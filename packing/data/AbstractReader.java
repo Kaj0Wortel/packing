@@ -8,23 +8,31 @@ import packing.data.Dataset;
 
 // Java imports
 import java.io.File;
+import java.io.IOException;
 
 
 /* 
  * Abstract class for reading the input files.
  */
 public abstract class AbstractReader {
-    final protected File file;
+    final protected OutputWriter ow;
     
-    public AbstractReader(File file) {
-        if (file == null)
-            throw new NullPointerException("File was null!");
-        this.file = file;
+    protected AbstractReader(OutputWriter ow) {
+        this.ow = ow;
     }
     
     /* 
      * @return the dataset from {@code file}.
      */
-    public abstract <D extends Dataset> D readEntries(Class<? extends D> type);
+    public abstract Dataset readEntries();
+    
+    protected void outputLine(String line) {
+        try {
+            if (ow != null) ow.println(line);
+            
+        } catch (IOException e) {
+            System.err.println("Could not write to output!");
+        }
+    }
     
 }
