@@ -83,7 +83,7 @@ public class DataReader
             // Create the dataset.
             try {
                 dataset = type.getConstructor(boolean.class, int.class, int.class)
-                    .newInstance(height, rotation, numRect);
+                    .newInstance(rotation, height, numRect);
                 
             } catch (NoSuchMethodException e) {
                 throw new IllegalStateException
@@ -127,8 +127,9 @@ public class DataReader
     
     // tmp
     public static void main(String[] args) {
+        String fs = System.getProperty("file.separator");
         Dataset dataset = new DataReader
-            (new File(System.getProperty("user.dir") + "\\testcases\\"
+            (new File(System.getProperty("user.dir") + fs + "testcases" + fs
                           + "03_01_h20_rn.txt")).readEntries(TestDataset.class);
         System.out.println(dataset);
     }
