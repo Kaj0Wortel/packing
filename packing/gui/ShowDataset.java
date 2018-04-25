@@ -49,7 +49,7 @@ public class ShowDataset
     
     // tmp
     public static void main(String[] args) {
-        Dataset dataset = new TestDataset(false, -1, 5);
+        Dataset dataset = new TestDataset(-1, false, 5, null);
         
         dataset.add(new Rectangle(0, 0, 100, 100));
         dataset.add(new Rectangle(100, 0, 100, 50));
