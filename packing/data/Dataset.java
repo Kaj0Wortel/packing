@@ -2,7 +2,7 @@
 package packing.data;
 
 
-// Packing imports
+// Tools imports
 import tools.MultiTool;
 
 
@@ -26,6 +26,8 @@ public abstract class Dataset
     // The predefined height. Use -1 for no predefined height.
     final protected int height;
     
+    final protected int numRect;
+    
     // Idea: also keep track of the current size of the sheet.
     
     /* -------------------------------------------------------------------------
@@ -48,6 +50,7 @@ public abstract class Dataset
         private void calcRotatedRec()
                 throws IllegalStateException {
             if (rotatedRec != null) return;
+            
             if (Dataset.this.allowRot) {
                 rotatedRec = new Rectangle(rec.y, rec.x, rec.height, rec.width);
                 
@@ -137,18 +140,25 @@ public abstract class Dataset
     
     
     /* -------------------------------------------------------------------------
-     * Entry class
+     * Constructor
      * -------------------------------------------------------------------------
      */
     /* 
      * @param rotation whether to allow rotation.
      * @param the height restriction. Use -1 for no height restriction.
+     * @param numRect the total number of rectangles.
      */
-    public Dataset(boolean rotation, int height) {
+    public Dataset(boolean rotation, int height, int numRect) {
         this.allowRot = rotation;
         this.height = height;
+        this.numRect = numRect;
     }
     
+    
+    /* -------------------------------------------------------------------------
+     * Functions
+     * -------------------------------------------------------------------------
+     */
     /* 
      * Adds an entry to the data set.
      * 

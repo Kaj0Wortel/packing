@@ -4,6 +4,7 @@ package packing.gui;
 
 // Packing imports
 import packing.data.Dataset;
+import packing.data.TestDataset;
 
 
 // Java imports
@@ -14,11 +15,6 @@ import java.util.Iterator;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-
-
-// tmp
-import java.util.Set;
-import java.util.HashSet;
 
 
 /* 
@@ -53,24 +49,7 @@ public class ShowDataset
     
     // tmp
     public static void main(String[] args) {
-        Dataset dataset = new Dataset(false, -1) {
-            Set<Dataset.Entry> set = new HashSet<>();
-            
-            @Override
-            public void add(Rectangle rec) {
-                set.add(new Entry(rec));
-            }
-            
-            @Override
-            public Object getEntries() {
-                return null;
-            }
-            
-            @Override
-            public Iterator<Dataset.Entry> iterator() {
-                return set.iterator();
-            }
-        };
+        Dataset dataset = new TestDataset(false, -1, 5);
         
         dataset.add(new Rectangle(0, 0, 100, 100));
         dataset.add(new Rectangle(100, 0, 100, 50));
