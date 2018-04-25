@@ -35,6 +35,7 @@ public class TestDataset
     
     @Override
     public String toString() {
-        return set.toString();
+        return "[allowRot: " + allowRot + ", height: " + height
+            + ", numRect: " + numRect + " set: " + set.toString() + "]";
     }
 }

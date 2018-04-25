@@ -26,6 +26,7 @@ public abstract class Dataset
     // The predefined height. Use -1 for no predefined height.
     final protected int height;
     
+    // The number of rectangle.
     final protected int numRect;
     
     // Idea: also keep track of the current size of the sheet.
@@ -121,7 +122,6 @@ public abstract class Dataset
             rec.setLocation(x, y);
         }
         
-        
         @Override
         public boolean equals(Object obj) {
             if (!(obj instanceof Dataset.Entry)) return false;
@@ -134,6 +134,12 @@ public abstract class Dataset
         public int hashCode() {
             return MultiTool.calcHashCode(rec.x, rec.y, rec.width, rec.height,
                                           useRotation);
+        }
+        
+        @Override
+        public String toString() {
+            return "[rec: " + rec.toString()
+                + ", rotation: " + useRotation + "]";
         }
         
     }
