@@ -2,6 +2,10 @@
 package packing.data;
 
 
+// Packing imports
+import packing.generator.Generator;
+
+
 // Tools imports
 import tools.MultiTool;
 
@@ -9,6 +13,8 @@ import tools.MultiTool;
 // Java imports
 import java.awt.Rectangle;
 import java.awt.Dimension;
+
+import java.util.List;
 
 
 /* 
@@ -20,14 +26,21 @@ public abstract class Dataset
      * Variables
      * -------------------------------------------------------------------------
      */
-    // Whether rotation is allowed or not.
-    final protected boolean allowRot;
-    
     // The predefined height. Use -1 for no predefined height.
     final protected int height;
     
+    // Whether rotation is allowed or not.
+    final protected boolean allowRot;
+    
     // The number of rectangle.
     final protected int numRect;
+    
+    // The number for keeping track of the number
+    // of elements relative the input.
+    protected int idCounter = 0;
+    
+    // The generator to be used on this dataset.
+    final protected Generator generator;
     
     // Idea: also keep track of the current size of the sheet.
     
@@ -36,12 +49,22 @@ public abstract class Dataset
      * -------------------------------------------------------------------------
      */
     public class Entry {
+        // The rectangle.
         final private Rectangle rec;
+        
+        // The number denoting the order of occurance in the input.
+        final private int id;
+        
+        // The rotated rectangle.
         private Rectangle rotatedRec;
+        
+        // Whether to use rotation by default.
         private boolean useRotation = false;
         
-        public Entry(Rectangle rec) {
+        
+        public Entry(Rectangle rec, int id) {
             this.rec = rec;
+            this.id = id;
         }
         
         /* 
@@ -153,11 +176,13 @@ public abstract class Dataset
      * @param rotation whether to allow rotation.
      * @param the height restriction. Use -1 for no height restriction.
      * @param numRect the total number of rectangles.
+     * @param gen the generator to be used on this dataset.
      */
-    public Dataset(boolean rotation, int height, int numRect) {
-        this.allowRot = rotation;
+    public Dataset(int height, boolean rotation, int numRect, Generator gen) {
         this.height = height;
+        this.allowRot = rotation;
         this.numRect = numRect;
+        this.generator = gen;
     }
     
     
@@ -178,8 +203,25 @@ public abstract class Dataset
      */
     public abstract Object getEntries();
     
+    /* 
+     * @return the i'th object that was added.
+     */
+    public abstract Entry get(int i);
     
     
-    // TODO: depending on which class it aditionally implements,
-    // we can also add a data counter.
+    /* 
+     * @return whether rotations are allowed.
+     */
+    public boolean allowRotation() {
+        return allowRot;
+    }
+    
+    public int size() {
+        return idCounter;
+    }
+    
+    public Generator getGenerator() {
+        return generator;
+    }
+    
 }
