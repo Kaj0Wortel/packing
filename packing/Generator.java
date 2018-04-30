@@ -1,11 +1,4 @@
 
-package packing.generator;
-
-
-// Packing imports
-import packing.data.Dataset;
-
-
 /* 
  * Abstract generator class.
  */

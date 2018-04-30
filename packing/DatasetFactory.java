@@ -1,11 +1,4 @@
 
-package packing.data;
-
-
-// Packing imports
-import packing.generator.*;
-
-
 // Java imports
 import java.awt.Rectangle;
 

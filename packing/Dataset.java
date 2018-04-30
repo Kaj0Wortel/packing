@@ -1,15 +1,4 @@
 
-package packing.data;
-
-
-// Packing imports
-import packing.generator.Generator;
-
-
-// Tools imports
-import tools.MultiTool;
-
-
 // Java imports
 import java.awt.Rectangle;
 import java.awt.Dimension;

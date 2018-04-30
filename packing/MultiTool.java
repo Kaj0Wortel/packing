@@ -11,12 +11,6 @@
  * without my permission.                                                    *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-package tools;
-
-
-// Tools imports
-import tools.log.Logger;
-
 
 // Java imports
 import java.awt.event.ActionEvent;
@@ -704,7 +698,7 @@ public class MultiTool {
             return (V) deepArrayClone(safeObjArrCast(value));
             
         } else {
-            if (value instanceof tools.Cloneable) {
+            if (value instanceof Cloneable) {
                 return (V) ((Cloneable) value).clone();
                 
             } else if (value instanceof java.lang.Cloneable) {
@@ -717,10 +711,11 @@ public class MultiTool {
                          SecurityException |
                          IllegalAccessException e) {
                     // When the method was not reacheable.
+                    /*
                     Logger.write(new Object[] {
                         "Unaccessable clone method of object \""
                             + value.toString() + "\"!", e
-                    });
+                    });*/
                     
                     throw new IllegalStateException
                         ("Could not finish cloning! Last element: "
@@ -728,10 +723,11 @@ public class MultiTool {
                     
                 } catch (InvocationTargetException e) {
                     // When the clone method threw an exception.
+                    /*
                     Logger.write(new Object[] {
                         "An error occured while cloning the object \""
                             + value.toString() + "\":", e.getCause()
-                    });
+                    });*/
                     
                     throw new IllegalStateException
                         ("An error occured while cloning the object \""

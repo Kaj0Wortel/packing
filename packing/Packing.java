@@ -1,23 +1,13 @@
 
-package packing;
-
-
-// Packing imports
-import packing.data.AbstractReader;
-import packing.data.Dataset;
-import packing.data.FileDataReader;
-import packing.data.StreamDataReader;
-import packing.data.OutputWriter;
-
-import packing.generator.Generator;
-
-
 // Java imports
 import java.io.File;
 import java.io.IOException;
 
 import java.util.Timer;
 import java.util.TimerTask;
+
+import java.io.FileOutputStream;
+import java.io.FileNotFoundException;
 
 
 /* 
@@ -44,8 +34,10 @@ public class Packing {
     
     /* 
      * Runs the application.
+     * 
+     * @param fileName the used file name of the data file.
      */
-    public void run() {
+    public void run(String inputFile, String outputFile) {
         // Start the timer.
         timer = new Timer();
         timer.schedule
@@ -58,17 +50,28 @@ public class Packing {
         }, 4900L);
         
         // Create the output writer.
-        OutputWriter ow = new OutputWriter(System.out);
+        OutputWriter ow = null;
+        if (outputFile == null) {
+            ow = new OutputWriter(System.out);
+            
+        } else {
+            try {
+                ow = new OutputWriter(new FileOutputStream(outputFile));
+                
+            } catch (FileNotFoundException e) {
+                System.err.println(e);
+                System.exit(0);
+            }
+        }
         
-        // Read input.
-        // Read data from file.
-        AbstractReader reader = new FileDataReader(testFile, ow);
-        
-        // Read data from system input.
-        //AbstractReader reader = new StreamDataReader(System.in);
-        
-        // Also possible for reading from file.
-        //AbstractReader reader = new StreamDataReader(new FileInputStream(testFile));
+        // Read the input.
+        AbstractReader reader;
+        if (inputFile == null) {
+            reader = new StreamDataReader(System.in, ow);
+            
+        } else {
+            reader = new FileDataReader(inputFile, ow);
+        }
         
         Dataset input = reader.readEntries();
         
@@ -93,6 +96,14 @@ public class Packing {
     }
     
     public static void main(String[] args) {
-        new Packing().run();
+        String in = null;
+        String out = null;
+        
+        if (args != null) {
+            if (args.length >= 1) in = args[0];
+            if (args.length >= 2) out = args[0];
+        }
+        
+        new Packing().run(in, out);
     }
 }

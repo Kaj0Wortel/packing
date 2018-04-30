@@ -11,8 +11,6 @@
  * without my permission.                                                    *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-package tools;
-
 
 /* 
  * A usefull interface that forces the implementer to have a public

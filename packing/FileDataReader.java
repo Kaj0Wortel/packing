@@ -1,15 +1,4 @@
 
-package packing.data;
-
-
-// Tools imports
-import tools.log.Logger;
-
-
-// Packing imports
-import packing.data.Dataset;
-
-
 // Java imports
 import java.io.BufferedReader;
 import java.io.File;
@@ -58,7 +47,7 @@ public class FileDataReader
             return DatasetFactory.process(data);
             
         } catch (IOException e) {
-            Logger.write(e);
+            System.err.println(e);
         }
         
         return null;

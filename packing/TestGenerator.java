@@ -1,11 +1,4 @@
 
-package packing.generator;
-
-
-// Packing imports
-import packing.data.Dataset;
-
-
 public class TestGenerator extends Generator {
     private boolean stopped = false;
     
@@ -19,12 +12,13 @@ public class TestGenerator extends Generator {
         } catch (InterruptedException e) {
             
         }
-        System.out.println("it works");
+        
         return dataset;
     }
     
     @Override
     public void interrupt() {
+        System.err.println("interrupted!");
         stopped = true;
     }
     

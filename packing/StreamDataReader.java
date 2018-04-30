@@ -1,10 +1,4 @@
 
-package packing.data;
-
-// Packing imports
-import packing.data.Dataset;
-
-
 // Java imports
 import java.io.InputStream;
 
