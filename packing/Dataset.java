@@ -15,8 +15,8 @@ public abstract class Dataset
      * Variables
      * -------------------------------------------------------------------------
      */
-    // The predefined height. Use -1 for no predefined height.
-    final protected int height;
+    // Whether the height of the sheet is fixed.
+    final protected boolean fixedHeight;
     
     // Whether rotation is allowed or not.
     final protected boolean allowRot;
@@ -31,7 +31,9 @@ public abstract class Dataset
     // The generator to be used on this dataset.
     final protected Generator generator;
     
-    // Idea: also keep track of the current size of the sheet.
+    // The width and height of the sheet.
+    protected int width;
+    protected int height;
     
     /* -------------------------------------------------------------------------
      * Entry class
@@ -168,10 +170,12 @@ public abstract class Dataset
      * @param gen the generator to be used on this dataset.
      */
     public Dataset(int height, boolean rotation, int numRect, Generator gen) {
-        this.height = height;
+        this.fixedHeight = height != -1;
         this.allowRot = rotation;
         this.numRect = numRect;
         this.generator = gen;
+        
+        if (fixedHeight) this.height = height
     }
     
     
@@ -205,12 +209,57 @@ public abstract class Dataset
         return allowRot;
     }
     
+    /* 
+     * @return the number of rectangles in the dataset.
+     */
     public int size() {
         return idCounter;
     }
     
+    /* 
+     * @return the generator for this dataset.
+     */
     public Generator getGenerator() {
         return generator;
     }
     
+    /* 
+     * @return the width of the sheet.
+     */
+    public int getWidth() {
+        return width;
+    }
+    
+    /* 
+     * @return the height of the sheet.
+     */
+    public int getHeight() {
+        return height;
+    }
+    
+    /* 
+     * Sets the width of the sheet.
+     * 
+     * @param newWidth the new width of the sheet.
+     */
+    public void setWidth(int newWidth) {
+        width = newWidtt;
+    }
+    
+    /* 
+     * Sets the height of the sheet.
+     * 
+     * @param newHeight the new height of the sheet.
+     * @throws IllegalArgumentException iff the height of the sheet is fixed.
+     */
+    public void setHeight(int newHeight)
+            throws IllegalArgumentException {
+        if (fixedHeight) {
+            throw new IllegalArgumentException("The height cannot be set!");
+            
+        } else {
+            height = newHeight;
+        }
+        
+    }
 }
