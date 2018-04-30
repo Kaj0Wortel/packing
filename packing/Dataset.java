@@ -175,7 +175,7 @@ public abstract class Dataset
         this.numRect = numRect;
         this.generator = gen;
         
-        if (fixedHeight) this.height = height
+        if (fixedHeight) this.height = height;
     }
     
     
@@ -243,7 +243,7 @@ public abstract class Dataset
      * @param newWidth the new width of the sheet.
      */
     public void setWidth(int newWidth) {
-        width = newWidtt;
+        width = newWidth;
     }
     
     /* 
