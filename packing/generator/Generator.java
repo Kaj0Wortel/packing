@@ -15,4 +15,9 @@ public abstract class Generator {
      */
     public abstract Dataset generate(Dataset dataset);
     
+    /* 
+     * Interrupts the generator.
+     */
+    public abstract void interrupt();
+    
 }

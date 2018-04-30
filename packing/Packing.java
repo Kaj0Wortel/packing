@@ -16,6 +16,9 @@ import packing.generator.Generator;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 
 /* 
  * The mainclass of the project.
@@ -32,11 +35,28 @@ public class Packing {
     final public static File[] testFiles
         = new File(System.getProperty("user.dir") + fs).listFiles();
     
+    // The timer to keep track of the time limit.
+    private Timer timer;
+    
+    // The generator used for calculating the solution.
+    private Generator gen;
+    
     
     /* 
      * Runs the application.
      */
     public void run() {
+        // Start the timer.
+        timer = new Timer();
+        timer.schedule
+            (new TimerTask() {
+            @Override
+            public void run() {
+                Generator gen = getGenerator();
+                if (gen != null) gen.interrupt();
+            }
+        }, 4900L);
+        
         // Create the output writer.
         OutputWriter ow = new OutputWriter(System.out);
         
@@ -53,8 +73,8 @@ public class Packing {
         Dataset input = reader.readEntries();
         
         // Generate solution.
-        Generator generator = input.getGenerator();
-        Dataset result = generator.generate(input);
+        gen = input.getGenerator();
+        Dataset result = gen.generate(input);
         
         // Output solution.
         try {
@@ -63,6 +83,13 @@ public class Packing {
         } catch (IOException e) {
             System.err.println("an exception occured");
         }
+    }
+    
+    /* 
+     * @return the generator
+     */
+    public Generator getGenerator() {
+        return gen;
     }
     
     public static void main(String[] args) {
