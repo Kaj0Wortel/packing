@@ -107,7 +107,7 @@ public class PackingSolver {
         if (args != null) {
             if (args.length >= 1) in = args[0];
             if (args.length >= 2) out = args[0];
-            //in = testFile;
+            in = testFile;
         }
         
         new PackingSolver().run(in, out);
