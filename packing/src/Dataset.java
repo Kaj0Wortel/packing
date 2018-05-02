@@ -61,7 +61,6 @@ public abstract class Dataset
         
         public Entry(Entry clone) {
             this(new Rectangle(clone.getNormalRec()), clone.id);
-            
         }
         
         /* 
@@ -255,6 +254,11 @@ public abstract class Dataset
      */
     public void setWidth(int newWidth) {
         width = newWidth;
+    }
+    
+    public void setSize(int width, int height) {
+        this.width = width;
+        this.height = height;
     }
     
     /* 
