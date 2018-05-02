@@ -16,6 +16,13 @@ public class TestDataset
         super(height, rotation, numRect, gen);
     }
     
+    public TestDataset(TestDataset clone) {
+        super((clone.fixedHeight ? clone.height : -1),
+              clone.allowRot, clone.numRect, clone.generator);
+        this.set = MultiTool.deepClone(clone.set);
+        
+    }
+    
     @Override
     public void add(Rectangle rec) {
         set.add(new Entry(rec, idCounter++));
@@ -40,6 +47,11 @@ public class TestDataset
     public String toString() {
         return "[allowRot: " + allowRot + ", height: " + height
             + ", numRect: " + numRect + " set: " + set.toString() + "]";
+    }
+    
+    @Override
+    public TestDataset clone() {
+        return new TestDataset(this);
     }
     
 }

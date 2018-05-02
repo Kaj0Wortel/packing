@@ -9,21 +9,25 @@ import java.util.TimerTask;
 import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
 
+import java.io.FileInputStream;
+
 
 /* 
  * The mainclass of the project.
  */
-public class Packing {
+public class PackingSolver {
     // The file separator for the current OS.
-    final public static String fs = System.getProperty("file.separator");
+    final public static String FS = System.getProperty("file.separator");
+    
     
     // The test file
     final public static String testFile
-        = System.getProperty("user.dir") + fs + "testcases" + fs
-        + "03_01_h20_rn.txt";
+        = System.getProperty("user.dir") + FS + "testcases" + FS
+        //+ "03_01_h20_rn.txt";
+        + "test2.txt";
     
     final public static File[] testFiles
-        = new File(System.getProperty("user.dir") + fs).listFiles();
+        = new File(System.getProperty("user.dir") + FS).listFiles();
     
     // The timer to keep track of the time limit.
     private Timer timer;
@@ -39,6 +43,7 @@ public class Packing {
      */
     public void run(String inputFile, String outputFile) {
         // Start the timer.
+        /*
         timer = new Timer();
         timer.schedule
             (new TimerTask() {
@@ -47,8 +52,8 @@ public class Packing {
                 Generator gen = getGenerator();
                 if (gen != null) gen.interrupt();
             }
-        }, 4900L);
-        
+        }, 10L); // 5*60*1000 = 300 000, use 299 500 (500 ms spare).
+        */
         // Create the output writer.
         OutputWriter ow = null;
         if (outputFile == null) {
@@ -60,12 +65,11 @@ public class Packing {
                 
             } catch (FileNotFoundException e) {
                 System.err.println(e);
-                System.exit(0);
             }
         }
         
         // Read the input.
-        AbstractReader reader;
+        AbstractReader reader = null;
         if (inputFile == null) {
             reader = new StreamDataReader(System.in, ow);
             
@@ -74,6 +78,7 @@ public class Packing {
         }
         
         Dataset input = reader.readEntries();
+        if (input == null) return;
         
         // Generate solution.
         gen = input.getGenerator();
@@ -84,7 +89,7 @@ public class Packing {
             ow.writeEntries(result);
             
         } catch (IOException e) {
-            System.err.println("an exception occured");
+            System.err.println(e);
         }
     }
     
@@ -102,8 +107,9 @@ public class Packing {
         if (args != null) {
             if (args.length >= 1) in = args[0];
             if (args.length >= 2) out = args[0];
+            //in = testFile;
         }
         
-        new Packing().run(in, out);
+        new PackingSolver().run(in, out);
     }
 }

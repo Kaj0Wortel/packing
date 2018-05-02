@@ -3,7 +3,7 @@ public class TestGenerator extends Generator {
     private boolean stopped = false;
     
     @Override
-    public Dataset generate(Dataset dataset) {
+    public Dataset generate(Dataset dataset) {/*
         try {
             while (!stopped) {
                 Thread.sleep(10);
@@ -11,14 +11,14 @@ public class TestGenerator extends Generator {
             
         } catch (InterruptedException e) {
             
-        }
+        }*/
         
         return dataset;
     }
     
     @Override
     public void interrupt() {
-        System.err.println("interrupted!");
+        //System.err.println("interrupted!");
         stopped = true;
     }
     

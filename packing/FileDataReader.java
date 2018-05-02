@@ -29,8 +29,7 @@ public class FileDataReader
     public FileDataReader(File file, OutputWriter ow) {
         super(ow);
         
-        if (file == null)
-            throw new NullPointerException("File was null!");
+        if (file == null) throw new NullPointerException("File was null!");
         this.file = file;
     }
     
@@ -40,8 +39,10 @@ public class FileDataReader
             List<String> data = new ArrayList<String>();
             String line;
             while ((line = br.readLine()) != null) {
-                data.add(line);
-                super.outputLine(line);
+                if (!line.equals("")) {
+                    data.add(line);
+                    super.outputLine(line);
+                }
             }
             
             return DatasetFactory.process(data);

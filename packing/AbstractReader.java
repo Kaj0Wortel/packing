@@ -24,7 +24,7 @@ public abstract class AbstractReader {
             if (ow != null) ow.println(line);
             
         } catch (IOException e) {
-            System.err.println("Could not write to output!");
+            System.err.println(e);
         }
     }
     

@@ -10,7 +10,7 @@ import java.util.List;
  * Abstract dataset for the rectangles and additional parameters.
  */
 public abstract class Dataset
-        implements Iterable<Dataset.Entry> { // TODO: Maybe also let it implement java.util.Set or java.util.List.
+        implements Iterable<Dataset.Entry>, Cloneable {
     /* -------------------------------------------------------------------------
      * Variables
      * -------------------------------------------------------------------------
@@ -39,7 +39,8 @@ public abstract class Dataset
      * Entry class
      * -------------------------------------------------------------------------
      */
-    public class Entry {
+    public class Entry
+            implements Cloneable {
         // The rectangle.
         final private Rectangle rec;
         
@@ -56,6 +57,11 @@ public abstract class Dataset
         public Entry(Rectangle rec, int id) {
             this.rec = rec;
             this.id = id;
+        }
+        
+        public Entry(Entry clone) {
+            this(new Rectangle(clone.getNormalRec()), clone.id);
+            
         }
         
         /* 
@@ -154,6 +160,11 @@ public abstract class Dataset
         public String toString() {
             return "[rec: " + rec.toString()
                 + ", rotation: " + useRotation + "]";
+        }
+        
+        @Override
+        public Entry clone() {
+            return new Entry(this);
         }
         
     }
@@ -262,4 +273,7 @@ public abstract class Dataset
         }
         
     }
+    
+    public abstract Dataset clone();
+    
 }

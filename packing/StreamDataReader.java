@@ -28,8 +28,10 @@ public class StreamDataReader
         List<String> data = new ArrayList<String>();
         while (sc.hasNextLine()) {
             String line = sc.nextLine();
-            data.add(line);
-            super.outputLine(line);
+            if (!line.equals("")) {
+                data.add(line);
+                super.outputLine(line);
+            }
         }
         
         return DatasetFactory.process(data);

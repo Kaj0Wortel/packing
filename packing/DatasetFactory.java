@@ -28,7 +28,8 @@ public class DatasetFactory {
                 height = Integer.parseInt(number);
                 
             } catch (NumberFormatException e) {
-                throw new IllegalStateException("Illegal input");
+                //throw new IllegalStateException("Illegal input");
+                return null;
             }
         }
         
@@ -47,7 +48,8 @@ public class DatasetFactory {
             numRect = Integer.parseInt(number);
             
         } catch (NumberFormatException e) {
-            throw new IllegalStateException("Illegal input: " + line);
+            //throw new IllegalStateException("Illegal input: " + line);
+            return null;
         }
         
         // Create the dataset.
@@ -55,15 +57,20 @@ public class DatasetFactory {
         
         // Fill the dataset.
         for (int i = 3; i < input.size(); i++) {
-            String[] coords = input.get(i).split(" ");
+            line = input.get(i);
             
-            try {
-                int recWidth  = Integer.parseInt(coords[0]);
-                int recHeight = Integer.parseInt(coords[1]);
-                dataset.add(new Rectangle(recWidth, recHeight));
+            if (!line.equals("")) {
+                String[] coords = line.split(" ");
                 
-            } catch (NumberFormatException e) {
-                throw new IllegalStateException("Illegal input: " + line);
+                try {
+                    int recWidth  = Integer.parseInt(coords[0]);
+                    int recHeight = Integer.parseInt(coords[1]);
+                    dataset.add(new Rectangle(recWidth, recHeight));
+                    
+                } catch (NumberFormatException e) {
+                    System.err.println("File does not have the correct format");
+                    return null;
+                }
             }
         }
         
