@@ -24,7 +24,7 @@ public class PackingSolver {
     final public static String testFile
         = System.getProperty("user.dir") + FS + "testcases" + FS
         //+ "03_01_h20_rn.txt";
-        + "test2.txt";
+        + "test_case_9_10000.txt";
     
     final public static File[] testFiles
         = new File(System.getProperty("user.dir") + FS).listFiles();
@@ -91,6 +91,8 @@ public class PackingSolver {
         } catch (IOException e) {
             System.err.println(e);
         }
+        
+        new ShowDataset(result);
     }
     
     /* 
