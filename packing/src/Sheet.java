@@ -43,7 +43,7 @@ public class Sheet {
     protected Sheet(Rectangle bounds, Sheet root, Sheet parent) {
         this.bounds = bounds;
         
-        this.root = root;
+        this.root = (root == null ? this : root);
         this.parent = parent;
     }
     
@@ -172,8 +172,11 @@ public class Sheet {
      */
     protected List<Sheet> put(Rectangle rec) {
         if (children.isEmpty()) {
-            // If the sheet consists of 
+            // If the sheet has no children.
+            // Update the location of the rectangle and check if it is valid.
             rec.setLocation(bounds.x, bounds.y);
+            // Check if the rectangle is still withing the root sheet.
+            if (!root.getBounds().contains(rec)) return null;
             return root.check(rec);
             
         } else {
@@ -283,20 +286,20 @@ public class Sheet {
                         update.y - bounds.y));
             }
             
-            if (!pX2) {
-                addSheets.add(new Rectangle(
-                        bounds.x + update.width,
-                        bounds.y,
-                        bounds.width,
-                        bounds.height));
-            }
-            
             if (!pY2) {
                 addSheets.add(new Rectangle(
                         bounds.x,
                         bounds.y + update.height,
                         update.width,
                         bounds.height - update.height));
+            }
+            
+            if (!pX2) {
+                addSheets.add(new Rectangle(
+                        bounds.x + update.width,
+                        bounds.y,
+                        bounds.width,
+                        bounds.height));
             }
             
             // Create and add all child sheets.
@@ -327,13 +330,13 @@ public class Sheet {
      * placed.
      */
     public boolean add(Dataset.Entry entry) {
-        //entry.getRec().setLocation(-1, -1);
+        Rectangle entryRec = entry.getRec();
         
         List<Sheet> mod = put(entry.getRec());
         if (mod == null) return false;
         
-        for (Sheet update : mod) {
-            update.fill();
+        for (Sheet modSheet : mod) {
+            modSheet.fill();
         }
         
         return true;
