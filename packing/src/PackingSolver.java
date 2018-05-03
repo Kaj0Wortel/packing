@@ -23,8 +23,9 @@ public class PackingSolver {
     // The test file
     final public static String testFile
         = System.getProperty("user.dir") + FS + "testcases" + FS
-        //+ "03_01_h20_rn.txt";
-        + "test_case_9_10000.txt";
+            //+ "03_01_h20_rn.txt";
+            //+ "test_case_9_10000.txt";
+            + "25_01_h19_ry.txt";
     
     final public static File[] testFiles
         = new File(System.getProperty("user.dir") + FS).listFiles();
@@ -43,7 +44,6 @@ public class PackingSolver {
      */
     public void run(String inputFile, String outputFile) {
         // Start the timer.
-        /*
         timer = new Timer();
         timer.schedule
             (new TimerTask() {
@@ -52,8 +52,8 @@ public class PackingSolver {
                 Generator gen = getGenerator();
                 if (gen != null) gen.interrupt();
             }
-        }, 10L); // 5*60*1000 = 300 000, use 299 500 (500 ms spare).
-        */
+        }, 300000L - 250L); // 5*60*1000 = 300 000, use 250 ms space
+        
         // Create the output writer.
         OutputWriter ow = null;
         if (outputFile == null) {
