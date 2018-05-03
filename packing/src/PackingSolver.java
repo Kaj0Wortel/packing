@@ -43,6 +43,8 @@ public class PackingSolver {
      * @param fileName the used file name of the data file.
      */
     public void run(String inputFile, String outputFile) {
+        long startTime = System.currentTimeMillis();
+        
         // Start the timer.
         timer = new Timer();
         timer.schedule
@@ -92,6 +94,9 @@ public class PackingSolver {
             System.err.println(e);
         }
         
+        // tmp
+        System.err.print("Total runtime: "
+                + (System.currentTimeMillis() - startTime));
         new ShowDataset(result);
     }
     
