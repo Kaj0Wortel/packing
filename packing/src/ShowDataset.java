@@ -8,11 +8,6 @@ import java.util.Iterator;
 import javax.swing.JFrame;
 
 
-// tmp
-import java.util.Set;
-import java.util.HashSet;
-
-
 /* 
  * GUI interface showing a visualisation of a {@link packing.data.Dataset}.
  */
