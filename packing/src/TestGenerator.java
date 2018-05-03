@@ -22,40 +22,29 @@ public class TestGenerator extends Generator {
         }
         height = minHeight;
 
-        dataset.setSize(width, height);
+        Dataset best = null;
 
-        Dataset best = dataset;
-        while (!stopped && minWidth <= width) {
+        while (!stopped && width >= minWidth) {
             if (width * height < minArea) {
                 ++height;
                 continue;
-            } else if (width * height > best.getWidth() * best.getHeight()) {
+            } else if (best != null && width * height > best.getArea()) {
                 --width;
                 continue;
             }
+//            System.out.printf("Packing into [%d x %d] bounding box\n", width, height);
+            Packer packer = new Sheet(width, height);
+            Dataset packed = packer.pack(dataset);
 
-            Dataset clone = dataset.clone();
-            clone.setSize(width, height);
-            Sheet sheet = new Sheet(new Rectangle(width, height));
-
-            boolean fit = true;
-
-            for (Dataset.Entry entry : clone) {
-                if (!sheet.add(entry)) {
-                    fit = false;
-                    break;
+            if (packed != null) {
+                if (best == null || packed.getArea() < best.getArea()) {
+                    best = packed;
                 }
-                if (stopped) return best;
-            }
-
-            if (fit) {
-                best = clone;
                 --width;
             } else {
                 ++height;
             }
         }
-
         return best;
     }
     

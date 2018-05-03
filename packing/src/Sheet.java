@@ -9,7 +9,7 @@ import java.util.List;
 /* 
  * This class keeps track of what part of it is filled and what part isn't.
  */
-public class Sheet {
+public class Sheet extends Packer {
     Rectangle bounds;
     
     boolean full;
@@ -31,6 +31,17 @@ public class Sheet {
      */
     public Sheet(Rectangle bounds) {
         this(bounds, null, null);
+    }
+
+    /**
+     * Constructs a new main sheet.
+     * Uses {@link Sheet (Rectangle)}.
+     *
+     * @param width the width of this sheet.
+     * @param height the height of this sheet.
+     */
+    public Sheet(int width, int height) {
+        this(new Rectangle(width, height));
     }
     
     /**
@@ -341,5 +352,15 @@ public class Sheet {
         
         return true;
     }
-    
+
+    public Dataset pack(Dataset dataset) {
+        Dataset clone = dataset.clone();
+        clone.setSize(this.bounds.width, this.bounds.height);
+        for (Dataset.Entry entry : clone) {
+            if (!add(entry)) {
+                return null;
+            }
+        }
+        return clone;
+    }
 }

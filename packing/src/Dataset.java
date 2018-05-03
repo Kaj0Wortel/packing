@@ -1,6 +1,7 @@
 
 // Java imports
 import java.awt.Rectangle;
+import java.util.Iterator;
 
 
 /* 
@@ -243,6 +244,13 @@ public abstract class Dataset
     public int getHeight() {
         return height;
     }
+
+    /*
+     * @return the area of the sheet.
+     */
+    public int getArea() {
+        return width * height;
+    }
     
     /* 
      * Sets the width of the sheet.
@@ -274,6 +282,8 @@ public abstract class Dataset
         }
         
     }
+
+    public abstract Iterable<Entry> sorted();
     
     public abstract Dataset clone();
     

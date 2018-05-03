@@ -2,9 +2,7 @@
 // Java imports
 import java.awt.Rectangle;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 
 public class TestDataset
@@ -37,6 +35,19 @@ public class TestDataset
     @Override
     public Iterator<Dataset.Entry> iterator() {
         return set.iterator();
+    }
+
+    @Override
+    public Iterable<Dataset.Entry> sorted() {
+        List<Entry> entries = new ArrayList<>(set);
+        entries.sort(
+            Collections.reverseOrder(
+                Comparator.comparingInt(
+                    (Dataset.Entry entry) -> (entry.getRec().height)
+                )
+            )
+        );
+        return entries;
     }
     
     @Override
