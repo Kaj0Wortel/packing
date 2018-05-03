@@ -201,8 +201,7 @@ class GreedyPacker extends Packer {
     private int height;
     private Space root;
     private SortedSet<Space> queue = new TreeSet<>((o1, o2) -> {
-        // Switch o1 and o2 to reverse order
-        return (Integer.compare(o2.x, o1.x) != 0) ? Integer.compare(o2.x, o1.x) : Integer.compare(o2.y, o1.y);
+        return (Integer.compare(o1.x, o2.x) != 0) ? Integer.compare(o1.x, o2.x) : Integer.compare(o1.y, o2.y);
     });
 
     public GreedyPacker(int width, int height) {
@@ -219,7 +218,7 @@ class GreedyPacker extends Packer {
                     space.x, space.y + offset, space.width, space.height - offset,
                     previous, null, space.top, space, space.isEmpty
             );
-            queue.add(newSpace);
+            if (newSpace.isEmpty) queue.add(newSpace);
             space.setHeight(offset);
             previous = newSpace;
         }
@@ -232,7 +231,7 @@ class GreedyPacker extends Packer {
                     space.x + offset, space.y, space.width - offset, space.height,
                     space, space.right, null, previous, space.isEmpty
             );
-            queue.add(newSpace);
+            if (newSpace.isEmpty) queue.add(newSpace);
             space.setWidth(offset);
             previous = newSpace;
         }
