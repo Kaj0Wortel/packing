@@ -1,18 +1,20 @@
 
+// Java imports
+import java.awt.Rectangle;
+
+
 public class TestGenerator extends Generator {
     private boolean stopped = false;
     
     @Override
-    public Dataset generate(Dataset dataset) {/*
-        try {
-            while (!stopped) {
-                Thread.sleep(10);
-            }
-            
-        } catch (InterruptedException e) {
-            
-        }*/
+    public Dataset generate(Dataset dataset) {
+        Sheet sheet = new Sheet(new Rectangle(100, 50));
         
+        for (Dataset.Entry entry : dataset) {
+            sheet.add(entry);
+            if (stopped) return dataset;
+        }
+        dataset.setSize(100, 50);
         return dataset;
     }
     
