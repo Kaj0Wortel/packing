@@ -1,9 +1,6 @@
 
 // Java imports
 import java.awt.Rectangle;
-import java.awt.Dimension;
-
-import java.util.List;
 
 
 /* 
