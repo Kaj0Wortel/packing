@@ -44,7 +44,7 @@ public class ShowDataset
     
     // tmp
     public static void main(String[] args) {
-        Dataset dataset = new TestDataset(-1, false, 5, null);
+        Dataset dataset = new TestDataset(-1, false, 5);
         
         dataset.add(new Rectangle(0, 0, 100, 100));
         dataset.add(new Rectangle(100, 0, 100, 50));

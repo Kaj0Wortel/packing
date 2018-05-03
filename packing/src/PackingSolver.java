@@ -83,7 +83,7 @@ public class PackingSolver {
         if (input == null) return;
         
         // Generate solution.
-        gen = input.getGenerator();
+        gen = new TestGenerator();
         Dataset result = gen.generate(input);
         
         // Output solution.

@@ -356,7 +356,7 @@ public class Sheet extends Packer {
     public Dataset pack(Dataset dataset) {
         Dataset clone = dataset.clone();
         clone.setSize(this.bounds.width, this.bounds.height);
-        for (Dataset.Entry entry : clone) {
+        for (Dataset.Entry entry : clone.sorted()) {
             if (!add(entry)) {
                 return null;
             }

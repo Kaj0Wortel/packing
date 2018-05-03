@@ -1,7 +1,6 @@
 
 // Java imports
 import java.awt.Rectangle;
-import java.util.Iterator;
 
 
 /* 
@@ -25,9 +24,6 @@ public abstract class Dataset
     // The number for keeping track of the number
     // of elements relative the input.
     protected int idCounter = 0;
-    
-    // The generator to be used on this dataset.
-    final protected Generator generator;
     
     // The width and height of the sheet.
     protected int width;
@@ -177,12 +173,11 @@ public abstract class Dataset
      * @param numRect the total number of rectangles.
      * @param gen the generator to be used on this dataset.
      */
-    public Dataset(int height, boolean rotation, int numRect, Generator gen) {
+    public Dataset(int height, boolean rotation, int numRect) {
         this.fixedHeight = height != -1;
         this.allowRot = rotation;
         this.numRect = numRect;
-        this.generator = gen;
-        
+
         if (fixedHeight) this.height = height;
     }
     
@@ -222,13 +217,6 @@ public abstract class Dataset
      */
     public int size() {
         return idCounter;
-    }
-    
-    /* 
-     * @return the generator for this dataset.
-     */
-    public Generator getGenerator() {
-        return generator;
     }
     
     /* 

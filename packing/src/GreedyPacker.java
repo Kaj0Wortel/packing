@@ -1,5 +1,6 @@
 import java.awt.Rectangle;
-import java.util.*;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 class GreedyPacker extends Packer {
     class Space {
@@ -13,6 +14,9 @@ class GreedyPacker extends Packer {
         Space top = null;
         Space bottom = null;
 
+        Space bottomRoot = null;
+        Space leftRoot = null;
+
         boolean isEmpty;
 
         public Space(int x, int y, int width, int height, Space left, Space right, Space top, Space bottom, boolean isEmpty) {
@@ -20,11 +24,13 @@ class GreedyPacker extends Packer {
             this.y = y;
             this.width = width;
             this.height = height;
-            this.left = left;
-            this.right = right;
-            this.top = top;
-            this.bottom = bottom;
+            setLeft(left);
+            setRight(right);
+            setTop(top);
+            setBottom(bottom);
             this.isEmpty = isEmpty;
+            this.bottomRoot = (bottom == null) ? this : bottom.bottomRoot;
+            this.leftRoot = (left == null) ? this : left.leftRoot;
         }
 
         public Space(int x, int y, int width, int height) {
@@ -123,6 +129,9 @@ class GreedyPacker extends Packer {
          */
         public void setBottom(Space bottom) {
             this.bottom = bottom;
+            if (bottom != null) {
+                bottom.top = this;
+            }
         }
 
         /**
@@ -137,6 +146,9 @@ class GreedyPacker extends Packer {
          */
         public void setTop(Space top) {
             this.top = top;
+            if (top != null) {
+                top.bottom = this;
+            }
         }
 
         /**
@@ -151,6 +163,9 @@ class GreedyPacker extends Packer {
          */
         public void setLeft(Space left) {
             this.left = left;
+            if (left != null) {
+                left.right = this;
+            }
         }
 
         /**
@@ -165,6 +180,9 @@ class GreedyPacker extends Packer {
          */
         public void setRight(Space right) {
             this.right = right;
+            if (right != null) {
+                right.left = this;
+            }
         }
 
         /**
@@ -179,77 +197,48 @@ class GreedyPacker extends Packer {
         }
     }
 
-    int width;
-    int height;
-    Space root;
+    private int width;
+    private int height;
+    private Space root;
+    private SortedSet<Space> queue = new TreeSet<>((o1, o2) -> {
+        // Switch o1 and o2 to reverse order
+        return (Integer.compare(o2.x, o1.x) != 0) ? Integer.compare(o2.x, o1.x) : Integer.compare(o2.y, o1.y);
+    });
 
     public GreedyPacker(int width, int height) {
         this.width = width;
         this.height = height;
         this.root = new Space(0, 0, width, height);
+        this.queue.add(this.root);
     }
 
-    public void splitRow(Space space, int offset) {
-        List<Space> spaces = new ArrayList<>();
-        Space previous = space.getLeft();
-        while (previous != null) {
-            spaces.add(previous);
-            previous = previous.getLeft();
-        }
-        Collections.reverse(spaces);
-        do {
-            spaces.add(space);
-            space = space.getRight();
-        } while (space != null);
-
-        List<Space> newSpaces = new ArrayList<>();
-        for (Space oldSpace : spaces) {
+    private void splitRow(Space space, int offset) {
+        Space previous = null;
+        for (space = space.leftRoot; space != null; space = space.getRight()) {
             Space newSpace = new Space(
-                    oldSpace.x, oldSpace.y + offset, oldSpace.width, oldSpace.height - offset,
-                    null, null, oldSpace.top, oldSpace, oldSpace.isEmpty
+                    space.x, space.y + offset, space.width, space.height - offset,
+                    previous, null, space.top, space, space.isEmpty
             );
-            newSpaces.add(newSpace);
-            if (newSpace.top != null) newSpace.top.setBottom(newSpace);
-            oldSpace.setTop(newSpace);
-            oldSpace.setHeight(offset);
-        }
-        for (int i = 0; i < newSpaces.size() - 1; i++) {
-            newSpaces.get(i).setRight(newSpaces.get(i + 1));
-            newSpaces.get(i + 1).setLeft(newSpaces.get(i));
+            queue.add(newSpace);
+            space.setHeight(offset);
+            previous = newSpace;
         }
     }
 
-    public void splitColumn(Space space, int offset) {
-        List<Space> spaces = new ArrayList<>();
-        Space previous = space.getBottom();
-        while (previous != null) {
-            spaces.add(previous);
-            previous = previous.getBottom();
-        }
-        Collections.reverse(spaces);
-        do {
-            spaces.add(space);
-            space = space.getTop();
-        } while (space != null);
-
-        List<Space> newSpaces = new ArrayList<>();
-        for (Space oldSpace : spaces) {
+    private void splitColumn(Space space, int offset) {
+        Space previous = null;
+        for (space = space.bottomRoot; space != null; space = space.getTop()) {
             Space newSpace = new Space(
-                    oldSpace.x + offset, oldSpace.y, oldSpace.width - offset, oldSpace.height,
-                    oldSpace, oldSpace.right, null, null, oldSpace.isEmpty
+                    space.x + offset, space.y, space.width - offset, space.height,
+                    space, space.right, null, previous, space.isEmpty
             );
-            newSpaces.add(newSpace);
-            if (newSpace.right != null) newSpace.right.setLeft(newSpace);
-            oldSpace.setRight(newSpace);
-            oldSpace.setWidth(offset);
-        }
-        for (int i = 0; i < newSpaces.size() - 1; i++) {
-            newSpaces.get(i).setTop(newSpaces.get(i + 1));
-            newSpaces.get(i + 1).setBottom(newSpaces.get(i));
+            queue.add(newSpace);
+            space.setWidth(offset);
+            previous = newSpace;
         }
     }
 
-    public void insertEntry(Rectangle rect, Space space) {
+    private void insertEntry(Rectangle rect, Space space) {
         if (rect.width < space.width) {
             splitColumn(space, rect.width);
         }
@@ -265,24 +254,19 @@ class GreedyPacker extends Packer {
         } else {
             // Perfect fit
             space.setEmpty(false);
+            queue.remove(space);
         }
     }
 
-    public boolean fitEntry(Dataset.Entry entry) {
-        Space columnStart = root;
-        do {
-            Space next = columnStart;
-            do {
-                Rectangle rect = entry.getNormalRec();
-                if (next.checkRectangle(rect)) {
-                    entry.setLocation(next.getX(), next.getY());
-                    insertEntry(rect, next);
-                    return true;
-                }
-                next = next.getTop();
-            } while (next != null);
-            columnStart = columnStart.getRight();
-        } while (columnStart != null);
+    private boolean fitEntry(Dataset.Entry entry) {
+        Rectangle rect = entry.getRec();
+        for (Space space : queue) {
+            if (space.checkRectangle(rect)) {
+                entry.setLocation(space.getX(), space.getY());
+                insertEntry(rect, space);
+                return true;
+            }
+        }
         return false;
     }
 

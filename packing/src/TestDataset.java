@@ -9,14 +9,13 @@ public class TestDataset
         extends Dataset {
     List<Entry> set = new ArrayList<>();
     
-    public TestDataset(int height, boolean rotation, int numRect,
-                       Generator gen) {
-        super(height, rotation, numRect, gen);
+    public TestDataset(int height, boolean rotation, int numRect) {
+        super(height, rotation, numRect);
     }
     
     public TestDataset(TestDataset clone) {
         super((clone.fixedHeight ? clone.height : -1),
-              clone.allowRot, clone.numRect, clone.generator);
+              clone.allowRot, clone.numRect);
         this.idCounter = clone.idCounter;
         for (Dataset.Entry entry : clone.set) {
             set.add(entry.clone());
