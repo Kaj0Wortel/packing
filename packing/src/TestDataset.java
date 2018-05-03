@@ -19,8 +19,9 @@ public class TestDataset
     public TestDataset(TestDataset clone) {
         super((clone.fixedHeight ? clone.height : -1),
               clone.allowRot, clone.numRect, clone.generator);
-        this.set = MultiTool.deepClone(clone.set);
-        
+        for (Dataset.Entry entry : clone.set) {
+            set.add(entry.clone());
+        }
     }
     
     @Override
