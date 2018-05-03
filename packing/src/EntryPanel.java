@@ -40,8 +40,9 @@ public class EntryPanel
                 containerHeight * rec.height / fieldHeight);
         //System.err.println(rec.x);
         //System.out.println(rec.y);
-        setLocation(containerWidth  * rec.x  / fieldWidth,
-                    containerHeight * rec.y  / fieldHeight);
+        setLocation(containerWidth * rec.x  / fieldWidth,
+                    containerHeight - getHeight()
+                            - containerHeight * rec.y  / fieldHeight);
     }
     
     @Override
@@ -51,7 +52,7 @@ public class EntryPanel
         int barWidth = (int) (0.1 * getWidth());
         int barHeight = (int) (0.1 * getHeight());
         
-        // Draw big gray bars around the panel.
+        // Draw gray bars around the panel.
         g2d.setPaint(new Color(150, 150, 150));
         g2d.fillRect(0, 0, getWidth(), barHeight);
         g2d.fillRect(0, 0, barWidth, getHeight());
