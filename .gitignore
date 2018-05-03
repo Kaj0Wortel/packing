@@ -23,3 +23,7 @@ hs_err_pid*
 /packing/packing/nbproject/private/
 /packing/packing/dist/
 /packing/packing/build/
+
+# Netbean files
+built-jar.properties
+private.xml
