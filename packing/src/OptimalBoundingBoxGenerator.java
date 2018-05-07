@@ -6,6 +6,12 @@
 public class OptimalBoundingBoxGenerator extends Generator {
     @Override
     public Dataset generate(Dataset dataset) {
+        /*
+        Calculate the total area of the rectangles as a lower bound.
+        Try packing the rectangles into every possible bounding box of
+        that size, increasing the area if it doesn't fit. Return when a
+        solution is found.
+         */
         return null;
     }
 
