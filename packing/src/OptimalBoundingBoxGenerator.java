@@ -11,6 +11,8 @@ public class OptimalBoundingBoxGenerator extends Generator {
         Try packing the rectangles into every possible bounding box of
         that size, increasing the area if it doesn't fit. Return when a
         solution is found.
+
+        See Algorithms Overview for ways to generate the bounding boxes.
          */
         return null;
     }
