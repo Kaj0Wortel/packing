@@ -4,7 +4,7 @@ import java.awt.Rectangle;
 
 /**
  * Generates bounding boxes starting at a wide, low bounding box,
- * and incrementelly decreases the width and increases the height.
+ * and incrementally decreases the width and increases the height.
  * Stops when the width is less than the width of the widest rectangle,
  * or when an interrupt is received.
  */
