@@ -81,7 +81,7 @@ public class PackingSolver {
         if (input == null) return;
         
         // Generate solution.
-        gen = new WideToHighBoundingBoxGenerator();
+        gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
         Dataset result = gen.generate(input);
         
         // Output solution.

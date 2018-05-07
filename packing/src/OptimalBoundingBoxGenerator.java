@@ -4,6 +4,10 @@
  * the final solution is optimal.
  */
 public class OptimalBoundingBoxGenerator extends Generator {
+    public OptimalBoundingBoxGenerator(PackerFactory factory) {
+        super(factory);
+    }
+
     @Override
     public Dataset generate(Dataset dataset) {
         /*

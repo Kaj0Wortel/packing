@@ -10,7 +10,11 @@ import java.awt.Rectangle;
  */
 public class WideToHighBoundingBoxGenerator extends Generator {
     private boolean stopped = false;
-    
+
+    public WideToHighBoundingBoxGenerator(PackerFactory factory) {
+        super(factory);
+    }
+
     @Override
     public Dataset generate(Dataset dataset) {
         int width = 0,
@@ -38,7 +42,7 @@ public class WideToHighBoundingBoxGenerator extends Generator {
                 continue;
             }
 //            System.out.printf("Packing into [%d x %d] bounding box\n", width, height);
-            Packer packer = new GreedyPacker(width, height);
+            Packer packer = packerFactory.create(width, height);
             Dataset packed = packer.pack(dataset);
 
             if (packed != null) {

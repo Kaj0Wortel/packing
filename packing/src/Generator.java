@@ -3,6 +3,12 @@
  * Abstract generator class.
  */
 public abstract class Generator {
+    protected PackerFactory packerFactory;
+
+    public Generator(PackerFactory factory) {
+        this.packerFactory = factory;
+    }
+
     /* 
      * Generates a solution for the given dataset.
      */
