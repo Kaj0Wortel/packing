@@ -2,8 +2,13 @@
 // Java imports
 import java.awt.Rectangle;
 
-
-public class TestGenerator extends Generator {
+/**
+ * Generates bounding boxes starting at a wide, low bounding box,
+ * and incrementelly decreases the width and increases the height.
+ * Stops when the width is less than the width of the widest rectangle,
+ * or when an interrupt is received.
+ */
+public class WideToHighBoundingBoxGenerator extends Generator {
     private boolean stopped = false;
     
     @Override
@@ -33,13 +38,15 @@ public class TestGenerator extends Generator {
                 continue;
             }
 //            System.out.printf("Packing into [%d x %d] bounding box\n", width, height);
-            Packer packer = new Sheet(width, height);
+            Packer packer = new GreedyPacker(width, height);
             Dataset packed = packer.pack(dataset);
 
             if (packed != null) {
+                packed.setWidth(packed.getEffectiveWidth());
                 if (best == null || packed.getArea() < best.getArea()) {
                     best = packed;
                 }
+                width = best.getEffectiveWidth();
                 --width;
             } else {
                 ++height;

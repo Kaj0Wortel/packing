@@ -239,6 +239,14 @@ public abstract class Dataset
     public int getArea() {
         return width * height;
     }
+
+    public int getEffectiveWidth() {
+        int max = 0;
+        for (Entry entry : this) {
+            max = Math.max(max, entry.getRec().x + entry.getRec().width);
+        }
+        return max;
+    }
     
     /* 
      * Sets the width of the sheet.

@@ -9,8 +9,6 @@ import java.util.TimerTask;
 import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
 
-import java.io.FileInputStream;
-
 
 /* 
  * The mainclass of the project.
@@ -83,7 +81,7 @@ public class PackingSolver {
         if (input == null) return;
         
         // Generate solution.
-        gen = new TestGenerator();
+        gen = new WideToHighBoundingBoxGenerator();
         Dataset result = gen.generate(input);
         
         // Output solution.
