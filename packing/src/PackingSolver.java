@@ -93,7 +93,7 @@ public class PackingSolver {
         }
         
         // tmp
-        System.err.print("Total runtime: "
+        System.err.println("Total runtime: "
                 + (System.currentTimeMillis() - startTime) + " ms");
         new ShowDataset(result);
     }
