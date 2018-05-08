@@ -14,34 +14,51 @@ public class Sheet extends Packer {
     
     boolean full;
     
+    // The children of this sheet. All entries MUST be ordered in the same
+    // way they are visited for checking where to add a rectangle.
     final protected List<Sheet> children = new ArrayList<Sheet>();
     final protected List<Rectangle> filled = new ArrayList<Rectangle>();
     
-    final protected Sheet root;
-    final protected Sheet parent;
+    // The root sheet of the sheet tree.
+    protected Sheet root;
+    // The parent sheet of this sheet.
+    protected Sheet parent;
+    // The sheet on the left of this sheet. {@code null} if it doesn't exist.
     
+    // These 4 sheets represent the neighbours of this sheet.
+    // Note that these may be an indirect neighbor.
+    protected Sheet left;
+    protected Sheet down;
+    protected Sheet up;
+    protected Sheet right;
+    
+    // The rectangle that should be filled when {@link fill()} is called.
     protected Rectangle update = null;
+    
+    
+    /**-------------------------------------------------------------------------
+     * Constructors.
+     * -------------------------------------------------------------------------
+     */
+    /**
+     * Constructs a new main sheet with the given width and height.
+     * Uses {@link Sheet#Sheet(Rectangle)}.
+     * 
+     * @param width
+     * @param height 
+     */
+    public Sheet(int width, int height) {
+        this(new Rectangle(width, height));
+    }
     
     /**
      * Constructs a new main sheet.
-     * Uses {@link Sheet(Rectangle, Sheet, Sheet, Sheet,
-     * boolean, boolean, boolean, boolean)}.
+     * Uses {@link Sheet#Sheet(Rectangle, Sheet, Sheet, Sheet, Sheet)}.
      * 
      * @param rec the bounds of this sheet.
      */
     public Sheet(Rectangle bounds) {
-        this(bounds, null, null);
-    }
-
-    /**
-     * Constructs a new main sheet.
-     * Uses {@link Sheet (Rectangle)}.
-     *
-     * @param width the width of this sheet.
-     * @param height the height of this sheet.
-     */
-    public Sheet(int width, int height) {
-        this(new Rectangle(width, height));
+        this(bounds, null, null, null, null);
     }
     
     /**
@@ -51,45 +68,160 @@ public class Sheet extends Packer {
      * @param root the root of all sheets.
      * @param parent the parent sheet of this sheet. {@code null} if none.
      */
-    protected Sheet(Rectangle bounds, Sheet root, Sheet parent) {
+    protected Sheet(Rectangle bounds, Sheet root, Sheet parent,
+            Sheet left, Sheet down) {
         this.bounds = bounds;
         
         this.root = (root == null ? this : root);
         this.parent = parent;
+        this.left = left;
+        this.down = down;
     }
     
-    /**
-     * @return the parent sheet of {@code this}.
+    
+    /**-------------------------------------------------------------------------
+     * Get/set functions.
+     * -------------------------------------------------------------------------
      */
-    protected Sheet getParent() {
-        return parent;
-    }
-    
     /**
      * @return the bounds of this sheet.
      */
-    protected Rectangle getBounds() {
+    public Rectangle getBounds() {
         return bounds;
     }
     
     /**
+     * Sets the bounds of the sheet.
+     * 
+     * @param newBounds the new bounds of this sheet.
+     */
+    public void setBounds(Rectangle newBounds) {
+        if (newBounds == null)
+            throw new NullPointerException("Bounds cannot be null!");
+        bounds = newBounds;
+    }
+    
+    
+    /**
+     * @return the parent sheet of {@code this}.
+     */
+    public Sheet getParent() {
+        return parent;
+    }
+    
+    /**
+     * Sets the parent of this sheet.
+     * Also updates the root accordingly.
+     * 
+     * @param newParent the new parent of ths sheet.
+     */
+    public void setParent(Sheet newParent) {
+        parent = newParent;
+        
+        root = (parent == null
+                    ? null
+                    : parent.root);
+    }
+    
+    
+    /**
+     * @return the sheet that is on the left of this sheet.
+     * 
+     * Note that the returned sheet might be a neighbor higher in
+     * the hierarchy, instead of a direct neighbor.
+     */
+    public Sheet getLeft() {
+        return left;
+    }
+    
+    /**
+     * Sets the left sheet.
+     * 
+     * @param newLeft the new left sheet.
+     */
+    public void setLeft(Sheet newLeft) {
+        left = newLeft;
+    }
+    
+    
+    /**
+     * @return the sheet that is below this sheet.
+     * 
+     * Note that the returned sheet might be a neighbor higher in
+     * the hierarchy, instead of a direct neighbor.
+     */
+    public Sheet getDown() {
+        return down;
+    }
+    
+    /**
+     * Sets the down sheet.
+     * 
+     * @param newDown the new down sheet.
+     */
+    public void setDown(Sheet newDown) {
+        down = newDown;
+    }
+    
+    
+    /**
+     * @return the sheet that is above this sheet.
+     * 
+     * Note that the returned sheet might be a neighbor higher in
+     * the hierarchy, instead of a direct neighbor.
+     */
+    public Sheet getUp() {
+        return up;
+    }
+    
+    /**
+     * Sets the upper sheet.
+     * 
+     * @param newUp the new up sheet.
+     */
+    public void setUp(Sheet newUp) {
+        up = newUp;
+    }
+    
+    
+    /**
+     * @return the sheet that is on the right of this sheet.
+     * 
+     * Note that the returned sheet might be a neighbor higher in
+     * the hierarchy, instead of a direct neighbor.
+     */
+    public Sheet getRight() {
+        return right;
+    }
+    
+    /**
+     * Sets the right sheet.
+     * 
+     * @param newRight the new right sheet.
+     */
+    public void setRight(Sheet newRight) {
+        right = newRight;
+    }
+    
+    
+    /**
      * @return the children of the sheet.
      */
-    protected List<Sheet> getChildren() {
+    public List<Sheet> getChildren() {
         return children;
     }
     
     /**
-     * @return whether the entire sheet has been filled.
+     * @return a list containing all filled rectangles of this sheet.
      */
-    protected List<Rectangle> getFilled() {
+    public List<Rectangle> getFilled() {
         return filled;
     }
     
     /**
      * @return whether the entire sheet is full.
      */
-    protected boolean isFull() {
+    public boolean isFull() {
         return full;
     }
     
@@ -98,16 +230,21 @@ public class Sheet extends Packer {
      * @return whether this sheet and all its children have at least one
      *     filled part.
      */
-    protected boolean hasFilled() {
-        if (!filled.isEmpty()) return true;
+    public boolean isEmpty() {
+        if (!filled.isEmpty()) return false;
         
         for (Sheet child : children) {
-            if (child.hasFilled()) return true;
+            if (!child.isEmpty()) return false;
         }
         
         return true;
     }
     
+    
+    /**-------------------------------------------------------------------------
+     * Functions.
+     * -------------------------------------------------------------------------
+     */
     /**
      * Checks recusively whether the given rectangle
      * can be placed at this sheet.
@@ -125,9 +262,9 @@ public class Sheet extends Packer {
         
         if (children.isEmpty()) {
             /** If this is an end sheet, set the update rectangle
-                for later when the rectangle is updated via {@link fill()}.
-                Note that it is known here that the intersection of {@code rec}
-                and {@code bounds} is not empty. */
+                for later when the rectangle is updated via
+                {@link Sheet#fill()}. Note that it is known here that the
+                intersection of {@code rec} and {@code bounds} is not empty. */
             update = rec;
             List<Sheet> mod = new ArrayList<Sheet>();
             mod.add(this);
@@ -135,25 +272,25 @@ public class Sheet extends Packer {
             return mod;
             
         } else if (rec.equals(bounds)) {
-            /** If {@code rec} fully contains this sheet, check if there is
+            /** If {@code rec} fully contains this sheet, check if there
                 doesn't exist a filled area in this sheet. If so, return
                 a list containing {@code this} and update the update rectangle.
                 If not, return {@code null}. */
-            if (hasFilled()) {
+            if (!isEmpty()) {
                 return null;
                 
             } else {
                 List<Sheet> mod = new ArrayList<Sheet>();
                 mod.add(this);
-                update = rec;
+                update = bounds;
                 return mod;
             }
             
         } else {
             /** Here it is known that the sheet has no children and is not
-                fully contained. Propagate the problem to the children.
-                If none finds a violation, return all sheets that should be
-                changed. Otherwise return null. */
+                fully contained by {@code rec}. Propagate the problem to the
+                children. If none finds a violation, return all sheets
+                that should be changed. Otherwise return null. */
             List<Sheet> mod = new ArrayList<Sheet>();
             
             // Test for every child whether the current rectangle is allowed.
@@ -186,6 +323,7 @@ public class Sheet extends Packer {
             // If the sheet has no children.
             // Update the location of the rectangle and check if it is valid.
             rec.setLocation(bounds.x, bounds.y);
+            
             // Check if the rectangle is still withing the root sheet.
             if (!root.getBounds().contains(rec)) return null;
             return root.check(rec);
@@ -275,61 +413,302 @@ public class Sheet extends Packer {
             
             if (!pX1 && !pY1) {
                 throw new IllegalStateException("The update rectangle does "
-                        + "not start at the lower left edge of the sheet!");
+                        + "not start at either the lower or the left edge "
+                        + "of the sheet!");
             }
             
-            ArrayList<Rectangle> addSheets = new ArrayList<Rectangle>();
+            // Determine and add the child sheets.
+            Sheet leftSheet = (pX1
+                    ? null
+                    : addLeftSheet(this, getLeft(), getDown()));
             
-            // Determine the bounds of the child sheets.
-            if (!pX1) { // ==> pY1 == true
-                addSheets.add(new Rectangle(
-                        bounds.x,
-                        bounds.y,
-                        update.x - bounds.x,
-                        bounds.height));
-            }
+            Sheet middleSheet = addMiddleSheet(this,
+                    (leftSheet == null
+                            ? getLeft()
+                            : leftSheet), getDown(), !pY1, !pY2);
             
-            if (!pY1) { // ==> pX1 == true
-                addSheets.add(new Rectangle(
-                        bounds.x,
-                        bounds.y,
-                        update.width,
-                        update.y - bounds.y));
-            }
+            if (!pX2) addRightSheet(this, middleSheet, getDown());
             
-            if (!pY2) {
-                addSheets.add(new Rectangle(
-                        bounds.x,
-                        bounds.y + update.height,
-                        update.width,
-                        bounds.height - update.height));
-            }
-            
-            if (!pX2) {
-                addSheets.add(new Rectangle(
-                        bounds.x + update.width,
-                        bounds.y,
-                        bounds.width,
-                        bounds.height));
-            }
-            
-            // Create and add all child sheets.
-            for (Rectangle add : addSheets) {
-                children.add(new Sheet(add, root, this));
-            }
-            
-            // Mark the filled update part as filled.
-            filled.add(update);
             // Check whether the current sheet is filled.
             updateFull();
             
+            /** Add cuts at the sheets below and on the left, using
+                the lower right corner as start point for the line downwards
+                and the upper left corner for the line to the left. Continues
+                until the line hits a filled area. */
+            /*
+            if (left != null) left.addCut(new HalfLine(
+                    update.x,
+                    update.y + update.height,
+                    HalfLine.Direction.LEFT), true);
+            
+            if (down != null) down.addCut(new HalfLine(
+                    update.x + update.width,
+                    update.y,
+                    HalfLine.Direction.DOWN), true);
+            */
         } else {
             parent.notifyFull(this);
         }
     }
     
     /**
-     * Tries to put the entry in the current sheet.
+     * Creates and adds a sheet that is on the left of the update rectangle.
+     * +---+
+     * |#  |
+     * |#* |
+     * |#  |
+     * +---+
+     * 
+     * @param parent the parent of the sheet to be created.
+     * @param leftSheet the left sheet of the sheet to be created.
+     * @param lowerSheet the lower sheet of the sheet to be created.
+     * @return the created sheet.
+     */
+    private Sheet addLeftSheet(Sheet parent, Sheet leftSheet,
+            Sheet lowerSheet) {
+        Sheet sheet = new Sheet(new Rectangle(
+                parent.bounds.x,
+                parent.bounds.y,
+                parent.update.x - bounds.x,
+                parent.bounds.height),
+            root, parent, leftSheet, lowerSheet);
+        
+        parent.children.add(sheet);
+        System.err.println("left");
+        return sheet;
+    }
+    
+    /**
+     * Creates and adds a sheet that is in the middle of the update rectangle.
+     * +---+
+     * | # |
+     * | * |
+     * | # |
+     * +---+
+     * 
+     * @param parent the parent of the sheet to be created.
+     * @param leftSheet the left sheet of the sheet to be created.
+     * @param lowerSheet the lower sheet of the sheet to be created.
+     * @param useDown whether to the middle sheet should include the area
+     *     below the update rectangle.
+     * @param useUp whether to the middle sheet should include the area
+     *     above the update rectangle.
+     * @return the created sheet. Returns {@code null} iff neither
+     *     {@code useUp} and {@code useDown} and adds the update to
+     *     {@code filled} of {@code parent}.
+     * 
+     * Uses {@link Sheet#addLowerSheet(Sheet, Sheet, Sheet)} and 
+     * {@link Sheet#addUpperSheet(Sheet, Sheet, Sheet)}.
+     */
+    private Sheet addMiddleSheet(Sheet parent, Sheet leftSheet,
+            Sheet lowerSheet, boolean useDown, boolean useUp) {
+        Sheet middleSheet;
+        
+        if (useUp) {
+            if (useDown) {
+                middleSheet = new Sheet(new Rectangle(
+                        parent.update.x,
+                        parent.bounds.y,
+                        parent.update.width,
+                        parent.bounds.height),
+                    root, parent, leftSheet, getDown());
+                middleSheet.update = parent.update;
+                
+                addLowerSheet(middleSheet, leftSheet, lowerSheet);
+                addUpperSheet(middleSheet, leftSheet, null);
+                
+                // Add the update to the middle sheet instead of
+                // the parent sheet and return the middle sheet.
+                middleSheet.filled.add(update);
+                parent.children.add(middleSheet);
+                return middleSheet;
+                
+            } else {
+                middleSheet = addUpperSheet(parent, leftSheet, lowerSheet);
+            }
+            
+        } else {
+            if (useDown) {
+                middleSheet = addLowerSheet(parent, leftSheet, lowerSheet);
+                
+            } else {
+                middleSheet = null;
+            }
+        }
+        
+        parent.filled.add(update);
+        if (middleSheet != null) parent.children.add(middleSheet);
+        return middleSheet;
+    }
+    
+    /**
+     * Creates and adds a sheet that is above of the update rectangle.
+     * +---+
+     * |   |
+     * | * |
+     * |###|
+     * +---+
+     * 
+     * @param parent the parent of the sheet to be created.
+     * @param leftSheet the left sheet of the sheet to be created.
+     * @param lowerSheet the lower sheet of the sheet to be created.
+     * @return the created sheet.
+     */
+    private Sheet addLowerSheet(Sheet parent, Sheet leftSheet,
+            Sheet lowerSheet) {
+        Sheet sheet = new Sheet(new Rectangle(
+                parent.bounds.x,
+                parent.bounds.y,
+                parent.bounds.width,
+                parent.update.y - parent.bounds.y),
+            root, parent, leftSheet, lowerSheet);
+        
+        parent.children.add(sheet);
+        System.err.println("down");
+        return sheet;
+    }
+    
+    /**
+     * Creates and adds a sheet that is below of the update rectangle.
+     * +---+
+     * |###|
+     * | * |
+     * |   |
+     * +---+
+     * 
+     * @param parent the parent of the sheet to be created.
+     * @param leftSheet the left sheet of the sheet to be created.
+     * @param lowerSheet the lower sheet of the sheet to be created.
+     * @return the created sheet.
+     */
+    private Sheet addUpperSheet(Sheet parent, Sheet leftSheet,
+            Sheet lowerSheet) {
+        Sheet sheet = new Sheet(new Rectangle(
+                parent.bounds.x,
+                parent.update.y + parent.update.height,
+                parent.bounds.width,
+                (parent.bounds.y + parent.bounds.height)
+                        - (parent.update.y + parent.update.height)),
+            root, parent, leftSheet, lowerSheet);
+        
+        parent.children.add(sheet);
+        System.err.println("up");
+        return sheet;
+    }
+    
+    /**
+     * Creates and adds a sheet that is on the right of the update rectangle.
+     * +---+
+     * |  #|
+     * | *#|
+     * |  #|
+     * +---+
+     * 
+     * @param parent the parent of the sheet to be created.
+     * @param leftSheet the left sheet of the sheet to be created.
+     * @param lowerSheet the lower sheet of the sheet to be created.
+     * @return the created sheet.
+     */
+    private Sheet addRightSheet(Sheet parent, Sheet leftSheet,
+            Sheet lowerSheet) {
+        Sheet sheet = new Sheet(new Rectangle(
+                parent.update.x + parent.update.width,
+                parent.bounds.y,
+                (parent.bounds.x + parent.bounds.width)
+                        - (parent.update.x + parent.update.width),
+                parent.bounds.height),
+            root, parent, leftSheet, lowerSheet);
+        
+        parent.children.add(sheet);
+        System.err.println("right");
+        return sheet;
+    }
+    
+    /**
+     * Adds an extra cut to the sheet.
+     * Distributes the cuts to its children.
+     * If no children available, cut the sheet according to the line.
+     * If the line has not yet hit a filled area, continue to the
+     * left/lower neighbor.
+     * 
+     * @param line the cut line.
+     * @param move whether the this sheet should ask its neighbor in the
+     *     direction of the line to continue the cut.
+     * @return whether a filled area was reached. Also returns {@code false}
+     *     if the line does not intersect the child.
+     */
+    public boolean addCut(HalfLine line) {
+        return addCut(line, true);
+    }
+    
+    protected boolean addCut(HalfLine line, boolean move) {
+        if (!line.intersects(bounds)) return false;
+        if (full) return true;
+        
+        if (!children.isEmpty()) {
+            // Determine the fist intersection coord.
+            int firstInterCoord = Integer.MIN_VALUE;
+            for (Rectangle fill : filled) {
+                if (line.intersects(fill)) {
+                    int newCoord = (line.dir == HalfLine.Direction.LEFT
+                            ? fill.x + fill.width
+                            : fill.y + fill.height);
+                    
+                    if (line.dir == HalfLine.Direction.LEFT &&
+                            firstInterCoord > newCoord) {
+                        firstInterCoord = newCoord;
+                    }
+                }
+            }
+            
+            // Iterate in reverse order to get the children in the order
+            // right to left, then up to down.
+            for (int i = children.size() - 1; i >= 0; i--) {
+                Sheet child = children.get(i);
+                int childCoord = (line.dir == HalfLine.Direction.LEFT
+                        ? child.bounds.x
+                        : child.bounds.y);
+                
+                if (childCoord > firstInterCoord) {
+                    if (child.addCut(line, move && i == 0)) {
+                        return true;
+                    }
+                }
+            }
+            
+        } else {
+            // Note that a sheet that doesn't have children is either
+            // completely full or empty.
+            if (line.dir == HalfLine.Direction.LEFT) {
+                update = new Rectangle(bounds.x, line.y, bounds.width, 0);
+                
+                Sheet lowerSheet = (update.y == bounds.y
+                        ? getDown()
+                        : addLowerSheet(this, getLeft(), getDown()));
+                
+                if (update.y != bounds.y + bounds.height) {
+                    addUpperSheet(this, getLeft(), lowerSheet);
+                }
+                
+            } else if (line.dir == HalfLine.Direction.DOWN) {
+                update = new Rectangle(line.x, bounds.y, 0, bounds.height);
+                
+                Sheet leftSheet = (update.x == bounds.x
+                        ? getLeft()
+                        : addLeftSheet(this, getLeft(), getDown()));
+                
+                if (update.x != bounds.x + bounds.width) {
+                    addRightSheet(this, leftSheet, getDown());
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Tries to add the entry in the current sheet.
      * If this sheet has children, distribute the placing of the entry
      * to them using {@link check(Rectangle)} and {@code fill()}.
      * 
@@ -341,8 +720,6 @@ public class Sheet extends Packer {
      * placed.
      */
     public boolean add(Dataset.Entry entry) {
-        Rectangle entryRec = entry.getRec();
-        
         List<Sheet> mod = put(entry.getRec());
         if (mod == null) return false;
         
@@ -352,15 +729,221 @@ public class Sheet extends Packer {
         
         return true;
     }
-
+    
+    /**
+     * Packs the given rectangles in the given box.
+     * 
+     * @param dataset the rectangles and the box data.
+     * @return the new locations of the rectangles within the box.
+     *     Returns {@code null} if no solution could be found.
+     */
+    @Override
     public Dataset pack(Dataset dataset) {
         Dataset clone = dataset.clone();
-        clone.setSize(this.bounds.width, this.bounds.height);
+        
         for (Dataset.Entry entry : clone.sorted()) {
             if (!add(entry)) {
                 return null;
             }
         }
+        
         return clone;
     }
+    
+    
+    /**
+     * @param rec the rectangle to give the representation of.
+     * @return a simple String representation of {@code rec}.
+     */
+    public String recToString(Rectangle rec) {
+        return "[x=" + rec.x + ", y=" + rec.y + ", width=" + rec.width
+                + ", height=" + rec.height + "]";
+    }
+    
+    
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[box:" + recToString(bounds) + ", ");
+        
+        sb.append("filled:[");
+        String[] fillBoxes = new String[filled.size()];
+        for (int i = 0; i < filled.size(); i++) {
+            fillBoxes[i] = recToString(filled.get(i));
+        }
+        sb.append(String.join(", ", fillBoxes) + "], ");
+        
+        sb.append("child boxes:[");
+        String[] childBoxes = new String[children.size()];
+        for (int i = 0; i < children.size(); i++) {
+            childBoxes[i] = recToString(children.get(i).bounds);
+        }
+        sb.append(String.join(", ", childBoxes) + "]]");
+        
+        return sb.toString();
+    }
+    
+    public String toTreeString() {
+        StringBuilder sb = new StringBuilder();
+        for (StringBuilder line : toTreeStringList()) {
+            sb.append(line);
+            sb.append(System.getProperty("line.separator"));
+        }
+        
+        return sb.toString();
+    }
+    
+    public List<StringBuilder> toTreeStringList() {
+        List<StringBuilder> list = toTreeStringList(' ', ' ');
+        list.remove(0);
+        return list;
+    }
+    
+    private List<StringBuilder> toTreeStringList(char treeChar,
+            char spacingChar) {
+        List<StringBuilder> list = new ArrayList<StringBuilder>();
+        
+        list.add(new StringBuilder().append(treeChar));
+        list.add(new StringBuilder("[" + bounds.width + "x" + bounds.height
+                + "@" + bounds.x + "," + bounds.y + "]"));
+        
+        int curSpacing = 0;
+        for (int i = 0; i < children.size(); i++) {
+            char childTree = '┬';
+            char childSpacing = '─';
+            
+            if (children.size() == 1) {
+                childTree = '│';
+                childSpacing = ' ';
+                
+            } else {
+                if (i == 0) {
+                    childTree = '├';
+                    
+                } else if (i == children.size() - 1) {
+                    childTree = '┐';
+                    childSpacing = ' ';
+                }
+            }
+            
+            char spacing = (i % 2 == 0
+                    ? childSpacing
+                    : ' ');
+            
+            List<StringBuilder> childList = children.get(i)
+                    .toTreeStringList(childTree, childSpacing);
+            
+            int longestDist = 0;
+            for (int j = 0; j < childList.size(); j++) {
+                StringBuilder elem = childList.get(j);
+                
+                // Update the longest distance.
+                if (elem.length() > longestDist) {
+                    longestDist = elem.length();
+                }
+                
+                if (j + 2 > list.size() - 1) {
+                    StringBuilder newSb = new StringBuilder();
+                    
+                    newSb.append(MultiTool.fill(' ', curSpacing));
+                    newSb.append(elem);
+                    list.add(newSb);
+                    
+                } else {
+                    StringBuilder listElem = list.get(j + 2);
+                    int length = listElem.length();
+                    
+                    char leftSpacing = (j % 2 == 0
+                            ? (j == 0 ? '─' : ' ')
+                            : ' ');
+                    listElem.append(MultiTool
+                            .fill(leftSpacing,
+                                    curSpacing - length));
+                    listElem.append(elem);
+                }
+            }
+                
+            curSpacing += longestDist;
+        }
+        
+        
+        list.get(0).append(MultiTool.fill(spacingChar, curSpacing - 2));
+        
+        return list;
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) return false;
+        if (!(obj instanceof Sheet)) return false;
+        if (obj == this) return true;
+        
+        Sheet sheet = (Sheet) obj;
+        return bounds.equals(sheet.bounds) &&
+               boundCheck(root,   sheet.root  ) &&
+               boundCheck(parent, sheet.parent) &&
+               boundCheck(left,   sheet.left  ) &&
+               boundCheck(down,   sheet.down  ) &&
+               boundCheck(up,     sheet.up    ) &&
+               boundCheck(right,  sheet.right ) &&
+               filled.equals(sheet.filled) &&
+               children.size() == sheet.children.size() &&
+               full == sheet.full;
+    }
+    
+    /**
+     * Checks whether the bounds of two sheets are equal.
+     * 
+     * @param s1 sheet 1 to compare.
+     * @param s2 sheet 2 to compare.
+     * @return if {@code s1} == {@code s2} == {@code null}, return true.
+     *     If either {@code s1} or {@code s2} equal {@code null}, return false.
+     *     Otherwise return whether the bounds of {@code s1} equal the bounds
+     *     of {@code s2.
+     */
+    private static boolean boundCheck(Sheet s1, Sheet s2) {
+        if (s1 == s2) return true;
+        if (s1 == null || s2 == null) return false;
+        return s1.bounds.equals(s2.bounds);
+    }
+    
+    /**
+     * Checks whether {@code obj} is equal to {@code this} using a deep check.
+     * 
+     * @param obj the object to check.
+     * @return wiether {@code obj} is deep equal to {@code this}.
+     * 
+     * WARNING: use this function with caution, as it might cause
+     * infinite loops when {@code left}, {@code down}, {@code up} or
+     * {@code right} of either objects are refferences to sheets higher
+     * in the hierarchy. The same holds for ALL direct and indirect children
+     * of both object ({@code this} and {@code obj}).
+     */
+    public boolean deepEquals(Object obj) {
+        if (obj == null) return false;
+        if (!(obj instanceof Sheet)) return false;
+        if (obj == this) return true;
+        
+        Sheet sheet = (Sheet) obj;
+        return bounds  .equals(sheet.bounds) &&
+               root    .equals(sheet.root) &&
+               parent  .equals(sheet.parent) &&
+               left    .deepEquals(sheet.left) &&
+               down    .deepEquals(sheet.down) &&
+               up      .deepEquals(sheet.up) &&
+               right   .deepEquals(sheet.right) &&
+               filled  .equals(sheet.filled) &&
+               children.equals(sheet.children) &&
+               full == sheet.full;
+    }
+    
+    @Override
+    public int hashCode() {
+        // Note that the sheets like {@code root}, {@code parent} and
+        // {@code left} are NOT FULLY taken into account to prevent recursion.
+        return MultiTool.calcHashCode(bounds, full, filled, children.size(),
+                (left == null), (down == null), (up == null), (right == null),
+                (root == null), (parent == null));
+    }
+    
 }
