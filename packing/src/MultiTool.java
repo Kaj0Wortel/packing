@@ -502,11 +502,15 @@ public class MultiTool {
      * @param size length of the text.
      */
     public static String fillSpaceLeft(String text, int size) {
+        StringBuilder sb = new StringBuilder();
+        
         for (int i = text.length(); i < size; i++) {
-            text = " " + text;
+            sb.append(" ");
         }
         
-        return text;
+        sb.append(text);
+        
+        return sb.toString();
     }
     
     /* 
@@ -519,11 +523,30 @@ public class MultiTool {
      * @param size length of the text.
      */
     public static String fillSpaceRight(String text, int size) {
+        StringBuilder sb = new StringBuilder(text);
+        
         for (int i = text.length(); i < size; i++) {
-            text = text + " ";
+            sb.append(" ");
         }
         
-        return text;
+        return sb.toString();
+    }
+    
+    /**
+     * Creates a {@link StringBuilder} containing {@code c} {@code n} times.
+     * 
+     * @param c the characer to be repeated.
+     * @param n the number of occurances.
+     * @return a {@link StringBuilder} containing {@code c} {@code n} times.
+     */
+    public static StringBuilder fill(char c, int n) {
+        StringBuilder sb = new StringBuilder();
+        
+        for (int i = 0; i < n; i++) {
+            sb.append(c);
+        }
+        
+        return sb;
     }
     
     /* 
@@ -698,8 +721,8 @@ public class MultiTool {
             return (V) deepArrayClone(safeObjArrCast(value));
             
         } else {
-            if (value instanceof Cloneable) {
-                return (V) ((Cloneable) value).clone();
+            if (value instanceof tmp.Cloneable) {
+                return (V) ((tmp.Cloneable) value).clone();
                 
             } else if (value instanceof java.lang.Cloneable) {
                 try {
