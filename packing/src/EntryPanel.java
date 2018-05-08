@@ -49,8 +49,8 @@ public class EntryPanel
     protected void paintBorder(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
         
-        int barWidth = (int) (0.1 * getWidth());
-        int barHeight = (int) (0.1 * getHeight());
+        int barWidth = (int) (0.1 * getWidth() + 0.5);
+        int barHeight = (int) (0.1 * getHeight() + 0.5);
         
         // Draw gray bars around the panel.
         g2d.setPaint(new Color(150, 150, 150));
