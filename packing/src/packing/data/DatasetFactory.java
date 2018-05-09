@@ -1,4 +1,7 @@
 
+package packing.data;
+
+
 // Java imports
 import java.awt.Rectangle;
 

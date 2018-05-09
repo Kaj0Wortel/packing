@@ -1,4 +1,12 @@
 
+package packing.packer;
+
+
+// Packing imports
+import packing.data.*;
+import packing.tools.*;
+
+
 // Java imports
 import java.awt.Rectangle;
 
@@ -504,6 +512,7 @@ public class Sheet extends Packer {
     private Sheet addMiddleSheet(Sheet parent, Sheet leftSheet,
             Sheet lowerSheet, boolean useDown, boolean useUp) {
         Sheet middleSheet;
+        System.err.println(update);
         
         if (useUp) {
             if (useDown) {
@@ -515,9 +524,11 @@ public class Sheet extends Packer {
                     root, parent, leftSheet, getDown());
                 middleSheet.update = parent.update;
                 
+                System.err.println(middleSheet);
                 addLowerSheet(middleSheet, leftSheet, lowerSheet);
+                System.err.println(middleSheet);
                 addUpperSheet(middleSheet, leftSheet, null);
-                
+                System.err.println(middleSheet);
                 // Add the update to the middle sheet instead of
                 // the parent sheet and return the middle sheet.
                 middleSheet.filled.add(update);
@@ -946,4 +957,62 @@ public class Sheet extends Packer {
                 (root == null), (parent == null));
     }
     
+    
+    // tmp
+    public static void main(String[] args) {
+        String fs = System.getProperty("file.separator");
+        String ls = System.getProperty("line.separator");
+        String fileName = System.getProperty("user.dir") + fs + "src" + fs + "log" + fs + "log.log";
+        System.err.println("Logfile: " + System.getProperty("user.dir") + fs + "log" + fs + "log.log");
+        Logger.setDefaultLogger(new FileLogger(fileName));
+        Logger.setLogHeader("Date: &date&" + System.getProperty("line.separator"));
+        
+        HalfLine downLine = new HalfLine(1, 10, HalfLine.Direction.DOWN);
+        HalfLine downLine2 = new HalfLine(2, 10, HalfLine.Direction.DOWN);
+        HalfLine leftLine = new HalfLine(10, 2, HalfLine.Direction.LEFT);
+        Rectangle rec = new Rectangle(10, 10);
+        Rectangle fill = new Rectangle(2, 2);
+        Sheet main = new Sheet(rec);
+        
+        /*
+        Sheet main = new Sheet(rec);
+        main.addCut(downLine);
+        main.addCut(downLine2);
+        main.addCut(leftLine);
+        
+        
+        tmp.Logger.write(ls + main.toTreeString());
+        */
+        
+        List<Sheet> list = main.put(new Rectangle(0, 1, 2, 2));
+        for (Sheet up : list) {
+            up.fill();
+        }
+        Logger.write(ls + main.toTreeString());
+        //System.err.println(main.children);
+        
+        System.err.println("----------------");
+        list = main.put(new Rectangle(0, 3, 4, 2));
+        for (Sheet up : list) {
+            up.fill();
+        }
+        Logger.write(ls + main.toTreeString());
+        /*
+        System.out.println("1: " + main);
+        MultiTool.sleepThread(10);
+        main.addCut(downLine);
+        MultiTool.sleepThread(10);
+        System.out.println("2: " + main);
+        MultiTool.sleepThread(10);
+        main.addCut(leftLine);
+        MultiTool.sleepThread(10);
+        System.out.println("3: " + main);
+        System.out.println("3.left: " + main.children.get(0));
+        System.out.println("3.right: " + main.children.get(1));
+        main.put(fill);
+        System.out.println("3: " + main);
+        System.out.println("3.left: " + main.children.get(0));
+        System.out.println("3.right: " + main.children.get(1));*/
+        
+    }
 }

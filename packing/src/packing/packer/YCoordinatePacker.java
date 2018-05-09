@@ -1,3 +1,11 @@
+
+package packing.packer;
+
+
+// Packing imports
+import packing.data.*;
+
+
 /**
  * Given a perfect packing instance with assigned X-coordinates, calculate a solution
  * to assign the Y-coordinates.

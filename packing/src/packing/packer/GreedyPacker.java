@@ -1,3 +1,11 @@
+
+package packing.packer;
+
+
+// Packing imports
+import packing.data.*;
+
+
 import java.awt.Rectangle;
 import java.util.SortedSet;
 import java.util.TreeSet;

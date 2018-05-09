@@ -1,4 +1,12 @@
 
+package packing.generator;
+
+
+// Packing imports
+import packing.data.*;
+import packing.packer.*;
+
+
 // Java imports
 import java.awt.Rectangle;
 

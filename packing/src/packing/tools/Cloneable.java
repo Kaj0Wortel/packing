@@ -11,6 +11,9 @@
  * without my permission.                                                    *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+package packing.tools;
+
+
 
 /* 
  * A usefull interface that forces the implementer to have a public

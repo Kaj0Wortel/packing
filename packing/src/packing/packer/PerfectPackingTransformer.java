@@ -1,3 +1,11 @@
+
+package packing.packer;
+
+
+// Packing imports
+import packing.data.*;
+
+
 /**
  * Transforms a dataset into a perfect packing instance, such that any
  * solution perfectly fills in the bounding box.

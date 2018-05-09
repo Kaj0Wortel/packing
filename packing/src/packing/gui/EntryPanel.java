@@ -1,4 +1,11 @@
 
+package packing.gui;
+
+
+// Packing imports
+import packing.data.*;
+
+
 // Java imports
 import java.awt.Color;
 import java.awt.Container;

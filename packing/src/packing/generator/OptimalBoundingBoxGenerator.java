@@ -1,3 +1,12 @@
+
+package packing.generator;
+
+
+// Packing imports
+import packing.data.*;
+import packing.packer.*;
+
+
 /**
  * Generates bounding boxes by increasing area, starting at a lower bound
  * for the Dataset instance. When used with an optimal packer, this ensures

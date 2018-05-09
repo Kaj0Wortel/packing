@@ -1,4 +1,11 @@
 
+package packing.data;
+
+
+// Packing imports
+import packing.tools.*;
+
+
 // Java imports
 import java.awt.Rectangle;
 
@@ -7,7 +14,7 @@ import java.awt.Rectangle;
  * Abstract dataset for the rectangles and additional parameters.
  */
 public abstract class Dataset
-        implements Iterable<Dataset.Entry>, Cloneable {
+        implements Iterable<Dataset.Entry>, packing.tools.Cloneable {
     /* -------------------------------------------------------------------------
      * Variables
      * -------------------------------------------------------------------------
@@ -34,7 +41,7 @@ public abstract class Dataset
      * -------------------------------------------------------------------------
      */
     public class Entry
-            implements Cloneable {
+            implements packing.tools.Cloneable {
         // The rectangle.
         final private Rectangle rec;
         

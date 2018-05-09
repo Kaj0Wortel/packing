@@ -1,3 +1,11 @@
+
+package packing.packer;
+
+
+// Packing imports
+import packing.data.*;
+
+
 /**
  * Assign the X-coordinate to every rectangle in the dataset, then call an inner packer
  * to assign the Y-coordinate.
