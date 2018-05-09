@@ -721,8 +721,8 @@ public class MultiTool {
             return (V) deepArrayClone(safeObjArrCast(value));
             
         } else {
-            if (value instanceof tmp.Cloneable) {
-                return (V) ((tmp.Cloneable) value).clone();
+            if (value instanceof Cloneable) {
+                return (V) ((Cloneable) value).clone();
                 
             } else if (value instanceof java.lang.Cloneable) {
                 try {
