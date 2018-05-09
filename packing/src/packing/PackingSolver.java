@@ -1,4 +1,15 @@
 
+package packing;
+
+
+// Package imports
+import packing.data.*;
+import packing.generator.*;
+import packing.gui.*;
+import packing.io.*;
+import packing.packer.*;
+
+
 // Java imports
 import java.io.File;
 import java.io.IOException;
