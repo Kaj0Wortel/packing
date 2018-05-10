@@ -18,9 +18,11 @@ import java.util.List;
  * This class keeps track of what part of it is filled and what part isn't.
  */
 public class Sheet extends Packer {
-    Rectangle bounds;
+    // The size and offset of the sheet.
+    protected Rectangle bounds;
     
-    boolean full;
+    // Whether the sheet is completely full.
+    protected boolean full;
     
     // The children of this sheet. All entries MUST be ordered in the same
     // way they are visited for checking where to add a rectangle.
@@ -363,14 +365,21 @@ public class Sheet extends Packer {
         
         // Set the sheet to full.
         fullSheet.full = true;
+        fullSheet.children.clear();
+        fullSheet.filled.clear();
         
         /** If there are now no more children, we know that the sheet is full
             since if there once were children, then all the available parts of
             this sheet have been distributed among them. So if all of them are
             full, so is this sheet. */
         if (children.isEmpty()) {
-            full = true;
-            parent.notifyFull(this);
+            if (parent != null) {
+                parent.notifyFull(this);
+                
+            } else {
+                full = true;
+                filled.clear();
+            }
             
         } else {
             // Otherwise simply add a full area to the sheet.
@@ -430,10 +439,8 @@ public class Sheet extends Packer {
                     ? null
                     : addLeftSheet(this, getLeft(), getDown()));
             
-            Sheet middleSheet = addMiddleSheet(this,
-                    (leftSheet == null
-                            ? getLeft()
-                            : leftSheet), getDown(), !pY1, !pY2);
+            Sheet middleSheet = addMiddleSheet(this, leftSheet, getDown(),
+                    !pY1, !pY2);
             
             if (!pX2) addRightSheet(this, middleSheet, getDown());
             
@@ -444,17 +451,17 @@ public class Sheet extends Packer {
                 the lower right corner as start point for the line downwards
                 and the upper left corner for the line to the left. Continues
                 until the line hits a filled area. */
-            /*
+            
             if (left != null) left.addCut(new HalfLine(
                     update.x,
                     update.y + update.height,
-                    HalfLine.Direction.LEFT), true);
+                    HalfLine.Direction.LEFT));
             
             if (down != null) down.addCut(new HalfLine(
                     update.x + update.width,
                     update.y,
-                    HalfLine.Direction.DOWN), true);
-            */
+                    HalfLine.Direction.DOWN));
+            
         } else {
             parent.notifyFull(this);
         }
@@ -483,7 +490,6 @@ public class Sheet extends Packer {
             root, parent, leftSheet, lowerSheet);
         
         parent.children.add(sheet);
-        System.err.println("left");
         return sheet;
     }
     
@@ -511,46 +517,42 @@ public class Sheet extends Packer {
      */
     private Sheet addMiddleSheet(Sheet parent, Sheet leftSheet,
             Sheet lowerSheet, boolean useDown, boolean useUp) {
-        Sheet middleSheet;
-        System.err.println(update);
+        if (leftSheet == null) leftSheet = getLeft();
         
-        if (useUp) {
-            if (useDown) {
-                middleSheet = new Sheet(new Rectangle(
-                        parent.update.x,
-                        parent.bounds.y,
-                        parent.update.width,
-                        parent.bounds.height),
-                    root, parent, leftSheet, getDown());
-                middleSheet.update = parent.update;
-                
-                System.err.println(middleSheet);
-                addLowerSheet(middleSheet, leftSheet, lowerSheet);
-                System.err.println(middleSheet);
-                addUpperSheet(middleSheet, leftSheet, null);
-                System.err.println(middleSheet);
-                // Add the update to the middle sheet instead of
-                // the parent sheet and return the middle sheet.
-                middleSheet.filled.add(update);
-                parent.children.add(middleSheet);
-                return middleSheet;
-                
-            } else {
-                middleSheet = addUpperSheet(parent, leftSheet, lowerSheet);
-            }
-            
-        } else {
-            if (useDown) {
-                middleSheet = addLowerSheet(parent, leftSheet, lowerSheet);
-                
-            } else {
-                middleSheet = null;
-            }
+        if (useUp && useDown) {
+            // If both up and down should be added, an extra sheet must be added
+            // to contain both parts.
+            Sheet middleSheet = new Sheet(new Rectangle(
+                    parent.update.x,
+                    parent.bounds.y,
+                    parent.update.width,
+                    parent.bounds.height),
+                root, parent, leftSheet, getDown());
+            middleSheet.update = parent.update;
+
+            addLowerSheet(middleSheet, leftSheet, lowerSheet);
+            addUpperSheet(middleSheet, leftSheet, null);
+            // Add the update to the middle sheet instead of
+            // the parent sheet and return the middle sheet.
+            middleSheet.filled.add(update);
+            parent.children.add(middleSheet);
+            return middleSheet;
         }
         
+        // In the remaining cases, the update should always be added
+        // to the parent sheet.
         parent.filled.add(update);
-        if (middleSheet != null) parent.children.add(middleSheet);
-        return middleSheet;
+        
+        if (useUp) {
+            return addUpperSheet(parent, leftSheet, lowerSheet);
+        }
+        
+        if (useDown) {
+            return addLowerSheet(parent, leftSheet, lowerSheet);
+        }
+        
+        // In all other cases, no middle sheet should be created.
+        return null;
     }
     
     /**
@@ -558,7 +560,7 @@ public class Sheet extends Packer {
      * +---+
      * |   |
      * | * |
-     * |###|
+     * | # |
      * +---+
      * 
      * @param parent the parent of the sheet to be created.
@@ -569,21 +571,20 @@ public class Sheet extends Packer {
     private Sheet addLowerSheet(Sheet parent, Sheet leftSheet,
             Sheet lowerSheet) {
         Sheet sheet = new Sheet(new Rectangle(
-                parent.bounds.x,
+                parent.update.x,
                 parent.bounds.y,
-                parent.bounds.width,
+                parent.update.width,
                 parent.update.y - parent.bounds.y),
             root, parent, leftSheet, lowerSheet);
         
         parent.children.add(sheet);
-        System.err.println("down");
         return sheet;
     }
     
     /**
      * Creates and adds a sheet that is below of the update rectangle.
      * +---+
-     * |###|
+     * | # |
      * | * |
      * |   |
      * +---+
@@ -596,15 +597,14 @@ public class Sheet extends Packer {
     private Sheet addUpperSheet(Sheet parent, Sheet leftSheet,
             Sheet lowerSheet) {
         Sheet sheet = new Sheet(new Rectangle(
-                parent.bounds.x,
+                parent.update.x,
                 parent.update.y + parent.update.height,
-                parent.bounds.width,
+                parent.update.width,
                 (parent.bounds.y + parent.bounds.height)
                         - (parent.update.y + parent.update.height)),
             root, parent, leftSheet, lowerSheet);
         
         parent.children.add(sheet);
-        System.err.println("up");
         return sheet;
     }
     
@@ -632,7 +632,6 @@ public class Sheet extends Packer {
             root, parent, leftSheet, lowerSheet);
         
         parent.children.add(sheet);
-        System.err.println("right");
         return sheet;
     }
     
@@ -658,16 +657,19 @@ public class Sheet extends Packer {
         if (full) return true;
         
         if (!children.isEmpty()) {
-            // Determine the fist intersection coord.
+            // Determine the first intersection coord value.
+            // This value represents the first intersection
             int firstInterCoord = Integer.MIN_VALUE;
             for (Rectangle fill : filled) {
                 if (line.intersects(fill)) {
-                    int newCoord = (line.dir == HalfLine.Direction.LEFT
-                            ? fill.x + fill.width
-                            : fill.y + fill.height);
+                    // Calculate the new coordinate value.
+                    int newCoord = Integer.MIN_VALUE;
+                    if (line.dir == HalfLine.Direction.LEFT)
+                        newCoord = fill.x + fill.width;
+                    else if (line.dir == HalfLine.Direction.DOWN)
+                        newCoord = fill.y + fill.height;
                     
-                    if (line.dir == HalfLine.Direction.LEFT &&
-                            firstInterCoord > newCoord) {
+                    if (firstInterCoord > newCoord) {
                         firstInterCoord = newCoord;
                     }
                 }
@@ -677,10 +679,15 @@ public class Sheet extends Packer {
             // right to left, then up to down.
             for (int i = children.size() - 1; i >= 0; i--) {
                 Sheet child = children.get(i);
-                int childCoord = (line.dir == HalfLine.Direction.LEFT
-                        ? child.bounds.x
-                        : child.bounds.y);
                 
+                // Calculate the child coordinate value.
+                int childCoord = Integer.MIN_VALUE;
+                if (line.dir == HalfLine.Direction.LEFT)
+                    childCoord = child.bounds.x + child.bounds.width;
+                else if (line.dir == HalfLine.Direction.DOWN)
+                    childCoord = child.bounds.y + child.bounds.height;
+                
+                // Check if there is a filled area before the child.
                 if (childCoord > firstInterCoord) {
                     if (child.addCut(line, move && i == 0)) {
                         return true;
@@ -688,10 +695,17 @@ public class Sheet extends Packer {
                 }
             }
             
+            return firstInterCoord != Integer.MIN_VALUE;
+            
         } else {
             // Note that a sheet that doesn't have children is either
             // completely full or empty.
+            
             if (line.dir == HalfLine.Direction.LEFT) {
+                if (line.y == bounds.y || line.y == bounds.y + bounds.height) {
+                    return false;
+                }
+                
                 update = new Rectangle(bounds.x, line.y, bounds.width, 0);
                 
                 Sheet lowerSheet = (update.y == bounds.y
@@ -703,6 +717,10 @@ public class Sheet extends Packer {
                 }
                 
             } else if (line.dir == HalfLine.Direction.DOWN) {
+                if (line.x == bounds.x || line.x == bounds.x + bounds.width) {
+                    return false;
+                }
+                
                 update = new Rectangle(line.x, bounds.y, 0, bounds.height);
                 
                 Sheet leftSheet = (update.x == bounds.x
@@ -957,15 +975,16 @@ public class Sheet extends Packer {
                 (root == null), (parent == null));
     }
     
+    final public static String FS = System.getProperty("file.separator");
+    final public static String LS = System.getProperty("line.separator");
     
     // tmp
     public static void main(String[] args) {
-        String fs = System.getProperty("file.separator");
-        String ls = System.getProperty("line.separator");
-        String fileName = System.getProperty("user.dir") + fs + "src" + fs + "log" + fs + "log.log";
-        System.err.println("Logfile: " + System.getProperty("user.dir") + fs + "log" + fs + "log.log");
+        String fileName = System.getProperty("user.dir")
+                + FS + "src" + FS + "log.log";
+        System.err.println("Logfile: " + fileName);
         Logger.setDefaultLogger(new FileLogger(fileName));
-        Logger.setLogHeader("Date: &date&" + System.getProperty("line.separator"));
+        Logger.setLogHeader("Date: &date&" + LS);
         
         HalfLine downLine = new HalfLine(1, 10, HalfLine.Direction.DOWN);
         HalfLine downLine2 = new HalfLine(2, 10, HalfLine.Direction.DOWN);
@@ -984,19 +1003,37 @@ public class Sheet extends Packer {
         tmp.Logger.write(ls + main.toTreeString());
         */
         
-        List<Sheet> list = main.put(new Rectangle(0, 1, 2, 2));
-        for (Sheet up : list) {
-            up.fill();
-        }
-        Logger.write(ls + main.toTreeString());
-        //System.err.println(main.children);
         
-        System.err.println("----------------");
-        list = main.put(new Rectangle(0, 3, 4, 2));
-        for (Sheet up : list) {
-            up.fill();
+        Rectangle[] input = new Rectangle[] {
+            /*
+            new Rectangle(1, 1),
+            new Rectangle(2, 1),
+            new Rectangle(2, 8),
+            new Rectangle(9, 1),
+            new Rectangle(8, 9)
+            /*
+            new Rectangle(1, 5),
+            new Rectangle(1, 6),
+            new Rectangle(2, 1)
+            /**/
+            new Rectangle(1, 5),
+            new Rectangle(2, 5),
+            new Rectangle(1, 6)
+            /**/
+        };
+        
+        
+        for (Rectangle in : input) {
+            List<Sheet> mod = main.put(in);
+            for (Sheet modSheet : mod) {
+                modSheet.fill();
+            }
+            Logger.write(LS + main.toTreeString());
         }
-        Logger.write(ls + main.toTreeString());
+        
+        System.out.println(main);
+        System.out.println(main.full);
+        
         /*
         System.out.println("1: " + main);
         MultiTool.sleepThread(10);

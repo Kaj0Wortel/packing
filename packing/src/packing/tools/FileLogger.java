@@ -106,6 +106,10 @@ public class FileLogger extends DefaultLogger {
         // Close any previously open writers.
         close();
         
+        if (!logFile.getParentFile().exists()) {
+            logFile.getParentFile().mkdirs();
+        }
+        
         // Create the new writer.
         writer = new PrintWriter
             (new BufferedWriter(new FileWriter(logFile, append)));
