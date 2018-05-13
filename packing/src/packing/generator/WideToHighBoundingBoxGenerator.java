@@ -59,7 +59,8 @@ public class WideToHighBoundingBoxGenerator extends Generator {
                     best = packed;
                 }
                 width = best.getEffectiveWidth();
-                --width;
+                //--width;
+                width -= decreaseWidth(packed);
             } else {
                 ++height;
             }
@@ -72,5 +73,26 @@ public class WideToHighBoundingBoxGenerator extends Generator {
         //System.err.println("interrupted!");
         stopped = true;
     }
+    
+    /**
+     * determines by how much the height has to increase when decreasing the width
+     * @param dataset solution set
+     * @return height of the tallest rectangle that touches the right edge
+    */
+    public int decreaseWidth(Dataset dataset){
+        int heightToBeAdded = 0;
+        
+        for(Dataset.Entry entry: dataset){
+            Rectangle rect = entry.getRec();
+            if((rect.x + rect.width == dataset.getEffectiveWidth()) 
+                    && rect.height > heightToBeAdded){
+                heightToBeAdded = rect.height;
+            }
+            
+        }
+        return heightToBeAdded;
+    }
+    
+    
     
 }
