@@ -283,6 +283,9 @@ class GreedyPacker extends Packer {
         clone.setSize(width, height);
         for (Dataset.Entry entry : clone.sorted()) {
             if (!fitEntry(entry)) {
+                if (dataset.allowRotation()) {
+                    entry.setRotation(!entry.useRotation());
+                }
                 return null;
             }
         }

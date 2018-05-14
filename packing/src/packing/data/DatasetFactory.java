@@ -84,7 +84,7 @@ public class DatasetFactory {
     private static Dataset createDataset(int height, boolean rotation,
                                          int numRect, List<String> input) {
         if (true) {// todo
-            return new TestDataset(height, rotation, numRect);
+            return new RotatedDataset(height, rotation, numRect);
         }
         
         return null;

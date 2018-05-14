@@ -772,6 +772,9 @@ public class Sheet extends Packer {
         
         for (Dataset.Entry entry : clone.sorted()) {
             if (!add(entry)) {
+                if (dataset.allowRotation()) {
+                    entry.setRotation(!entry.useRotation());
+                }
                 return null;
             }
         }
