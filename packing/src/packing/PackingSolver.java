@@ -34,7 +34,8 @@ public class PackingSolver {
         = System.getProperty("user.dir") + FS + "testcases" + FS
             //+ "03_01_h20_rn.txt";
             //+ "test_case_9_10000.txt";
-            + "25_01_h19_ry.txt";
+            //+ "25_01_h19_ry.txt";
+            + "25_04_h74_rn.txt";
     
     final public static File[] testFiles
         = new File(System.getProperty("user.dir") + FS).listFiles();
@@ -126,7 +127,18 @@ public class PackingSolver {
             in = testFile;
         }
         
-        new PackingSolver().run(in, out);
+        for (File file : testFiles) {
+            in = file.toString();
+            System.err.println("Testfile: " + in);
+            
+            try {    
+                new PackingSolver().run(in, out);
+                
+            } catch (Exception e) {
+                System.err.println(e);
+            }
+        }
+        //new PackingSolver().run(in, out);
     }
     
 }
