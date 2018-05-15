@@ -58,7 +58,7 @@ public class WideToHighBoundingBoxGenerator extends Generator {
                 if (best == null || packed.getArea() < best.getArea()) {
                     best = packed;
                 }
-                width = best.getEffectiveWidth();
+                width = packed.getEffectiveWidth();
                 //--width;
                 width -= decreaseWidth(packed);
             } else {
