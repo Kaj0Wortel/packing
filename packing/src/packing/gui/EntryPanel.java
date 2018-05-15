@@ -9,6 +9,7 @@ import packing.data.*;
 // Java imports
 import java.awt.Color;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
@@ -20,6 +21,17 @@ import java.awt.Insets;
 
 public class EntryPanel
         extends JPanel {
+    // The parent container.
+    final private Container container;
+    
+    // The rectangle to be shown.
+    final private Rectangle rec;
+    
+    // The size of the total dataset.
+    final private int dataWidth;
+    final private int dataHeight;
+    
+    
     /* 
      * @param entry the entry to represent.
      * @param container the parent container.
@@ -27,29 +39,38 @@ public class EntryPanel
      * @param fieldHeight the maximum height of the dataset.
      */
     public EntryPanel(Dataset.Entry entry, Container container,
-                      int fieldWidth, int fieldHeight) {
-        // Set null layout.
+            int dataWidth, int dataHeight) {
+        // Create JPanel with null layout.
         super(null);
         
         // Obtain the rectangle.
-        Rectangle rec = entry.getRec();
+        rec = entry.getRec();
+        
+        // Set container.
+        this.container = container;
+        
+        // Set the data size.
+        this.dataWidth = dataWidth;
+        this.dataHeight = dataHeight;
         
         // Set the default background.
         setBackground(Color.GREEN);
-        
+    }
+    
+    public void update() {
         // Calculate the available width.
         Insets in = container.getInsets();
         int containerWidth = container.getWidth() - in.left - in.right;
         int containerHeight = container.getHeight() - in.top - in.bottom;
         
         // Set the size and location of the rectangle.
-        setSize(containerWidth  * rec.width  / fieldWidth,
-                containerHeight * rec.height / fieldHeight);
+        setSize(containerWidth  * rec.width  / dataWidth,
+                containerHeight * rec.height / dataHeight);
         //System.err.println(rec.x);
         //System.out.println(rec.y);
-        setLocation(containerWidth * rec.x  / fieldWidth,
+        setLocation(containerWidth * rec.x  / dataWidth,
                     containerHeight - getHeight()
-                            - containerHeight * rec.y  / fieldHeight);
+                            - containerHeight * rec.y  / dataHeight);
     }
     
     @Override
@@ -72,6 +93,11 @@ public class EntryPanel
         
         // Dispose the graphics object to prevent any further changes.
         g2d.dispose();
+    }
+    
+    @Override
+    public Dimension getPreferredSize() {
+        return new Dimension(getWidth(), getHeight());
     }
     
 }
