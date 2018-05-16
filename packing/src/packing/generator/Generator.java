@@ -25,9 +25,8 @@ public abstract class Generator {
         try {
             generateSolution(dataset);
             
-        } catch (Exception e) {
-            System.err.println(e);
-            System.err.println("stopped!");
+        } catch (ThreadDeath e) {
+            System.err.println("TERMINATED BY TIME-OUT!");
             
         } finally {
             return best;
