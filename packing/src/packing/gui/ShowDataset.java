@@ -93,10 +93,8 @@ public class ShowDataset
         zoomInButton.addActionListener((e) -> {
             AntiLayoutManagerJPanel panel = ShowDataset.this.contentPane;
             if (panel != null) {
-                System.out.println(panel.getWidth());
                 panel.overrideSize((int) (panel.getWidth() * 1.25),
                                    (int) (panel.getHeight() * 1.25));
-                System.out.println(panel.getWidth());
                 update();
             }
         });
@@ -170,7 +168,6 @@ public class ShowDataset
     }
     
     public void update() {
-        System.out.println("update");
         synchronized(this) {
             if (updateThread == null) {
                 updateThread = createUpdateThread();
