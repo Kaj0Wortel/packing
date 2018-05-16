@@ -56,6 +56,8 @@ public class OutputWriter {
         }
         
         useRotation = dataset.allowRotation();
+
+        dataset.setOrdering(Dataset.SORT_ID);
         
         for (Dataset.Entry entry : dataset) {
             write(entry);

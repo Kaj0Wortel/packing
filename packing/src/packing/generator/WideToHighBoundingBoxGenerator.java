@@ -9,6 +9,8 @@ import packing.packer.*;
 
 // Java imports
 import java.awt.Rectangle;
+import java.util.Arrays;
+import java.util.Comparator;
 
 /**
  * Generates bounding boxes starting at a wide, low bounding box,
@@ -26,13 +28,16 @@ public class WideToHighBoundingBoxGenerator extends Generator {
     public void generateSolution(Dataset dataset) {
         // By default set the best solution to null.
         best = null;
-        
+
+        dataset.setRotation(Dataset.NO_ROTATION);
+
         int width = 0;
         int height = 0;
         int minWidth = 0;
         int minHeight = 0;
         int minArea = 0;
-        
+        int numPacked = 0, numSkipped = 0;
+
         // Initialize the local variables.
         for (Dataset.Entry entry : dataset) {
             Rectangle rect = entry.getRec();
@@ -47,74 +52,71 @@ public class WideToHighBoundingBoxGenerator extends Generator {
         
         // Loop until the time has run out, or the minimal
         // width has been reached.
-        while (width >= minWidth) {
-            if (width * height < minArea) {
-                // If the current area is less then the minimal solution area,
-                // increase the height until the area is more then the minimal
-                // solution area.
-                height = Math.max((int) Math.ceil(((double) minArea) / width),
-                                  height + 1);
-                //--height;
-                //continue;
-            }
-            
-            // If there is already a solution available, and that area is
-            // already smaller then the area we want to try, then we simply
-            // skip all these configurations.
-            if (best != null && width * height > best.getArea()) {
-                width = Math.min(best.getArea() / height,
-                                 width - 1);
-                //--width;
-                //continue;
-            }
-            
-            //System.err.printf("Packing into [%d x %d] bounding box\n", width, height);
-            
-            // Obtains a packer, and pack the dataset with this packer.
-            Packer packer = packerFactory.create(width, height);
-            Dataset packed = packer.pack(dataset);
-            
-            if (packed != null) {
-                // Update the width of the solution to the effective width
-                // (so cropping unused space of), and set this width
-                // as the width of the solution.
-                packed.setWidth(width = packed.getEffectiveWidth());
-                
-                // Update the best solution if nessecary.
+        try {
+            Comparator<Dataset.Entry> bestOrdering = null;
+
+            for (Comparator<Dataset.Entry> comparator : Arrays.asList(Dataset.SORT_HEIGHT, Dataset.SORT_AREA, Dataset.SORT_WIDTH, Dataset.SORT_LONGEST_SIDE)) {
+                dataset.setOrdering(comparator);
+                Packer packer = packerFactory.create(width, height);
+                Dataset packed = packer.pack(dataset);
+                numPacked++;
+
                 if (best == null || packed.getArea() < best.getArea()) {
+//                    System.err.printf("Found new solution: [%d x %d] (%.5f%% wasted space)\n", packed.getWidth(), packed.getHeight(),
+//                            (packed.getArea() - minArea) / (double) packed.getArea());
                     best = packed;
+                    bestOrdering = comparator;
                 }
-                
-                --width;
-                height+=decreaseWidth(packed);
-                //width -= decreaseWidth(packed);
-            } else {
-                ++height;
             }
+
+            dataset.setOrdering(bestOrdering);
+
+            while (width >= minWidth) {
+                if (width * height < minArea) {
+                    // If the current area is less then the minimal solution area,
+                    // increase the height until the area is more then the minimal
+                    // solution area.
+                    height = Math.max((int) Math.ceil(((double) minArea) / width),
+                            height + 1);
+                    numSkipped++;
+                    continue;
+                }
+
+                // If there is already a solution available, and that area is
+                // already smaller then the area we want to try, then we simply
+                // skip all these configurations.
+                if (best != null && width * height >= best.getArea()) {
+                    width = Math.min(best.getArea() / height,
+                            width - 1);
+                    numSkipped++;
+                    continue;
+                }
+
+//            System.err.printf("Packing into [%d x %d] bounding box\n", width, height);
+
+                // Obtains a packer, and pack the dataset with this packer.
+                Packer packer = packerFactory.create(width, height);
+                Dataset packed = packer.pack(dataset);
+                numPacked++;
+
+                if (packed != null) {
+                    // Update the width of the solution to the effective width
+                    // (so cropping unused space of), and set this width
+                    // as the width of the solution.
+                    packed.setWidth(width = packed.getEffectiveWidth());
+
+                    // Update the best solution if nessecary.
+                    if (best == null || packed.getArea() < best.getArea()) {
+//                    System.err.printf("Found new solution: [%d x %d] (%.5f%% wasted space)\n", packed.getWidth(), packed.getHeight(),
+//                            (packed.getArea() - minArea) / (double) packed.getArea());
+                        best = packed;
+                    }
+                    --width;
+                }
+                height += packer.getMinHeightIncrease();
+            }
+        } finally {
+//            System.err.printf("Generated %d packings, skipped %d...\n", numPacked, numSkipped);
         }
     }
-    
-    /**
-     * Determines by how much the height has to increase when decreasing
-     * the width.
-     * 
-     * @param dataset solution set.
-     * @return height of the tallest rectangle that touches the right edge.
-     */
-    public int decreaseWidth(Dataset dataset){
-        int heightToBeAdded = 0;
-        
-        for(Dataset.Entry entry: dataset){
-            Rectangle rect = entry.getRec();
-            if((rect.x + rect.width == dataset.getEffectiveWidth()) 
-                    && rect.height > heightToBeAdded){
-                heightToBeAdded = rect.height;
-            }
-            
-        }
-        return heightToBeAdded;
-    }
-    
-    
-    
 }

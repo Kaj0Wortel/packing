@@ -789,7 +789,7 @@ public class Sheet extends Packer {
         Dataset clone = dataset.clone();
         clone.setSize(bounds.width, bounds.height);
         
-        for (Dataset.Entry entry : clone.sorted()) {
+        for (Dataset.Entry entry : clone) {
             if (!add(entry)) {
                 /*
                 if (dataset.allowRotation()) {
@@ -799,7 +799,7 @@ public class Sheet extends Packer {
                 return null;
             }
         }
-        
+        clone.setWidth(clone.getEffectiveWidth());
         return clone;
     }
     

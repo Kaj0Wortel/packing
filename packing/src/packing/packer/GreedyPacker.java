@@ -58,7 +58,22 @@ class GreedyPacker extends Packer {
          * Check if rectangle fits at bottom-left corner.
          */
         public boolean checkRectangle(Rectangle rect) {
-            return isEmpty && rect.width <= horizontalSpace && rect.height <= verticalSpace;
+            if (!isEmpty) return false;
+
+            if (rect.width > horizontalSpace || rect.height > verticalSpace) return false;
+
+            if (rect.width <= this.width && rect.height <= this.height) {
+                return true;
+            } else if (rect.width <= this.width) {
+                return getTop() != null && getTop().checkRectangle(new Rectangle(rect.width, rect.height - this.height));
+            } else if (rect.height <= this.height) {
+                return getRight() != null && getRight().checkRectangle(new Rectangle(rect.width - this.width, rect.height));
+            } else {
+                // First split into left/right, then split remaining rectangle in top/bottom and check them.
+                return getRight() != null && getTop() != null
+                        && getRight().checkRectangle(new Rectangle(rect.width - this.width, rect.height))
+                        && getTop().checkRectangle(new Rectangle(width, rect.height - this.height));
+            }
         }
 
         /**
@@ -230,6 +245,8 @@ class GreedyPacker extends Packer {
         return (Integer.compare(o1.x, o2.x) != 0) ? Integer.compare(o1.x, o2.x) : Integer.compare(o1.y, o2.y);
     });
 
+    private int minHeightIncrease = Integer.MAX_VALUE;
+
     public GreedyPacker(int width, int height) {
         this.width = width;
         this.height = height;
@@ -304,8 +321,11 @@ class GreedyPacker extends Packer {
                 entry.setLocation(space.getX(), space.getY());
                 insertEntry(rect, space);
                 return true;
+            } else if (space.isEmpty && space.horizontalSpace >= rect.width && space.y + space.verticalSpace == height) {
+                minHeightIncrease = Math.min(minHeightIncrease, space.y + rect.height - height);
             }
         }
+        minHeightIncrease = Math.min(minHeightIncrease, rect.height);
         return false;
     }
 
@@ -313,15 +333,21 @@ class GreedyPacker extends Packer {
     public Dataset pack(Dataset dataset) {
         Dataset clone = dataset.clone();
         clone.setSize(width, height);
-        for (Dataset.Entry entry : clone.sorted()) {
+        for (Dataset.Entry entry : clone) {
             if (!fitEntry(entry)) {
-                if (dataset.allowRotation()) {
+                if (clone.allowRotation()) {
                     entry.setRotation(!entry.useRotation());
                     if (fitEntry(entry)) continue;
                 }
                 return null;
             }
         }
+        clone.setWidth(clone.getEffectiveWidth());
         return clone;
+    }
+
+    @Override
+    public int getMinHeightIncrease() {
+        return minHeightIncrease == Integer.MAX_VALUE ? 1 : minHeightIncrease;
     }
 }

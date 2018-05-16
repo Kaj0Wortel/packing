@@ -90,6 +90,20 @@ public class ShowDataset
         
         // Set null layout.
         setLayout(null);
+
+        // Setup contentpane and scroll pane.
+        contentPane = new AntiLayoutManagerJPanel(data);
+
+        contentPane.setSize(data.getWidth() * 10, data.getHeight() * 10);
+        contentPane.overrideSize(data.getWidth() * 10, data.getHeight() * 10);
+        //contentPane.setSize(1000, 1000);
+        scrollPane = new JScrollPane(contentPane);
+        add(scrollPane);
+
+        //scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        //scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(28);
+        scrollPane.getHorizontalScrollBar().setUnitIncrement(28);
         
         // Setup the zoom buttons
         zoomInButton = new JButton("+");
@@ -115,20 +129,6 @@ public class ShowDataset
         
         add(zoomInButton);
         add(zoomOutButton);
-        
-        // Setup contentpane and scroll pane.
-        contentPane = new AntiLayoutManagerJPanel(data);
-        
-        contentPane.setSize(data.getWidth() * 10, data.getHeight() * 10);
-        contentPane.overrideSize(data.getWidth() * 10, data.getHeight() * 10);
-        //contentPane.setSize(1000, 1000);
-        scrollPane = new JScrollPane(contentPane);
-        add(scrollPane);
-        
-        //scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-        //scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(28);
-        scrollPane.getHorizontalScrollBar().setUnitIncrement(28);
         
         setSize(1000, 1000);
         setLocation(10, 10);
@@ -198,6 +198,8 @@ public class ShowDataset
         return new Thread() {
             @Override
             public void run() {
+                if (zoomInButton == null || zoomOutButton == null) return;
+
                 zoomInButton.setSize(getWidth() / 2, ZOOM_BUTTON_HEIGHT);
                 zoomOutButton.setSize(getWidth() / 2, ZOOM_BUTTON_HEIGHT);
                 zoomInButton.setLocation(0, 0);
@@ -235,7 +237,7 @@ public class ShowDataset
     
     // tmp
     public static void main(String[] args) {
-        Dataset dataset = new TestDataset(-1, false, 5);
+        Dataset dataset = new Dataset(-1, false, 5);
         
         dataset.add(new Rectangle(0, 0, 100, 100));
         dataset.add(new Rectangle(100, 0, 100, 50));

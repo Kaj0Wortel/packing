@@ -47,7 +47,7 @@ public abstract class Generator {
      * this case not a problem since no other threads are using any data
      * from that calculation thread, or at least not the active part.
      */
-    @SuppressWarnings("Deprecated")
+    @SuppressWarnings({"Deprecated", "deprecation"})
     public void interrupt() {
         System.err.println("INTERRUPT!");
         genThread.stop();

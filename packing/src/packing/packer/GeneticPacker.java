@@ -16,7 +16,7 @@ public class GeneticPacker extends Packer {
     public Dataset pack(Dataset data) {
         Dataset clone = data.clone();
         
-        for (Dataset.Entry entry : clone.sorted()) {
+        for (Dataset.Entry entry : clone) {
             // TODO
         }
         
