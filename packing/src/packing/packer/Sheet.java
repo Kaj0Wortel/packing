@@ -769,7 +769,7 @@ public class Sheet extends Packer {
     @Override
     public Dataset pack(Dataset dataset) {
         Dataset clone = dataset.clone();
-        
+        clone.setSize(bounds.width, bounds.height);
         for (Dataset.Entry entry : clone.sorted()) {
             if (!add(entry)) {
                 if (dataset.allowRotation()) {

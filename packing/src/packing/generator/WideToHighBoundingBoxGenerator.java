@@ -49,7 +49,7 @@ public class WideToHighBoundingBoxGenerator extends Generator {
                 --width;
                 continue;
             }
-//            System.out.printf("Packing into [%d x %d] bounding box\n", width, height);
+//            System.err.printf("Packing into [%d x %d] bounding box\n", width, height);
             Packer packer = packerFactory.create(width, height);
             Dataset packed = packer.pack(dataset);
 
@@ -58,9 +58,9 @@ public class WideToHighBoundingBoxGenerator extends Generator {
                 if (best == null || packed.getArea() < best.getArea()) {
                     best = packed;
                 }
-                width = best.getEffectiveWidth();
-                //--width;
-                width -= decreaseWidth(packed);
+                width = packed.getEffectiveWidth();
+                --width;
+                //width -= decreaseWidth(packed);
             } else {
                 ++height;
             }
