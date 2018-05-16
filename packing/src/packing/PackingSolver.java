@@ -38,7 +38,8 @@ public class PackingSolver {
             + "25_04_h74_rn.txt";
     
     final public static File[] testFiles
-        = new File(System.getProperty("user.dir") + FS).listFiles();
+        = new File(System.getProperty("user.dir") + FS + "testcases")
+                .listFiles();
     
     // The timer to keep track of the time limit.
     private Timer timer;
@@ -62,9 +63,18 @@ public class PackingSolver {
             @Override
             public void run() {
                 Generator gen = getGenerator();
-                if (gen != null) gen.interrupt();
+                System.err.println("EXIT!");
+                synchronized(PackingSolver.this) {
+                    if (gen != null) {
+                        gen.interrupt();
+                        
+                    } else {
+                        System.exit(0);
+                    }
+                }
             }
-        }, 300000L - 250L); // 5*60*1000 = 300 000, use 250 ms space
+        //}, 300000L - 2000L); // 5*60*1000 = 300 000, use 2000 ms space
+        }, 5000L); // tmp
         
         // Create the output writer.
         OutputWriter ow = null;
@@ -77,11 +87,12 @@ public class PackingSolver {
                 
             } catch (FileNotFoundException e) {
                 System.err.println(e);
+                System.exit(0);
             }
         }
         
         // Read the input.
-        AbstractReader reader = null;
+        AbstractReader reader;
         if (inputFile == null) {
             reader = new StreamDataReader(System.in, ow);
             
@@ -94,6 +105,7 @@ public class PackingSolver {
         
         // Generate solution.
         gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
+        //gen = new WideToHighBoundingBoxGenerator(new SheetPackerFactory());
         Dataset result = gen.generate(input);
         
         // Output solution.
@@ -105,9 +117,10 @@ public class PackingSolver {
         }
         
         // tmp
-        System.err.print("Total runtime: "
+        System.err.println("Total runtime: "
                 + (System.currentTimeMillis() - startTime) + " ms");
-        new ShowDataset(result);
+        if (result != null) new ShowDataset(result);
+        //System.exit(0);
     }
     
     /* 
@@ -127,6 +140,8 @@ public class PackingSolver {
             in = testFile;
         }
         
+        new PackingSolver().run(in, out);
+        /*
         for (File file : testFiles) {
             in = file.toString();
             System.err.println("Testfile: " + in);
@@ -137,8 +152,7 @@ public class PackingSolver {
             } catch (Exception e) {
                 System.err.println(e);
             }
-        }
-        //new PackingSolver().run(in, out);
+        }/**/
     }
     
 }
