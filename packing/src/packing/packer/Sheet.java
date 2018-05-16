@@ -65,18 +65,35 @@ public class Sheet extends Packer {
      * Constructs a new main sheet.
      * Uses {@link Sheet#Sheet(Rectangle, Sheet, Sheet, Sheet, Sheet)}.
      * 
-     * @param rec the bounds of this sheet.
+     * @param bounds the bounds of this sheet.
      */
     public Sheet(Rectangle bounds) {
         this(bounds, null, null, null, null);
+        threads = new ArrayList<Thread>();
     }
     
     /**
-     * Constructs a new Sheet.
+     * Constructs a new sheet with the given bounds, root and parent sheet.
      * 
-     * @param rec the bounds of this sheet.
+     * @param bounds the bounds of this sheet.
      * @param root the root of all sheets.
      * @param parent the parent sheet of this sheet. {@code null} if none.
+     */
+    public Sheet(Rectangle bounds, Sheet root, Sheet parent) {
+        this.bounds = bounds;
+        this.root = (root == null ? this : root);
+        this.parent = parent;
+    }
+    
+    /**
+     * Constructs a new Sheet with the given root, parent, left and lower
+     * children.
+     * 
+     * @param bounds the bounds of this sheet.
+     * @param root the root of all sheets.
+     * @param parent the parent sheet of this sheet. {@code null} if none.
+     * @param left the sheet on the left of this sheet.
+     * @param right the sheet on the right of this sheet.
      */
     protected Sheet(Rectangle bounds, Sheet root, Sheet parent,
             Sheet left, Sheet down) {
@@ -265,6 +282,8 @@ public class Sheet extends Packer {
      *     {@code null} otherwise.
      */
     protected List<Sheet> check(Rectangle rec) {
+        if (full) return null;
+        
         // Check if the rectangle is allowed to be placed.
         for (Rectangle filledRec : filled) {
             if (!rec.intersection(filledRec).isEmpty()) return null;
@@ -770,12 +789,14 @@ public class Sheet extends Packer {
     public Dataset pack(Dataset dataset) {
         Dataset clone = dataset.clone();
         clone.setSize(bounds.width, bounds.height);
+        
         for (Dataset.Entry entry : clone.sorted()) {
             if (!add(entry)) {
+                /*
                 if (dataset.allowRotation()) {
                     entry.setRotation(!entry.useRotation());
                     if (add(entry)) continue;
-                }
+                }*/
                 return null;
             }
         }
