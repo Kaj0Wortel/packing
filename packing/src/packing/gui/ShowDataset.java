@@ -20,6 +20,7 @@ import java.awt.event.WindowEvent;
 
 import java.util.Iterator;
 
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -31,34 +32,96 @@ import javax.swing.SwingUtilities;
  */
 public class ShowDataset
         extends JFrame {
+    final private static int ZOOM_BUTTON_HEIGHT = 40;
     
     final private JScrollPane scrollPane;
-    final private JPanel contentPane;
+    final private AntiLayoutManagerJPanel contentPane;
+    final private JButton zoomInButton;
+    final private JButton zoomOutButton;
+    
+    private Thread updateThread = null;
+    private boolean waiting = false;
     
     // Static counter for the total number of alive frames.
     private static int counter = 0;
     
+    /**
+     * Class for ignoring annoying layout manager calls from the jscrollpane.
+     */
+    private class AntiLayoutManagerJPanel extends JPanel {
+        private Dataset data;
+        AntiLayoutManagerJPanel(Dataset data) {
+            super(null);
+            this.data = data;
+        }
+        
+        @Override
+        public Dimension getPreferredSize() {
+            return new Dimension(super.getWidth(), super.getHeight());
+        }
+        
+        // Changed setBounds method to only accept changes in location.
+        // Note that this is NOT GOOD PROGRAMMING PRACTICE!
+        // Just to shut the layout managers up.
+        @Override
+        public void setBounds(int x, int y, int width, int height) {
+            super.setBounds(x, y, getWidth(), getHeight());
+        }
+        
+        public void overrideBounds(int x, int y, int width, int height) {
+            super.setBounds(x, y, width, height);
+        }
+        
+        public void overrideSize(int width, int height) {
+            super.setBounds(getX(), getY(), width, height);
+        }
+        
+        public void overrideLocation(int x, int y) {
+            super.setBounds(x, y, getWidth(), getHeight());
+        }
+    }
+    
+    
     public ShowDataset(Dataset data) {
         super("Show solution");
+        
+        setLayout(null);
+        
+        zoomInButton = new JButton("+");
+        zoomOutButton = new JButton("-");
+        
+        zoomInButton.addActionListener((e) -> {
+            AntiLayoutManagerJPanel panel = ShowDataset.this.contentPane;
+            if (panel != null) {
+                System.out.println(panel.getWidth());
+                panel.overrideSize((int) (panel.getWidth() * 1.25),
+                                   (int) (panel.getHeight() * 1.25));
+                System.out.println(panel.getWidth());
+                update();
+            }
+        });
+        
+        zoomOutButton.addActionListener((e) -> {
+            AntiLayoutManagerJPanel panel = ShowDataset.this.contentPane;
+            if (panel != null) {
+                panel.overrideSize((int) (panel.getWidth() * 0.8),
+                                   (int) (panel.getHeight() * 0.8));
+                update();
+            }
+        });
+        
+        add(zoomInButton);
+        add(zoomOutButton);
         
         // Increase counter.
         counter++;
         
         //setLayout(null);
         
-        contentPane = new JPanel(null) {
-            @Override
-            public Dimension getPreferredSize() {
-                return new Dimension(super.getWidth(), super.getHeight());
-            }
-            
-            @Override
-            public void setBounds(int x, int y, int width, int height) {
-                super.setBounds(x, y, data.getWidth() * 10, data.getHeight() * 10);
-            }
-        };
+        contentPane = new AntiLayoutManagerJPanel(data);
         
         contentPane.setSize(data.getWidth() * 5, data.getHeight() * 5);
+        contentPane.overrideSize(data.getWidth() * 10, data.getHeight() * 10);
         //contentPane.setSize(1000, 1000);
         scrollPane = new JScrollPane(contentPane);
         add(scrollPane);
@@ -76,7 +139,7 @@ public class ShowDataset
         
         // Set the background.
         contentPane.setBackground(Color.RED);
-        scrollPane.getViewport().setBackground(Color.GREEN);
+        scrollPane.getViewport().setBackground(Color.BLUE);
         //scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         //scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         
@@ -106,10 +169,8 @@ public class ShowDataset
         });
     }
     
-    private Thread updateThread = null;
-    private boolean waiting = false;
-    
     public void update() {
+        System.out.println("update");
         synchronized(this) {
             if (updateThread == null) {
                 updateThread = createUpdateThread();
@@ -131,18 +192,24 @@ public class ShowDataset
             updateThread = createUpdateThread();
             updateThread.start();
         }
-        System.out.println(contentPane.getSize());
     }
     
     public Thread createUpdateThread() {
         return new Thread() {
             @Override
             public void run() {
+                zoomInButton.setSize(getWidth() / 2, ZOOM_BUTTON_HEIGHT);
+                zoomOutButton.setSize(getWidth() / 2, ZOOM_BUTTON_HEIGHT);
+                zoomInButton.setLocation(0, 0);
+                zoomOutButton.setLocation(getWidth() / 2, 0);
+                
                 if (contentPane != null) {
                     Insets in = getInsets();
                     scrollPane.setSize(
                             getWidth() - in.left - in.right,
-                            getHeight() - in.top - in.bottom);
+                            getHeight() - in.top - in.bottom
+                                    - ZOOM_BUTTON_HEIGHT);
+                    scrollPane.setLocation(0, ZOOM_BUTTON_HEIGHT);
                 }
                 
                 for (Component comp : contentPane.getComponents()) {
