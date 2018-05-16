@@ -50,6 +50,11 @@ public class OutputWriter {
     public void writeEntries(Dataset dataset) throws IOException {
         println("placement of rectangles");
         
+        if (dataset == null) {
+            System.err.println("Unable to process null dataset!");
+            return;
+        }
+        
         useRotation = dataset.allowRotation();
         
         for (int i = 0; i < dataset.size(); i++) {
