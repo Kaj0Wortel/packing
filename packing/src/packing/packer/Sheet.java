@@ -69,7 +69,6 @@ public class Sheet extends Packer {
      */
     public Sheet(Rectangle bounds) {
         this(bounds, null, null, null, null);
-        threads = new ArrayList<Thread>();
     }
     
     /**
