@@ -774,6 +774,7 @@ public class Sheet extends Packer {
             if (!add(entry)) {
                 if (dataset.allowRotation()) {
                     entry.setRotation(!entry.useRotation());
+                    if (add(entry)) continue;
                 }
                 return null;
             }

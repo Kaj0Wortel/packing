@@ -285,6 +285,7 @@ class GreedyPacker extends Packer {
             if (!fitEntry(entry)) {
                 if (dataset.allowRotation()) {
                     entry.setRotation(!entry.useRotation());
+                    if (fitEntry(entry)) continue;
                 }
                 return null;
             }
