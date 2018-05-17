@@ -62,6 +62,7 @@ public abstract class Dataset
         
         public Entry(Entry clone) {
             this(new Rectangle(clone.getNormalRec()), clone.id);
+            useRotation = clone.useRotation;
         }
         
         /* 
@@ -201,12 +202,6 @@ public abstract class Dataset
     public abstract void add(Rectangle rec);
     
     /* 
-     * @return the entries.
-     * TODO: Maybe other return type?
-     */
-    public abstract Object getEntries();
-    
-    /* 
      * @return the i'th object that was added.
      */
     public abstract Entry get(int i);
@@ -239,14 +234,14 @@ public abstract class Dataset
     public int getHeight() {
         return height;
     }
-
+    
     /*
      * @return the area of the sheet.
      */
     public int getArea() {
         return width * height;
     }
-
+    
     public int getEffectiveWidth() {
         int max = 0;
         for (Entry entry : this) {
@@ -288,6 +283,7 @@ public abstract class Dataset
 
     public abstract Iterable<Entry> sorted();
     
+    @Override
     public abstract Dataset clone();
     
 }

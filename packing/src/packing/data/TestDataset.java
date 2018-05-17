@@ -31,11 +31,6 @@ public class TestDataset
     }
     
     @Override
-    public Object getEntries() {
-        return null;
-    }
-    
-    @Override
     public Iterator<Dataset.Entry> iterator() {
         return set.iterator();
     }

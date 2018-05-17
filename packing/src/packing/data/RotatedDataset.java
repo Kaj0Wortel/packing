@@ -10,7 +10,7 @@ import java.util.*;
 
 public class RotatedDataset
         extends Dataset {
-    List<Dataset.Entry> set = new ArrayList<>();
+    List<Dataset.Entry> list = new ArrayList<>();
     
     public RotatedDataset(int height, boolean rotation, int numRect) {
         super(height, rotation, numRect);
@@ -20,29 +20,24 @@ public class RotatedDataset
         super((clone.fixedHeight ? clone.height : -1),
               clone.allowRot, clone.numRect);
         this.idCounter = clone.idCounter;
-        for (Dataset.Entry entry : clone.set) {
-            set.add(entry.clone());
+        for (Dataset.Entry entry : clone.list) {
+            list.add(entry.clone());
         }
     }
     
     @Override
     public void add(Rectangle rec) {
-        set.add(new Dataset.Entry(rec, idCounter++));
-    }
-    
-    @Override
-    public Object getEntries() {
-        return null;
+        list.add(new Dataset.Entry(rec, idCounter++));
     }
     
     @Override
     public Iterator<Dataset.Entry> iterator() {
-        return set.iterator();
+        return list.iterator();
     }
-
+    
     @Override
     public Iterable<Dataset.Entry> sorted() {
-        List<Dataset.Entry> entries = new ArrayList<>(set);
+        List<Dataset.Entry> entries = new ArrayList<>(list);
         if (allowRot) {
             for (Entry ent : entries) {
                 ent.setRotation(ent.getNormalRec().width > ent.getNormalRec().height);
@@ -60,13 +55,13 @@ public class RotatedDataset
     
     @Override
     public Dataset.Entry get(int i) {
-        return set.get(i);
+        return list.get(i);
     }
     
     @Override
     public String toString() {
         return "[allowRot: " + allowRot + ", height: " + height
-            + ", numRect: " + numRect + " set: " + set.toString() + "]";
+            + ", numRect: " + numRect + " set: " + list.toString() + "]";
     }
     
     @Override

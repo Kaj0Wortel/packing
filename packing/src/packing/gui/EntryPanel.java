@@ -66,8 +66,6 @@ public class EntryPanel
         // Set the size and location of the rectangle.
         setSize(containerWidth  * rec.width  / dataWidth,
                 containerHeight * rec.height / dataHeight);
-        //System.err.println(rec.x);
-        //System.out.println(rec.y);
         setLocation(containerWidth * rec.x  / dataWidth,
                     containerHeight - getHeight()
                             - containerHeight * rec.y  / dataHeight);
