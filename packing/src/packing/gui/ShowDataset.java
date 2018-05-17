@@ -49,7 +49,7 @@ public class ShowDataset
      * Class for ignoring annoying layout manager calls from the jscrollpane.
      */
     private class AntiLayoutManagerJPanel extends JPanel {
-        private Dataset data;
+        final private Dataset data;
         AntiLayoutManagerJPanel(Dataset data) {
             super(null);
             this.data = data;
@@ -85,8 +85,13 @@ public class ShowDataset
     public ShowDataset(Dataset data) {
         super("Show solution");
         
+        // Increase counter.
+        counter++;
+        
+        // Set null layout.
         setLayout(null);
         
+        // Setup the zoom buttons
         zoomInButton = new JButton("+");
         zoomOutButton = new JButton("-");
         
@@ -111,35 +116,32 @@ public class ShowDataset
         add(zoomInButton);
         add(zoomOutButton);
         
-        // Increase counter.
-        counter++;
-        
-        //setLayout(null);
-        
+        // Setup contentpane and scroll pane.
         contentPane = new AntiLayoutManagerJPanel(data);
         
-        contentPane.setSize(data.getWidth() * 5, data.getHeight() * 5);
+        contentPane.setSize(data.getWidth() * 10, data.getHeight() * 10);
         contentPane.overrideSize(data.getWidth() * 10, data.getHeight() * 10);
         //contentPane.setSize(1000, 1000);
         scrollPane = new JScrollPane(contentPane);
         add(scrollPane);
-        //add(contentPane);
+        
+        //scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        //scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(28);
+        scrollPane.getHorizontalScrollBar().setUnitIncrement(28);
         
         setSize(1000, 1000);
         setLocation(10, 10);
         
         // Create all entry panels.
-        Iterator<Dataset.Entry> it = data.iterator();
-        while (it.hasNext()) {
-            contentPane.add(new EntryPanel(it.next(), contentPane,
+        for (Dataset.Entry entry : data) {
+            contentPane.add(new EntryPanel(entry, contentPane,
                             data.getWidth(), data.getHeight()));
         }
         
         // Set the background.
         contentPane.setBackground(Color.RED);
         scrollPane.getViewport().setBackground(Color.BLUE);
-        //scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-        //scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         
         addWindowListener(new WindowAdapter() {
             @Override
@@ -163,6 +165,7 @@ public class ShowDataset
         setVisible(true);
         
         SwingUtilities.invokeLater(() -> {
+            update();
             repaint();
         });
     }
