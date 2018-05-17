@@ -52,7 +52,8 @@ public class WideToHighBoundingBoxGenerator extends Generator {
                 // If the current area is less then the minimal solution area,
                 // increase the height until the area is more then the minimal
                 // solution area.
-                height = (int) Math.ceil(((double) minArea) / width);
+                height = Math.max((int) Math.ceil(((double) minArea) / width),
+                                  height + 1);
                 //--height;
                 //continue;
             }
@@ -61,12 +62,14 @@ public class WideToHighBoundingBoxGenerator extends Generator {
             // already smaller then the area we want to try, then we simply
             // skip all these configurations.
             if (best != null && width * height > best.getArea()) {
-                width = best.getArea() / height;
+                width = Math.min(best.getArea() / height,
+                                 width - 1);
                 //--width;
                 //continue;
             }
             
             //System.err.printf("Packing into [%d x %d] bounding box\n", width, height);
+            
             // Obtains a packer, and pack the dataset with this packer.
             Packer packer = packerFactory.create(width, height);
             Dataset packed = packer.pack(dataset);
