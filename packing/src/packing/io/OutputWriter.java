@@ -57,8 +57,8 @@ public class OutputWriter {
         
         useRotation = dataset.allowRotation();
         
-        for (int i = 0; i < dataset.size(); i++) {
-            write(dataset.get(i));
+        for (Dataset.Entry entry : dataset) {
+            write(entry);
         }
     }
     
@@ -72,7 +72,7 @@ public class OutputWriter {
             sb.append(entry.useRotation() ? "yes " : "no ");
         }
         
-        Rectangle rec = entry.getNormalRec();
+        Rectangle rec = entry.getRec();
         sb.append(rec.x + " " + rec.y);
         
         sb.append(System.getProperty("line.separator"));
