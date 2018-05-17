@@ -107,6 +107,7 @@ public class PackingSolver {
         gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
         //gen = new WideToHighBoundingBoxGenerator(new SheetPackerFactory());
         Dataset result = gen.generate(input);
+        timer.cancel();
         
         // Output solution.
         try {
@@ -120,7 +121,6 @@ public class PackingSolver {
         System.err.println("Total runtime: "
                 + (System.currentTimeMillis() - startTime) + " ms");
         if (result != null) new ShowDataset(result);
-        //System.exit(0);
     }
     
     /* 
