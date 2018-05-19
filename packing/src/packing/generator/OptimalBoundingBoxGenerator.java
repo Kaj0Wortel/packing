@@ -6,6 +6,7 @@ package packing.generator;
 import java.awt.Rectangle;
 import packing.data.*;
 import packing.packer.*;
+import packing.generator.RectangleMinHeap;
 
 
 /**
@@ -21,6 +22,7 @@ public class OptimalBoundingBoxGenerator extends Generator {
     
     @Override
     public void generateSolution(Dataset dataset) {
+        best = null;
         /** Calculate the total area of the rectangles as a lower bound.
             Try packing the rectangles into every possible bounding box of
             that size, increasing the area if it doesn't fit. Return when a
@@ -37,6 +39,7 @@ public class OptimalBoundingBoxGenerator extends Generator {
         int width = 0;
         int height = 0;
         int area = 0;
+        RectangleMinHeap boundingBoxHeap = new RectangleMinHeap(); // heap to keep track of all the possible bounding boxes in order of non decreasing area
         
         // Determine minArea, greedyWidth, greedyHeight, minWidth, minHeight.
         for (Dataset.Entry entry : dataset){
@@ -54,12 +57,25 @@ public class OptimalBoundingBoxGenerator extends Generator {
         maxArea = greedyPacked.getArea();
         maxWidth = greedyPacked.getWidth();
         
-        width = minWidth;
-        height = determinHeight(dataset, width, minArea);
+        boundingBoxHeap = createInitialHeap(dataset, minWidth, maxWidth, minArea);
         
-        while(area < maxArea){
-            Packer packer = packerFactory.create(width, height);
-            Dataset packed = packer.pack(dataset);
+        
+        while(best == null){
+            Rectangle rect = boundingBoxHeap.extractMin();// get minimum boundingbox
+            width = (int)rect.getWidth();
+            height = (int)rect.getHeight();
+            Packer packer = packerFactory.create(width, height); //create packing instance for said box
+            Dataset packed = packer.pack(dataset); // try to pack the box
+            
+            //if possible, than this is the optimal solution
+            if(packed != null){
+                best = packed;
+            } else {
+                // else increase height and put the new boundingBox in the heap
+                height++;
+                rect.setSize(width, height);
+                boundingBoxHeap.insert(rect);
+            }
         }
     }
     
@@ -108,6 +124,26 @@ public class OptimalBoundingBoxGenerator extends Generator {
         }
         
         return minHeight;        
+    }
+    /**
+     * 
+     * @param dataset input set
+     * @param minWidth minimum width for boundingBox
+     * @param maxWidth maximum width for boundingBox
+     * @param minArea minimum area for boundingBox
+     * @return a heap with the initial set of boxes, containing boxes 
+     * of every width between minWidth and maxWidth, with an appropriate minHeight
+     */
+    public RectangleMinHeap createInitialHeap(Dataset dataset, int minWidth, int maxWidth, int minArea){
+        RectangleMinHeap initialHeap = new RectangleMinHeap();
+        // Loop over all possible widths
+        for(int i = minWidth; i < maxWidth; i++){
+            int height = determinHeight(dataset, i, minArea);     
+            Rectangle rect = new Rectangle(i, height);
+            initialHeap.insert(rect);
+        }
+        
+        return initialHeap;
     }
     
 }

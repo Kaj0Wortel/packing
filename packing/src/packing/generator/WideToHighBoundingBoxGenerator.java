@@ -86,6 +86,7 @@ public class WideToHighBoundingBoxGenerator extends Generator {
                 }
                 
                 --width;
+                height+=decreaseWidth(packed);
                 //width -= decreaseWidth(packed);
             } else {
                 ++height;
