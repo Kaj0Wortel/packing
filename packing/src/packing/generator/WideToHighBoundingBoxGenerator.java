@@ -63,7 +63,7 @@ public class WideToHighBoundingBoxGenerator extends Generator {
 
                 if (best == null || packed.getArea() < best.getArea()) {
 //                    System.err.printf("Found new solution: [%d x %d] (%.5f%% wasted space)\n", packed.getWidth(), packed.getHeight(),
-//                            (packed.getArea() - minArea) / (double) packed.getArea());
+//                            100 * (packed.getArea() - minArea) / (double) packed.getArea());
                     best = packed;
                     bestOrdering = comparator;
                 }
@@ -108,7 +108,7 @@ public class WideToHighBoundingBoxGenerator extends Generator {
                     // Update the best solution if nessecary.
                     if (best == null || packed.getArea() < best.getArea()) {
 //                    System.err.printf("Found new solution: [%d x %d] (%.5f%% wasted space)\n", packed.getWidth(), packed.getHeight(),
-//                            (packed.getArea() - minArea) / (double) packed.getArea());
+//                            100 * (packed.getArea() - minArea) / (double) packed.getArea());
                         best = packed;
                     }
                     --width;

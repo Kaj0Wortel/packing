@@ -274,6 +274,13 @@ public class Dataset
     }
 
     /**
+     * @return whether the height is fixed.
+     */
+    public boolean isFixedHeight() {
+        return fixedHeight;
+    }
+
+    /**
      * @return whether rotations are allowed.
      */
     public boolean allowRotation() {
@@ -356,8 +363,20 @@ public class Dataset
      */
     public void setRotation(Predicate<Entry> predicate) {
         if (allowRot) {
-            for (Entry entry : this) {
-                entry.setRotation(predicate.test(entry));
+            if (fixedHeight) {
+                for (Entry entry : this) {
+                    if (entry.getNormalRec().height > height) {
+                        entry.setRotation(true);
+                    } else if (entry.getNormalRec().width > height) {
+                        entry.setRotation(false);
+                    } else {
+                        entry.setRotation(predicate.test(entry));
+                    }
+                }
+            } else {
+                for (Entry entry : this) {
+                    entry.setRotation(predicate.test(entry));
+                }
             }
         }
     }
@@ -368,6 +387,21 @@ public class Dataset
      */
     public void setOrdering(Comparator<Entry> comparator) {
         list.sort(comparator);
+    }
+
+    public void shuffle() {
+        Collections.shuffle(list);
+    }
+
+    public void swap(int i, int j) {
+        Collections.swap(list, i, j);
+    }
+
+    public void rotate(int i) {
+        if (allowRot) {
+            Entry entry = list.get(i);
+            entry.setRotation(!entry.useRotation());
+        }
     }
 
     @Override

@@ -73,8 +73,8 @@ public class PackingSolver {
                     }
                 }
             }
-        //}, 300000L - 2000L); // 5*60*1000 = 300 000, use 2000 ms space
-        }, 5000L); // tmp
+        }, 300000L - 2000L); // 5*60*1000 = 300 000, use 2000 ms space
+//        }, 5000L); // tmp
         
         // Create the output writer.
         OutputWriter ow = null;
@@ -104,8 +104,12 @@ public class PackingSolver {
         if (input == null) return;
         
         // Generate solution.
-        gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
-        //gen = new WideToHighBoundingBoxGenerator(new SheetPackerFactory());
+        if (input.isFixedHeight()) {
+            gen = new FixedHeightGenerator(new GreedyPackerFactory());
+        } else {
+            gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
+            //gen = new WideToHighBoundingBoxGenerator(new SheetPackerFactory());
+        }
         Dataset result = gen.generate(input);
         timer.cancel();
         

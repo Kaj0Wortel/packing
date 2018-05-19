@@ -28,9 +28,8 @@ public abstract class Generator {
         } catch (ThreadDeath e) {
             System.err.println("TERMINATED BY TIME-OUT!");
             
-        } finally {
-            return best;
         }
+        return best;
     }
     
     /**
