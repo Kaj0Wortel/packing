@@ -54,22 +54,26 @@ public class Dataset
 
     // Sort rectangles by decreasing height
     public static final Comparator<Entry> SORT_HEIGHT = Collections.reverseOrder(
-            Comparator.comparingInt(entry -> entry.getRec().height)
+            Comparator.comparingInt((Entry entry) -> entry.getRec().height)
+                    .thenComparing((Entry entry) -> entry.getRec().width)
     );
 
     // Sort rectangles by decreasing area
     public static final Comparator<Entry> SORT_AREA = Collections.reverseOrder(
-            Comparator.comparingInt(entry -> entry.getRec().height * entry.getRec().width)
+            Comparator.comparingInt((Entry entry) -> entry.getRec().height * entry.getRec().width)
+                    .thenComparing((Entry entry) -> entry.getRec().height)
     );
 
     // Sort rectangles by decreasing width
     public static final Comparator<Entry> SORT_WIDTH = Collections.reverseOrder(
-            Comparator.comparingInt(entry -> entry.getRec().width)
+            Comparator.comparingInt((Entry entry) -> entry.getRec().width)
+                    .thenComparing((Entry entry) -> entry.getRec().height)
     );
 
     // Sort rectangles by the length of their longest side, decreasing
     public static final Comparator<Entry> SORT_LONGEST_SIDE = Collections.reverseOrder(
-            Comparator.comparingInt(entry -> Math.max(entry.getRec().height, entry.getRec().width))
+            Comparator.comparingInt((Entry entry) -> Math.max(entry.getRec().height, entry.getRec().width))
+                    .thenComparing((Entry entry) -> Math.min(entry.getRec().height, entry.getRec().width))
     );
 
     // Sort rectangles by id, ascending

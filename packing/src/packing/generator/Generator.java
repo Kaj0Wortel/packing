@@ -6,6 +6,10 @@ package packing.generator;
 import packing.data.*;
 import packing.packer.*;
 
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.function.Predicate;
+
 
 /* 
  * Abstract generator class.
@@ -36,6 +40,30 @@ public abstract class Generator {
      * Generates a solution for the given dataset.
      */
     public abstract void generateSolution(Dataset dataset);
+
+    public Dataset generateUpperBound(Dataset dataset) {
+        int height = dataset.getHeight();
+        int width = Integer.MAX_VALUE;
+
+        Dataset upperBound = null;
+
+        for (Predicate<Dataset.Entry> predicate : Arrays.asList(Dataset.NO_ROTATION, Dataset.LONGEST_SIDE_VERTIAL)) {
+            dataset.setRotation(predicate);
+            for (Comparator<Dataset.Entry> comparator : Arrays.asList(Dataset.SORT_HEIGHT, Dataset.SORT_AREA, Dataset.SORT_WIDTH, Dataset.SORT_LONGEST_SIDE)) {
+                dataset.setOrdering(comparator);
+                Packer packer = packerFactory.create(width, height);
+                Dataset packed = packer.pack(dataset);
+
+                if (packed != null) {
+                    if (upperBound == null || packed.getArea() < upperBound.getArea()) {
+                        upperBound = packed;
+                        width = packed.getWidth();
+                    }
+                }
+            }
+        }
+        return upperBound;
+    }
     
     /**
      * Interrupts the generator when the time is up.

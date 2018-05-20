@@ -67,7 +67,7 @@ public class PackingSolver {
                 synchronized(PackingSolver.this) {
                     if (gen != null) {
                         gen.interrupt();
-                        
+
                     } else {
                         System.exit(0);
                     }
@@ -105,7 +105,8 @@ public class PackingSolver {
         
         // Generate solution.
         if (input.isFixedHeight()) {
-            gen = new FixedHeightGenerator(new GreedyPackerFactory());
+//            gen = new FixedHeightGenerator(new GreedyPackerFactory());
+            gen = new GeneticGenerator(new GreedyPackerFactory());
         } else {
             gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
             //gen = new WideToHighBoundingBoxGenerator(new SheetPackerFactory());
