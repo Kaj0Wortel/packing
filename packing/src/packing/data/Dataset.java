@@ -258,6 +258,10 @@ public class Dataset
     public void add(Rectangle rec) {
         list.add(new Dataset.Entry(rec, idCounter++));
     }
+    
+    public void remove(Rectangle rec) {
+        list.remove(new Dataset.Entry(rec, idCounter--));
+    }
 
     @Override
     public Iterator<Entry> iterator() {
