@@ -28,6 +28,9 @@ public class FixedHeightGenerator extends Generator {
         best = generateUpperBound(dataset);
         width = best.getWidth();
 
+        System.err.printf("Found initial solution: [%d x %d] (%.5f%% wasted space)\n", best.getWidth(), best.getHeight(),
+                100 * (best.getArea() - minArea) / (double) best.getArea());
+
         while (height * width > minArea) {
             // Random Search
             dataset.shuffle();
@@ -38,6 +41,8 @@ public class FixedHeightGenerator extends Generator {
 
             if (packed != null) {
                 if (packed.getArea() < best.getArea()) {
+                    System.err.printf("Found new solution: [%d x %d] (%.5f%% wasted space)\n", packed.getWidth(), packed.getHeight(),
+                            100 * (packed.getArea() - minArea) / (double) packed.getArea());
                     best = packed;
                     width = packed.getWidth();
                 }

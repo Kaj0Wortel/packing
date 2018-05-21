@@ -42,11 +42,11 @@ public class GeneticGenerator
         best = generateUpperBound(dataset);
         width = best.getWidth();
 
-        System.err.printf("Found new solution: [%d x %d] (%.5f%% wasted space)\n", best.getWidth(), best.getHeight(),
+        System.err.printf("Found initial solution: [%d x %d] (%.5f%% wasted space)\n", best.getWidth(), best.getHeight(),
                 100 * (best.getArea() - minArea) / (double) best.getArea());
 
         Population population = new Population(best, packerFactory, dataset.getHeight());
-//        population.setMaxWidth(width);
+        population.setMaxWidth(width);
         population.setTarget(minArea);
 
         Dataset current;

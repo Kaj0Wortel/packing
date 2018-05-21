@@ -105,8 +105,11 @@ public class PackingSolver {
         
         // Generate solution.
         if (input.isFixedHeight()) {
-//            gen = new FixedHeightGenerator(new GreedyPackerFactory());
-            gen = new GeneticGenerator(new GreedyPackerFactory());
+            if (input.size() > 1000) {
+                gen = new FixedHeightGenerator(new GreedyPackerFactory());
+            } else {
+                gen = new GeneticGenerator(new GreedyPackerFactory());
+            }
         } else {
             gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
             //gen = new WideToHighBoundingBoxGenerator(new SheetPackerFactory());
@@ -142,7 +145,7 @@ public class PackingSolver {
         if (args != null) {
             if (args.length >= 1) in = args[0];
             if (args.length >= 2) out = args[1];
-            in = testFile;
+//            in = testFile;
         }
         
         new PackingSolver().run(in, out);
