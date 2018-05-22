@@ -34,6 +34,11 @@ public class XCoordinatePacker extends Packer {
         - Empty-strip dominance
          */
         
+        // create solution as an empty boundingBox with the same values as the input
+        Dataset solution = new Dataset(dataset.getWidth(),dataset.allowRotation(), dataset.getHeight());
+        
+        solution = backtracker(dataset, solution, 0);
+        
         return null;
     }
     /**
@@ -48,6 +53,7 @@ public class XCoordinatePacker extends Packer {
     public Dataset backtracker(Dataset input, Dataset solution, int current){
         int width = input.getWidth();
         
+        
         if(solution.size()<input.size()){
             Dataset.Entry entry = input.get(current);
             for(int j = 0; j<width; j++){
@@ -56,7 +62,10 @@ public class XCoordinatePacker extends Packer {
                 solution.add(rec);
                 if(heightPruning(input, solution)){ // if solution is still viable continue backtracking
                     current++;
-                    backtracker(input, solution, current);
+                    Dataset backtrackSolution = backtracker(input, solution, current);
+                    if(backtrackSolution != null){
+                        return backtrackSolution;
+                    }
                     current--;
                     solution.remove(rec);
                 } else { // otherwise remove placed rectangle and try next position
