@@ -36,6 +36,8 @@ public abstract class Generator {
         } catch (ThreadDeath e) {
             System.err.println("TERMINATED BY TIME-OUT!");
             
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
         } finally {
             ThreadMonitor.killAll();
             return best;

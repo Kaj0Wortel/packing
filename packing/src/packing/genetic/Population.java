@@ -12,8 +12,7 @@ import java.util.Random;
 public class Population {
     // The size of the population.
     public static final int POPULATION_SIZE = 200;
-    // %%explaination needed%%
-    public static final boolean ELITIST = true;
+
     // The mutation rate for every mutation.
     public static final double MUTATION_RATE = 0.1;
     
@@ -30,8 +29,6 @@ public class Population {
     // The maximum width that should be used in the evaluation of the
     // instances.
     private int maxWidth = Integer.MAX_VALUE;
-    // %%explaination needed%%
-    private int target;
     // The best instance so far.
     private Instance best = null;
     
@@ -57,8 +54,6 @@ public class Population {
         
         /**
          * Mutates the current instance.
-         * 
-         * %%I think that this part is incorrect%%.
          */
         public void mutate() {
             for (int i = 0; i < dataset.size(); i++) {
@@ -94,7 +89,7 @@ public class Population {
         public void calculateFitness(Packer packer) {
             Dataset packed = packer.pack(this.dataset);
             fitness = (packed != null
-                    ? 1.0 / (packed.getArea() - target + 1)
+                    ? 1.0 / (packed.getWidth())
                     : 0.0);
             dataset = packed;
         }
@@ -115,9 +110,13 @@ public class Population {
         public double getFitness() {
             return fitness;
         }
+
+        public String toString() {
+            return String.format("<Instance %f, %s>", fitness, dataset);
+        }
     }
-    
-    
+
+
     /**
      * Craetes a new population with the given instances, packer factory and
      * height.
@@ -167,50 +166,45 @@ public class Population {
         best = instances.get(0);
     }
     /**
-     * %%exlaination needed%%
-     * @param fitnessSum %%exlaination needed%%
-     * @return %%exlaination needed%%
+     * Select a parent from the previous generation, with probability
+     * proportional to the inverse of its rank.
+     *
+     * @param fitnessSum the sum of all fitness scores from the previous generation
+     * @return a randomly selected instance from the previous generation
      */
     public Instance selectParent(double fitnessSum) {
         double rand = random.nextDouble() * fitnessSum;
         double runningSum = 0;
-        for (Instance instance : instances) {
-            runningSum += instance.getFitness();
+        for (int i = 0; i < instances.size(); i++) {
+            runningSum += 1.0 / (i + 1);
             if (runningSum > rand) {
-                return instance.clone();
+                return instances.get(i).clone();
             }
         }
         throw new RuntimeException("Failed to select a parent. Rounding error?");
     }
     
     /**
-     * Creates a selection
+     * Perform selection to create the next generation. Use an elitist strategy
+     * (i.e. always keep the best instance from the previous generation). Then
+     * randomly select parents from the previous generation with probability
+     * proportional to the inverse of its rank.
      */
     public void performSelection() {
         List<Instance> newInstances = new ArrayList<>(POPULATION_SIZE);
         
         // Calculates the total fitnessSum of the instances.
         double fitnessSum = 0;
-        for (Instance instance : instances) {
-            fitnessSum += instance.getFitness();
+        for (int i = 0; i < instances.size(); i++) {
+            fitnessSum += 1.0 / (i + 1);
         }
-        
-        // %%exlaination needed%% Always true???
-        if (ELITIST) {
-            newInstances.add(instances.get(0).clone());
-        }
-        
-        // %%exlaination needed%%
-        while (newInstances.size() < POPULATION_SIZE / 2) {
-            newInstances.add(selectParent(fitnessSum));
-        }
-        
-        // %%exlaination needed%%
+
+        // Always keep the best instance from the previous generation.
+        newInstances.add(instances.get(0).clone());
+
+        // Select instances to create new generation
         while (newInstances.size() < POPULATION_SIZE) {
-            Dataset dataset = best.dataset.clone();
-            dataset.shuffle();
-            dataset.setRotation(Dataset.RANDOM_ROTATION);
-            newInstances.add(new Instance(dataset));
+            newInstances.add(selectParent(fitnessSum));
         }
         
         instances = newInstances;
@@ -225,38 +219,22 @@ public class Population {
             instances.get(i).mutate();
         }
     }
-    
+
     /**
-     * @return the maximum width of %%explaination needed%%.
+     * @return the maximum width used for the packer when packing an instance.
      */
     public int getMaxWidth() {
         return maxWidth;
     }
-    
+
     /**
-     * Sets the maximum width of %%exlaination needed%%.
-     * 
+     * Sets the maximum width of a solution. Permutations that don't fit within
+     * this width get a fitness of 0 and are subsequently discarded.
+     *
      * @param maxWidth the new maximum width.
      */
     public void setMaxWidth(int maxWidth) {
         this.maxWidth = maxWidth;
-    }
-    
-    /**
-     * @return The setted target.
-     */
-    public int getTarget() {
-        return target;
-    }
-    
-    /**
-     * Sets the target amount.
-     * %%explaination needed%%
-     * 
-     * @param target 
-     */
-    public void setTarget(int target) {
-        this.target = target;
     }
     
     /**
