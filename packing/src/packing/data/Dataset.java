@@ -171,6 +171,15 @@ public class Dataset
             useRotation = rotation;
         }
         
+        /**
+         * Rotates the entry.
+         */
+        public void rotate() {
+            if (!Dataset.this.allowRot)
+                throw new IllegalStateException("Rotation is not allowed.");
+            useRotation = !useRotation;
+        }
+        
         /* 
          * @return the area of the rectangle.
          */
