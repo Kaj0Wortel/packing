@@ -448,6 +448,11 @@ public class OptimalPointGenerator extends Generator {
             System.out.println("[[0]]");
             System.out.println(curNode);
             
+            // left x = node.point.x right x is prevX or nextX
+            wastedWidth = nextX - node.point.x;
+            //left bottom y = nodeY right upper y = nextY
+            wastedHeight = next.point.y - node.point.y;
+            
             LinkAction la = new RemoveLinkAction(node, next);
             curNode = prev;
             System.out.println(curNode);
@@ -458,6 +463,11 @@ public class OptimalPointGenerator extends Generator {
             // the point.
             System.out.println("[[1]]");
             System.out.println(curNode);
+            
+            //left x = node.point.x right x = prevX
+            wastedWidth = prevX - node.point.x;
+            //bottom y = node.point.y upper y = next.Y
+            wastedHeight = wastedHeight = next.point.y - node.point.y;
             
             LinkAction la = new RemoveLinkAction(node);
             curNode = prev;
@@ -472,6 +482,11 @@ public class OptimalPointGenerator extends Generator {
                     = new PointNode(new Point(next.point.x, node.point.y));
             System.out.println("[[2]]");
             System.out.println(curNode);
+            
+             //left x = node.point.x right x = nextX
+            wastedWidth = nextX - node.point.x;
+            //bottom y = node.point.y upper y = next.Y
+            wastedHeight = next.point.y - node.point.y;
             
             LinkAction la = new ReplaceLinkAction(next, node,
                     new PointNode[] {newNode});
@@ -507,12 +522,23 @@ public class OptimalPointGenerator extends Generator {
     public void generateSolution(Dataset dataset) {
         this.dataset = dataset;
         doubleDataset = new IgnoreDoubleDataset(dataset);
+        for(Dataset.Entry entry: dataset){
+            totalInputArea += entry.area();
+        }
+        /* wasted space = unfillable space + area of all rectangles
+        and can therefore be initialized as totalInputArea
+        */
+        wastedSpace = totalInputArea;
         recursion();
     }
     
     private IgnoreDoubleDataset doubleDataset;
     private Dataset dataset;
     
+    int wastedSpace = 0;
+    int wastedWidth = 0;
+    int wastedHeight = 0;
+    int totalInputArea;
     
     private void recursion() {
         System.out.println("recursion!");
@@ -578,7 +604,17 @@ public class OptimalPointGenerator extends Generator {
             if (!smallerThenNextSolExists && curNode != last) {
                 System.out.println("no small sol---------------------------------------------");
                 LinkAction la = fillAreaPointAction(node);
+                int currentWastedArea = wastedWidth * wastedHeight;
+                wastedSpace += currentWastedArea;
+                // if wasted space exceeds area of the best solution so far
+                // remove the wasted space added in this call and return to 
+                // when it was called.
+                if(best != null && wastedSpace > best.getArea()){
+                    wastedSpace -= currentWastedArea;
+                    return;
+                }
                 recursion();
+                wastedSpace -= currentWastedArea;
                 System.out.println("return");
                 la.revert();
             }
