@@ -105,8 +105,11 @@ public class Dataset
         }
         
         public Entry(Entry clone) {
-            this(new Rectangle(clone.getNormalRec()), clone.id);
-            useRotation = clone.useRotation;
+            this.rec = (Rectangle) clone.getNormalRec().clone();
+            if (clone.rotatedRec != null) this.rotatedRec
+                    = (Rectangle) clone.rotatedRec.clone();
+            this.id = clone.id;
+            this.useRotation = clone.useRotation;
         }
         
         /* 
