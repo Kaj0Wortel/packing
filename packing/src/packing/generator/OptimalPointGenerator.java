@@ -677,9 +677,10 @@ public class OptimalPointGenerator extends Generator {
     // tmp
     public static void main(String[] args) {
         // Logger setup (to disable logging, comment next line).
-        Logger.setDefaultLogger(new StreamLogger(System.out));
         
         Dataset data = new Dataset(-1, false, 6);
+        //Logger.setDefaultLogger(new StreamLogger(System.out));
+        long startTime = System.currentTimeMillis();
         data.add(new Rectangle(2, 6));
         data.add(new Rectangle(2, 6));
         data.add(new Rectangle(6, 2));
