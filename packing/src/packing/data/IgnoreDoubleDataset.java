@@ -163,7 +163,11 @@ public class IgnoreDoubleDataset
         
         @Override
         public int hashCode() {
-            return 7 * width * height;
+            if (dataset.allowRotation()) {
+                return 7 * width * height;
+            } else {
+                return (7 * width + 17) * (5 * height + 19);
+            }
         }
         
         @Override
@@ -189,7 +193,14 @@ public class IgnoreDoubleDataset
         // The next and current multiEntry.
         private MultiEntry nextEntry;
         
-        private boolean processed = false;
+        // The current dataset entry. If rotation is allowed, then this will be
+        // non-null if the entry from {@code nextEntry} has been returned once,
+        // and null if the entry from {@code nextEntry} has not yet been
+        // returned or has been returned twice.
+        private Dataset.Entry curDataEntry;
+        
+        // Whether {@code nextEntry} has been feched yet.
+        private boolean nextFeched = false;
         
         /**
          * Iterates over the multi entries of the current entry map.
@@ -200,21 +211,43 @@ public class IgnoreDoubleDataset
         
         @Override
         public Dataset.Entry next() {
-            if (!processed) {
-                if (hasNext()) throw new NoSuchElementException();
+            if (curDataEntry != null) {
+                // If rotations are allowed, and the entry has been returned
+                // once, rotate it and return it again.
+                curDataEntry.rotate();
+                
+                // And set the value to null.
+                Dataset.Entry returnValue = curDataEntry;
+                curDataEntry = null;
+                return returnValue;
+            }
+            
+            if (!nextFeched) {
+                if (!hasNext()) throw new NoSuchElementException();
             }
             
             // Check for {@code null} element.
             if (nextEntry == null) throw new NoSuchElementException();
-            processed = false;
+            nextFeched = false;
             
-            // Return the value
-            return nextEntry.next();
+            if (!dataset.allowRotation()) {
+                // If no rotations allowed, simply return the value.
+                return nextEntry.next();
+                
+            } else {
+                // If rotations are allowed, also set {@code curDataEntry}
+                // if the width and height are unequal.
+                Dataset.Entry entry = nextEntry.next();
+                Rectangle rec = entry.getNormalRec();
+                if (rec.width != rec.height) curDataEntry = entry;
+                return entry;
+            }
         }
         
         @Override
         public boolean hasNext() {
-            if (processed) return nextEntry != null;
+            if (curDataEntry != null) return true;
+            if (nextFeched) return nextEntry != null;
             
             // Revert the actions of the next(/current) entry.
             if (nextEntry != null) {
@@ -223,7 +256,7 @@ public class IgnoreDoubleDataset
             }
             
             calcNextEntry();
-            processed = true;
+            nextFeched = true;
             
             return nextEntry != null;
         }
@@ -291,9 +324,9 @@ public class IgnoreDoubleDataset
     
     // tmp
     public static void main(String[] args) {
-        Dataset data = new Dataset(-1, false, 3);
+        Dataset data = new Dataset(-1, true, 3);
         data.add(new Rectangle(2, 6));
-        //data.add(new Rectangle(2, 6));
+        data.add(new Rectangle(2, 6));
         //data.add(new Rectangle(6, 2));
         //data.add(new Rectangle(4, 3));
         //data.add(new Rectangle(3, 4));
@@ -320,7 +353,7 @@ public class IgnoreDoubleDataset
     
     public static void recursion(IgnoreDoubleDataset idd, int i) {
         for (Dataset.Entry entry : idd) {
-            System.out.println(i + ": " + entry);
+            System.out.println(i + ": " + entry.getRec());
             recursion(idd, i + 1);
         }
     }
