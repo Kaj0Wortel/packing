@@ -86,12 +86,12 @@ public class XCoordinatePacker extends Packer {
      */
     public boolean heightPruning(Dataset input, Dataset solution){
         int[] height = new int[input.getWidth()]; // height of every column of width 1
-        // e.g height[0] is the height of the column with x-coordinate 0
+        // e.g height[0] is the height of the column with x-coordinate 0 to x =1
         
         for(Dataset.Entry entry: solution){
             Rectangle rec = entry.getRec();
-            for(int i = (int)rec.getX(); i<(int)rec.getWidth(); i++){
-                height[i] += (int)rec.getHeight();
+            for(int i = rec.x; i<(rec.x + rec.width - 1); i++){
+                height[i] += rec.height;
                 // height of all rectangles in the column x=i is more than the height of the bounding box
                 if(height[i] > input.getHeight()){
                     return false;
