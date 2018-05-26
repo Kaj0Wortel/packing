@@ -31,8 +31,20 @@ public class OptimalPointGenerator extends Generator {
     // The current node that is being processed.
     private PointNode curNode;
     
+    // The current width of the dataset.
     private int width = 0;
     
+    // The dataset to generate.
+    private Dataset dataset;
+    // Dataset that ignores doubles.
+    private IgnoreDoubleDataset doubleDataset;
+    
+    // Variables to keep track of the amount of wasted space.
+    private int wastedSpace = 0;
+    private int wastedWidth = 0;
+    private int wastedHeight = 0;
+    private int totalInputArea;
+    private Stack<Integer> wastedSpaceStack = new Stack<>();
     
     /**-------------------------------------------------------------------------
      * PointNode class for creating a local linked list.
@@ -369,43 +381,64 @@ public class OptimalPointGenerator extends Generator {
         Point upLeft = new Point(node.point.x, node.point.y + rec.height);
         Point downRight = new Point(node.point.x + rec.width, node.point.y);
         
-        
         LinkAction la;
         
-        if (upLeft.y == node.point.y) {
-            PointNode removeLeft = node;
-            if (node.next != null && node.next.point.x == downRight.x) {
-                removeLeft = node.next;
-            }
-            
-            if (node.prev != null && node.prev.point.x == downRight.x) {
-                la = new RemoveLinkAction(removeLeft, node);
-                curNode = node.prev;
+        PointNode upLeftNode = null;
+        PointNode downRightNode = null;
+        
+        // If the rectangle fits the remaining space at the top (it is exactly
+        // below the next point) we can ignore the upper left point.
+        if (node.next == null || upLeft.y != node.next.point.y) {
+            upLeftNode = new PointNode(upLeft);
+        }
+        
+        // If the rectangle fits the space on the left (it is exactly above
+        // the previous point), we can ignore the lower right point.
+        if (node.prev == null || downRight.x != node.prev.point.x) {
+            downRightNode = new PointNode(downRight);
+        }
+        
+        // If the rectangle exactly fits the remaining space at the top and
+        // fits the space on the left (it is exactly below the next point),
+        // we can additionally replace the next node.
+        if (node.next != null && upLeftNode != null &&
+                downRight.y == node.next.point.y) {
+            if (downRightNode == null) {
+                la = new ReplaceLinkAction(node, node.next,
+                        new PointNode[] {upLeftNode});
+                curNode = upLeftNode;
                 
             } else {
-                PointNode newNode = new PointNode(downRight);
-                la = new ReplaceLinkAction(removeLeft, node,
-                        new PointNode[] {newNode});
-                curNode = newNode;
+                la = new ReplaceLinkAction(node, node.next,
+                        new PointNode[] {downRightNode, upLeftNode});
+                curNode = downRightNode;
             }
             
         } else {
-            PointNode[] newChain;
-            
-            if (node.prev != null && node.prev.point.x == downRight.x) {
-                newChain = new PointNode[] {
-                    new PointNode(upLeft)
-                };
+            if (downRightNode == null) {
+                if (upLeftNode == null) {
+                    la = new RemoveLinkAction(node);
+                    // This value is non-null since upLeftNode == null,
+                    // and the only way for node.next to be null is when
+                    // node.next == last, and in that case upLeftNode != null.
+                    curNode = node.next;
+                    
+                } else {
+                    la = new ReplaceLinkAction(node, upLeftNode);
+                    curNode = upLeftNode;
+                }
                 
             } else {
-                newChain = new PointNode[] {
-                    new PointNode(downRight),
-                    new PointNode(upLeft)
-                };
+                if (upLeftNode == null) {
+                    la = new ReplaceLinkAction(node, downRightNode);
+                    
+                } else {
+                    la = new ReplaceLinkAction(node,
+                            new PointNode[] {downRightNode, upLeftNode});
+                }
+                
+                curNode = downRightNode;
             }
-            
-            la = new ReplaceLinkAction(node, newChain);
-            curNode = newChain[0];
         }
         
         nodeActions.add(la);
@@ -448,6 +481,11 @@ public class OptimalPointGenerator extends Generator {
             System.out.println("[[0]]");
             System.out.println(curNode);
             
+            // left x = node.point.x right x is prevX or nextX
+            wastedWidth = nextX - node.point.x;
+            //left bottom y = nodeY right upper y = nextY
+            wastedHeight = next.point.y - node.point.y;
+            
             LinkAction la = new RemoveLinkAction(node, next);
             curNode = prev;
             System.out.println(curNode);
@@ -458,6 +496,10 @@ public class OptimalPointGenerator extends Generator {
             // the point.
             System.out.println("[[1]]");
             System.out.println(curNode);
+            //left x = node.point.x right x = prevX
+            wastedWidth = prevX - node.point.x;
+            //bottom y = node.point.y upper y = next.Y
+            wastedHeight = wastedHeight = next.point.y - node.point.y;
             
             LinkAction la = new RemoveLinkAction(node);
             curNode = prev;
@@ -472,6 +514,11 @@ public class OptimalPointGenerator extends Generator {
                     = new PointNode(new Point(next.point.x, node.point.y));
             System.out.println("[[2]]");
             System.out.println(curNode);
+            
+            //left x = node.point.x right x = nextX
+            wastedWidth = nextX - node.point.x;
+            //bottom y = node.point.y upper y = next.Y
+            wastedHeight = next.point.y - node.point.y;
             
             LinkAction la = new ReplaceLinkAction(next, node,
                     new PointNode[] {newNode});
@@ -495,6 +542,11 @@ public class OptimalPointGenerator extends Generator {
         if (best == null || best.getArea() > dataset.getArea()) {
             best = dataset.clone();
             System.out.println("New best: " + best.toString());
+            
+        } else {
+            System.out.println("Sol found: " + dataset.toString());
+            new packing.gui.ShowDataset(dataset);
+            MultiTool.sleepThread(200);
         }
     }
     
@@ -507,19 +559,26 @@ public class OptimalPointGenerator extends Generator {
     public void generateSolution(Dataset dataset) {
         this.dataset = dataset;
         doubleDataset = new IgnoreDoubleDataset(dataset);
+        
+        for (Dataset.Entry entry : dataset) {
+            totalInputArea += entry.area();
+        }
+        
+        // wasted space = unfillable space + area of all rectangle and
+        // can therefore be initialized as totalInputArea.
+        wastedSpace = totalInputArea;
         recursion();
     }
     
-    private IgnoreDoubleDataset doubleDataset;
-    private Dataset dataset;
-    
-    
+    /**
+     * The recursive fucntion to generate the solutions.
+     * All the magic happens here.
+     */
     private void recursion() {
         System.out.println("recursion!");
         System.out.println("first: " + first);
         System.out.println("last: " + last);
         printTree();
-        
         
         PointNode[] nodes = getPoints();
         if (nodes == null) return;
@@ -575,12 +634,29 @@ public class OptimalPointGenerator extends Generator {
                 return;
             }
             
-            if (!smallerThenNextSolExists && curNode != last) {
+            if (!smallerThenNextSolExists &&
+                    curNode != last && curNode != first) {
                 System.out.println("no small sol---------------------------------------------");
                 LinkAction la = fillAreaPointAction(node);
+                
+                wastedSpaceStack.add(wastedSpace);
+                int currentWastedArea = wastedWidth * wastedHeight;
+                wastedSpace += currentWastedArea;
+                // If wasted space exceeds the area of the best solution so far,
+                // we can simply ignore filling in this area and return.
+                // Note that we can also ingore possible remaining points since
+                // the rectangles that should be placed are bigger then this
+                // area.
+                if (best == null && wastedSpace <= best.getArea()) {
+                    wastedSpace = wastedSpaceStack.pop();
+                    la.revert();
+                    return;
+                }
+                
                 recursion();
                 System.out.println("return");
                 la.revert();
+                wastedSpace = wastedSpaceStack.pop();
             }
         }
     }
@@ -597,13 +673,13 @@ public class OptimalPointGenerator extends Generator {
     
     // tmp
     public static void main(String[] args) {
-        Dataset data = new Dataset(-1, false, 3);/*
+        Dataset data = new Dataset(-1, false, 6);
         data.add(new Rectangle(2, 6));
         data.add(new Rectangle(2, 6));
-        //data.add(new Rectangle(6, 2));
+        data.add(new Rectangle(6, 2));
         data.add(new Rectangle(4, 3));
         data.add(new Rectangle(3, 4));
-        //data.add(new Rectangle(10, 10));
+        data.add(new Rectangle(10, 10));
         /**//*
         data.add(new Rectangle(1, 1));
         data.add(new Rectangle(2, 2));
@@ -618,20 +694,21 @@ public class OptimalPointGenerator extends Generator {
         data.add(new Rectangle(6, 2));
         data.add(new Rectangle(3, 4));
         data.add(new Rectangle(4, 3));
-        /**/
+        /**//*
         data.add(new Rectangle(2, 6));
         data.add(new Rectangle(2, 6));
         //data.add(new Rectangle(6, 2));
         data.add(new Rectangle(4, 3));
         data.add(new Rectangle(3, 4));
+        data.add(new Rectangle(10, 10));
         /**/
         //Dataset data = new Dataset(10, false, 1);
         //data.add(new Rectangle(10, 10));
         
         Dataset result = new OptimalPointGenerator(null).generate(data);
         MultiTool.sleepThread(200);
-        System.out.println();
-        System.out.println(result);
+        System.err.println();
+        System.err.println(result);
         new packing.gui.ShowDataset(result);
     }
     
