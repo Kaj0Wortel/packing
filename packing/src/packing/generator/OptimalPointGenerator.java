@@ -21,8 +21,11 @@ import packing.tools.MultiTool;
  * Keeps track of all points of the possible locations of the rectangles.
  */
 public class OptimalPointGenerator extends Generator {
-    // A stack denoting the order in which the nodes were used.
+    // Stack for keeping track of the linked list manipulations
+    // over the iterations.
     final private Stack<LinkAction> nodeActions = new Stack<LinkAction>();
+    // Stack for keeping track of the current node over the iterations.
+    final private Stack<PointNode> curNodeStack = new Stack<PointNode>();
     
     // These points represent the fist and the last elements of the chain.
     private PointNode last;
@@ -44,6 +47,8 @@ public class OptimalPointGenerator extends Generator {
     private int wastedWidth = 0;
     private int wastedHeight = 0;
     private int totalInputArea;
+    // Stack for keeping track of the total amount of wasted space
+    // over the iterations.
     private Stack<Integer> wastedSpaceStack = new Stack<>();
     
     /**-------------------------------------------------------------------------
@@ -120,7 +125,6 @@ public class OptimalPointGenerator extends Generator {
     protected class RemoveLinkAction extends LinkAction {
         final protected PointNode removeLeft;
         final protected PointNode removeRight;
-        final protected PointNode prevCurNode;
         
         /**
          * Single link to be removed.
@@ -141,7 +145,6 @@ public class OptimalPointGenerator extends Generator {
                                    PointNode removeRight) {
             this.removeLeft = removeLeft;
             this.removeRight = removeRight;
-            this.prevCurNode = curNode;
             
             execute();
         }
@@ -168,9 +171,6 @@ public class OptimalPointGenerator extends Generator {
             // Update the first and last nodes.
             if (removeRight.prev == null) first = removeRight;
             if (removeLeft.next == null) last = removeLeft;
-            
-            // Restore the current node.
-            curNode = prevCurNode;
         }
         
     }
@@ -185,7 +185,6 @@ public class OptimalPointGenerator extends Generator {
         final protected PointNode leftNew;
         final protected PointNode rightNew;
         final protected int prevWidth;
-        final protected PointNode prevCurNode;
         
         /**
          * Short constructor for a single old node and a single new node.
@@ -199,8 +198,9 @@ public class OptimalPointGenerator extends Generator {
         
         /**
          * Short constructor for a single old node and multiple new nodes.
-         * @param oldNode
-         * @param newNodes 
+         * 
+         * @param oldNode the node to be replaced.
+         * @param newNodes chain of replacing nodes.
          */
         protected ReplaceLinkAction(PointNode oldNode, PointNode[] newNodes) {
             this(oldNode, oldNode, newNodes);
@@ -221,7 +221,6 @@ public class OptimalPointGenerator extends Generator {
             this.leftNew = newNodes[newNodes.length - 1];
             this.rightNew = newNodes[0];
             this.prevWidth = width;
-            this.prevCurNode = curNode;
             
             // Connect the new part amoung each other.
             for (int i = 0; i < newNodes.length - 1; i++) {
@@ -267,9 +266,6 @@ public class OptimalPointGenerator extends Generator {
             
             // Restore the width.
             width = prevWidth;
-            
-            // Restore the current node.
-            curNode = prevCurNode;
         }
         
     }
@@ -462,28 +458,23 @@ public class OptimalPointGenerator extends Generator {
         PointNode prev = node.prev;
         PointNode next = node.next;
         
-        if (prev == null && next == null) {
-            LinkAction li = new RemoveLinkAction(node);
-            curNode = null;
-            return li;
-        }
+        // Only when {@code node == last}.
+        if (next == null) throw new IllegalStateException();
         
-        int nextX = (next != null
-                ? next.point.x
-                : Integer.MAX_VALUE);
+        int nextX = next.point.x;
         int prevX = (prev != null
                 ? prev.point.x
                 : Integer.MAX_VALUE);
         
-        if (prevX == nextX) { // ==> prev != null && next != null
+        if (prevX == nextX) { // prev != null
             // If the x-coords are equal, we can additionally remove the
             // {@code next} point.
             System.out.println("[[0]]");
             System.out.println(curNode);
             
-            // left x = node.point.x right x is prevX or nextX
-            wastedWidth = nextX - node.point.x;
-            //left bottom y = nodeY right upper y = nextY
+            // left x = node.point.x right x is prevX
+            wastedWidth = prevX - node.point.x;
+            // left bottom y = nodeY right upper y = nextY
             wastedHeight = next.point.y - node.point.y;
             
             LinkAction la = new RemoveLinkAction(node, next);
@@ -491,11 +482,12 @@ public class OptimalPointGenerator extends Generator {
             System.out.println(curNode);
             return la;
             
-        } else if (prevX < nextX) { // ==> prev != null
+        } else if (prevX < nextX) { // prev != null
             // If the previous x-coord is smaller, we can simply remove
             // the point.
             System.out.println("[[1]]");
             System.out.println(curNode);
+            
             //left x = node.point.x right x = prevX
             wastedWidth = prevX - node.point.x;
             //bottom y = node.point.y upper y = next.Y
@@ -506,7 +498,7 @@ public class OptimalPointGenerator extends Generator {
             System.out.println(curNode);
             return la;
             
-        } else { // ==> prevX > nextX && next != null
+        } else { // ==> prevX > nextX
             // If the next x-coord is smaller, then we must replace the current
             // and the next coord with a new point that lies on their lower
             // right intersection.
@@ -546,7 +538,7 @@ public class OptimalPointGenerator extends Generator {
         } else {
             System.out.println("Sol found: " + dataset.toString());
             //new packing.gui.ShowDataset(dataset);
-            //MultiTool.sleepThread(200);
+            //MultiTool.sleepThread(2000);
         }
     }
     
@@ -581,7 +573,7 @@ public class OptimalPointGenerator extends Generator {
         printTree();
         
         PointNode[] nodes = getPoints();
-        if (nodes == null) return;
+        if (nodes == null) throw new IllegalStateException();
         
         for (int i = 0; i < nodes.length; i++) {
             PointNode node = nodes[i];
@@ -618,6 +610,7 @@ public class OptimalPointGenerator extends Generator {
                 boolean isSmallWidthEntry = nextNode == null || // If this is the first entry, true by default.
                         (isSmallWidthEntryUp && isSmallWidthEntryDown); // If small entry for up and down, then true.
                 
+                curNodeStack.add(curNode);
                 if (checkAndAddEntry(entry, node)) {
                     System.out.println("valid entry!");
                     
@@ -631,6 +624,7 @@ public class OptimalPointGenerator extends Generator {
                     System.out.println("return");
                     nodeActions.pop().revert();
                 }
+                curNode = curNodeStack.pop();
             }
             
             // If all rectangles have been placed,
@@ -652,17 +646,20 @@ public class OptimalPointGenerator extends Generator {
                 // Note that we can also ingore possible remaining points
                 // since the rectangles that should be placed are bigger
                 // then this area.
-                if (best == null && wastedSpace <= best.getArea()) {
+                if (best == null || wastedSpace <= best.getArea()) {
                     wastedSpace = wastedSpaceStack.pop();
                     la.revert();
                     return;
                 }
                 
+                curNodeStack.add(curNode);
                 recursion();
                 System.out.println("return");
                 la.revert();
+                curNode = curNodeStack.pop();
                 wastedSpace = wastedSpaceStack.pop();
             }
+            
         }
     }
     
