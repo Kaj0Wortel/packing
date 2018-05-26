@@ -545,8 +545,8 @@ public class OptimalPointGenerator extends Generator {
             
         } else {
             System.out.println("Sol found: " + dataset.toString());
-            new packing.gui.ShowDataset(dataset);
-            MultiTool.sleepThread(200);
+            //new packing.gui.ShowDataset(dataset);
+            //MultiTool.sleepThread(200);
         }
     }
     
@@ -592,7 +592,7 @@ public class OptimalPointGenerator extends Generator {
             }
             
             // Whether a rectangle that fits in the minimal gap has been found.
-            boolean smallerThenNextSolExists = false;
+            boolean smallSolExists = false;
             // Whether there is at least one rectangle remaining.
             boolean recsAvailable = false;
             
@@ -606,19 +606,25 @@ public class OptimalPointGenerator extends Generator {
                 System.out.println("point: " + node);
                 System.out.println("entry: " + entry);
                 
+                Rectangle rec = entry.getRec();
+                boolean isSmallWidthEntryUp = nextNode == null || // If this is the last entry, true by default.
+                        nextNode.point.x <= node.point.x || // Next point is on the left.
+                        nextNode.point.x >= node.point.x + rec.width; // next point >= cur point + rec.
+                
+                boolean isSmallWidthEntryDown = prevNode == null || // If this is the first entry, true by default.
+                        prevNode.point.x <= node.point.x || // Prev point is on the left (should not occur).
+                        prevNode.point.x >= node.point.x + rec.width; // prev point >= cur point + rec.
+                
+                boolean isSmallWidthEntry = nextNode == null || // If this is the first entry, true by default.
+                        (isSmallWidthEntryUp && isSmallWidthEntryDown); // If small entry for up and down, then true.
+                
                 if (checkAndAddEntry(entry, node)) {
                     System.out.println("valid entry!");
-                    Rectangle rec = entry.getRec();
                     
-                    if ((nextNode == null || // No next point available.
-                            nextNode.point.x <= node.point.x || // Next point is on the left.
-                            nextNode.point.x >= node.point.x + rec.width) && // Rec + cur point < next point (should not occur).
-                           (prevNode == null || // No prev point available.
-                            prevNode.point.x <= node.point.x || // Prev point is on the left (should not occur).
-                            prevNode.point.x >= node.point.x + rec.width)) { // Rec + cur point < prev point.
+                    if (isSmallWidthEntry) {
                         // There exists at least one solution that doesn't
                         // 'stick out' compared to the next and previous point.
-                        smallerThenNextSolExists = true;
+                        smallSolExists = true;
                     }
                     
                     recursion();
@@ -634,8 +640,7 @@ public class OptimalPointGenerator extends Generator {
                 return;
             }
             
-            if (!smallerThenNextSolExists &&
-                    curNode != last && curNode != first) {
+            if (!smallSolExists) {
                 System.out.println("no small sol---------------------------------------------");
                 LinkAction la = fillAreaPointAction(node);
                 
@@ -644,9 +649,9 @@ public class OptimalPointGenerator extends Generator {
                 wastedSpace += currentWastedArea;
                 // If wasted space exceeds the area of the best solution so far,
                 // we can simply ignore filling in this area and return.
-                // Note that we can also ingore possible remaining points since
-                // the rectangles that should be placed are bigger then this
-                // area.
+                // Note that we can also ingore possible remaining points
+                // since the rectangles that should be placed are bigger
+                // then this area.
                 if (best == null && wastedSpace <= best.getArea()) {
                     wastedSpace = wastedSpaceStack.pop();
                     la.revert();
