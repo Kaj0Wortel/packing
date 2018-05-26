@@ -13,6 +13,7 @@ import java.awt.Rectangle;
 import java.util.Stack;
 import packing.data.IgnoreDoubleDataset;
 import packing.generator.OptimalPointGenerator.LinkAction;
+import packing.gui.ShowDataset;
 import packing.packer.PackerFactory;
 import packing.tools.Logger;
 import packing.tools.MultiTool;
@@ -539,16 +540,11 @@ public class OptimalPointGenerator extends Generator {
             
         } else {
             Logger.write("Sol found: " + dataset.toString());
-            //new packing.gui.ShowDataset(dataset);
-            //MultiTool.sleepThread(2000);
+            //new ShowDataset(dataset);
+            //MultiTool.sleepThread(100);
         }
     }
     
-    /**
-     * Generates a solution for the given dataset.
-     * 
-     * @param node 
-     */
     @Override
     public void generateSolution(Dataset dataset) {
         this.dataset = dataset;
@@ -569,6 +565,9 @@ public class OptimalPointGenerator extends Generator {
      * All the magic happens here.
      */
     private void recursion() {
+        if (best != null && last != null &&
+                last.point.y * width >= best.size()) return;
+        
         Logger.write("recursion!");
         Logger.write("first: " + first);
         Logger.write("last: " + last);
@@ -713,10 +712,11 @@ public class OptimalPointGenerator extends Generator {
         //data.add(new Rectangle(10, 10));
         
         Dataset result = new OptimalPointGenerator(null).generate(data);
+        System.out.println(System.currentTimeMillis() - startTime);
         MultiTool.sleepThread(200);
         System.err.println();
         System.err.println(result);
-        new packing.gui.ShowDataset(result);
+        new ShowDataset(result);
     }
     
 }
