@@ -37,49 +37,49 @@ public class Dataset
     // The width and height of the sheet.
     protected int width;
     protected int height;
-
+    
     // The list of entries
     protected List<Dataset.Entry> list = new ArrayList<>();
-
-    protected static Random random = new Random();
-
+    
+    final protected static Random random = new Random();
+    
     // Do not rotate rectangles
     public static final Predicate<Entry> NO_ROTATION = entry -> false;
-
+    
     // Rotate rectangles randomly
     public static final Predicate<Entry> RANDOM_ROTATION = entry -> random.nextBoolean();
-
+    
     // Rotate rectangles so their longest side is vertical
     public static final Predicate<Entry> LONGEST_SIDE_VERTIAL = entry -> entry.getRec().width > entry.getRec().height;
-
+    
     // Sort rectangles by decreasing height
     public static final Comparator<Entry> SORT_HEIGHT = Collections.reverseOrder(
             Comparator.comparingInt((Entry entry) -> entry.getRec().height)
                     .thenComparing((Entry entry) -> entry.getRec().width)
     );
-
+    
     // Sort rectangles by decreasing area
     public static final Comparator<Entry> SORT_AREA = Collections.reverseOrder(
             Comparator.comparingInt((Entry entry) -> entry.getRec().height * entry.getRec().width)
                     .thenComparing((Entry entry) -> entry.getRec().height)
     );
-
+    
     // Sort rectangles by decreasing width
     public static final Comparator<Entry> SORT_WIDTH = Collections.reverseOrder(
             Comparator.comparingInt((Entry entry) -> entry.getRec().width)
                     .thenComparing((Entry entry) -> entry.getRec().height)
     );
-
+    
     // Sort rectangles by the length of their longest side, decreasing
     public static final Comparator<Entry> SORT_LONGEST_SIDE = Collections.reverseOrder(
             Comparator.comparingInt((Entry entry) -> Math.max(entry.getRec().height, entry.getRec().width))
                     .thenComparing((Entry entry) -> Math.min(entry.getRec().height, entry.getRec().width))
     );
-
+    
     // Sort rectangles by id, ascending
     public static final Comparator<Entry> SORT_ID = Comparator.comparingInt(entry -> entry.id);
-
-
+    
+    
     /* -------------------------------------------------------------------------
      * Entry class
      * -------------------------------------------------------------------------
@@ -206,8 +206,9 @@ public class Dataset
         
         @Override
         public String toString() {
-            return "[rec: " + rec.toString()
-                + ", rotation: " + useRotation + "]";
+            return "[rec: [x=" + rec.x + ", y=" + rec.y + ", width="
+                    + rec.width + ", height=" + rec.height + "], "
+                    + "rotation: " + useRotation + "]";
         }
         
         @Override
@@ -235,11 +236,14 @@ public class Dataset
 
         if (fixedHeight) this.height = height;
     }
-
+    
     public Dataset(Dataset clone) {
         this((clone.fixedHeight ? clone.height : -1),
                 clone.allowRot, clone.numRect);
         this.idCounter = clone.idCounter;
+        this.width = clone.width;
+        this.height = clone.height;
+        
         for (Dataset.Entry entry : clone.list) {
             list.add(entry.clone());
         }
@@ -259,35 +263,41 @@ public class Dataset
         list.add(new Dataset.Entry(rec, idCounter++));
     }
     
+    /**
+     * Removes the provided rectangle from the entry list.
+     * 
+     * @param rec the rectangle to be removed.
+     */
     public void remove(Rectangle rec) {
         list.remove(new Dataset.Entry(rec, idCounter--));
     }
-
+    
     @Override
     public Iterator<Entry> iterator() {
         return list.iterator();
     }
-
+    
     /**
      * @return the i'th object that was added.
      */
     public Dataset.Entry get(int i) {
         return list.get(i);
     }
-
+    
     @Override
     public String toString() {
-        return "[allowRot: " + allowRot + ", height: " + height
-                + ", numRect: " + numRect + " set: " + list.toString() + "]";
+        return "[allowRot=" + allowRot + ", width=" + width
+                + ", height=" + height + ", numRect=" + numRect
+                + " set=" + list.toString() + "]";
     }
-
+    
     /**
      * @return whether the height is fixed.
      */
     public boolean isFixedHeight() {
         return fixedHeight;
     }
-
+    
     /**
      * @return whether rotations are allowed.
      */
