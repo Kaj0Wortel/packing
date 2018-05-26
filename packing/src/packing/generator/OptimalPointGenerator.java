@@ -646,7 +646,7 @@ public class OptimalPointGenerator extends Generator {
                 // Note that we can also ingore possible remaining points
                 // since the rectangles that should be placed are bigger
                 // then this area.
-                if (best == null || wastedSpace <= best.getArea()) {
+                if (best != null && wastedSpace <= best.getArea()) {
                     wastedSpace = wastedSpaceStack.pop();
                     la.revert();
                     return;
