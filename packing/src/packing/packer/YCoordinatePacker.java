@@ -27,15 +27,29 @@ public class YCoordinatePacker extends Packer {
         
         List<Point> corners = new ArrayList<Point>();
         corners.add(new Point(0,0));
-        return null;
+        
+        Dataset solution = dataset.clone();
+        for(Dataset.Entry entry: solution){
+            Rectangle rec = entry.getRec();
+            solution.remove(rec);
+        }
+        entries = new boolean[dataset.getWidth()-1][dataset.getHeight()-1];
+        return backtracker(dataset, solution, corners);
     }
     
+    boolean[][] entries;
+   
     public Dataset backtracker(Dataset input, Dataset solution, List<Point> corners){
         
         for(Point p: corners){
             for(Dataset.Entry entry: input){
                 Rectangle rec = entry.getRec();
-                if(rec.x == p.x){
+                if(rec.x == p.x && checkIfFits(rec)){
+                    for(int i = rec.x; i < (rec.x + rec.width -1); i++){
+                        for(int j = rec.y; j < (rec.y + rec.height -1); j++){
+                            entries[i][j] = true;
+                        }
+                    }
                     rec.y = p.y;
                     solution.add(rec);
                     input.remove(entry.getRec());
@@ -52,6 +66,17 @@ public class YCoordinatePacker extends Packer {
         }
         
         return null;
+    }
+    
+    public boolean checkIfFits(Rectangle rec){
+        for(int i = rec.x; i < (rec.x + rec.width -1); i++){
+                        for(int j = rec.y; j < (rec.y + rec.height -1); j++){
+                            if(entries[i][j]){
+                                return false;
+                            }
+                        }
+                    }
+        return true;
     }
     
     /**

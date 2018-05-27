@@ -37,6 +37,8 @@ public class RectangleMinHeap {
             i = parent;
             parent = parent(i);
         }
+        //System.out.println(item.width + "Width and Height" + item.height);
+          //  System.out.println(list.get(0));
     }
 
     public void buildHeap() {
@@ -54,11 +56,14 @@ public class RectangleMinHeap {
         } else if (list.size() == 1) {
 
             Rectangle min = list.remove(0);
+            System.out.println(min + "min and item" + list.get(0));
             return min;
         }
 
         // remove the last item ,and set it as new root
         Rectangle min = list.get(0);
+       System.out.println(min + "min");
+        //System.out.println(min.height);
         Rectangle lastItem = list.remove(list.size() - 1);
         list.set(0, lastItem);
 
