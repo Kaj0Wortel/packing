@@ -21,14 +21,14 @@ import java.util.NoSuchElementException;
  * (1, 2) and (2, 1) also are considered equal.
  * 
  * NOTES OF CAUTION:
- * - This class is ONLY suitable for recursive use. This means that you
- *   should not use this class when new iterators are created in a linear way
- *   (recursing after each other instead of simultaneously).
- * - This class is not thread safe.
- * - There is no guarantee of the order of the rectangles that are returned.
- * - There is no guarantee of the entry returned by the iterator.
- * - An open iterator cannot be abandoned carelessly. One can only do this
- *   AFTER calling the {@link IgnoreDoubleIterator#hasNext()} function.
+ * - An "open" iterator cannot be "abandoned" carelessly. One can only do this
+ *   AFTER calling the {@link IgnoreDoubleIterator#hasNext()} function when no
+ *   rotations are not allowed or the last entry returned was a square,
+ *   or by calling the same method after the same rectangle occured twice when
+ *   rotations are allowed
+ * - By default, the returned entries are semi-randomly sorted. This means
+ *   that when exactly the same dataset in the same order is inputted, the
+ *   result will be the same, but no further guarantees about the order.
  */
 public class IgnoreDoubleDataset
         implements Iterable<Dataset.Entry>, packing.tools.Cloneable {
@@ -41,6 +41,9 @@ public class IgnoreDoubleDataset
     
     /**-------------------------------------------------------------------------
      * Entry containing multiple {@code Dataset.Entry}'s.
+     * -------------------------------------------------------------------------
+     */
+    /**
      * All entries contained in this class have the same characteristics,
      * so the width and height are equal or, when rotations are allowed,
      * the width equal to the height and vice verca.
@@ -352,15 +355,27 @@ public class IgnoreDoubleDataset
         sortedArray = toArray(entryMap.values(), MultiEntry.class);
     }
     
+    
     /**-------------------------------------------------------------------------
      * Functions.
      * -------------------------------------------------------------------------
      */
-    private static <V> V[] toArray(Collection<V> col, Class<V> c) {
-        V[] arr = (V[]) Array.newInstance(c, col.size());
+    /**
+     * Converts a collection to an array.
+     * 
+     * @param <V1> the type value of the collection.
+     * @param <V2> the type value of the returned array.
+     * @param col the collection to be converted.
+     * @param c denotes the return array class type.
+     * @return an array containg the same instances as {@code col}, and in the
+     *     same order as returned by the iterator of {@code col}.
+     */
+    private static <V1, V2 extends V1> V1[] toArray(Collection<V2> col,
+                                                    Class<V1> c) {
+        V1[] arr = (V1[]) Array.newInstance(c, col.size());
         
         int counter = 0;
-        for (V v : col) {
+        for (V1 v : col) {
             arr[counter++] = v;
         }
         
@@ -392,13 +407,14 @@ public class IgnoreDoubleDataset
         return new IgnoreDoubleDataset(dataset.clone());
     }
     
+    
     // tmp
     public static void main(String[] args) {
         Dataset data = new Dataset(-1, true, 3);
-        //data.add(new Rectangle(2, 6));
+        data.add(new Rectangle(2, 6));
         //data.add(new Rectangle(2, 6));
         //data.add(new Rectangle(6, 2));
-        //data.add(new Rectangle(4, 3));
+        data.add(new Rectangle(4, 3));
         //data.add(new Rectangle(3, 4));
         //data.add(new Rectangle(100, 100));
         
@@ -421,6 +437,7 @@ public class IgnoreDoubleDataset
         
     }
     
+    // tmp
     public static void recursion(IgnoreDoubleDataset idd, int i) {
         for (Dataset.Entry entry : idd) {
             System.out.println(i + ": " + entry.getRec());
