@@ -100,8 +100,11 @@ public class PackingSolver {
             reader = new FileDataReader(inputFile, ow);
         }
         
-        Dataset input = reader.readEntries();
-        if (input == null) return;
+        DatasetDefault input = reader.readEntries();
+        if (input == null) {
+            timer.cancel();
+            return;
+        }
         
         // Generate solution.
         if (input.isFixedHeight()) {
