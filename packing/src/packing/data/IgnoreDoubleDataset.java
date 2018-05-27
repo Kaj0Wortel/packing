@@ -3,8 +3,10 @@ package packing.data;
 
 // Java imports.
 import java.awt.Rectangle;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -34,9 +36,6 @@ public class IgnoreDoubleDataset
     // The dataset used as source.
     final protected Dataset dataset;
     
-    // Map containing the multi entries.
-    final protected HashMap<MultiEntryKey, MultiEntry> entryMap;
-    
     // Sorted array containing the same elements as the HashMap.
     final protected MultiEntry[] sortedArray;
     
@@ -46,8 +45,9 @@ public class IgnoreDoubleDataset
      * so the width and height are equal or, when rotations are allowed,
      * the width equal to the height and vice verca.
      */
-    public class MultiEntry 
-            implements Iterable {
+    public class MultiEntry
+            extends CompareEntry
+            implements Iterable<Dataset.Entry> {
         // List containing all entries.
         final private List<Dataset.Entry> entries = new ArrayList<>();
         
@@ -59,6 +59,7 @@ public class IgnoreDoubleDataset
         // Pointer for the entries to be returned via {@link #next()}.
         private int entryPointer = 0;
         
+        
         /**
          * @param width the width value for all entries.
          * @param height the height value for all entries.
@@ -67,9 +68,11 @@ public class IgnoreDoubleDataset
          * iff rotations are allowed.
          */
         public MultiEntry(int width, int height) {
+            super(0);
             this.width = width;
             this.height = height;
         }
+        
         
         /**
          * @return the total number of enties in this class.
@@ -129,6 +132,11 @@ public class IgnoreDoubleDataset
         }
         
         @Override
+        public Rectangle getRec() {
+            return entries.get(entryPointer).getRec();
+        }
+        
+        @Override
         public Iterator<Dataset.Entry> iterator() {
             return entries.iterator();
         }
@@ -151,6 +159,7 @@ public class IgnoreDoubleDataset
     
     /**-------------------------------------------------------------------------
      * Key class for the multiEntries.
+     * -------------------------------------------------------------------------
      */
     public class MultiEntryKey {
         final private int width;
@@ -186,13 +195,14 @@ public class IgnoreDoubleDataset
     }
     
     
-    /**
-     * Iterator for the elements.
+    /**-------------------------------------------------------------------------
+     * Iterator ignoring double elements.
+     * -------------------------------------------------------------------------
      */
     private class IgnoreDoubleIterator
             implements Iterator<Dataset.Entry> {
-        // The iterator over the entries of the map.
-        final private Iterator<MultiEntry> mapIt;
+        // The iterator over the sorted array
+        final private Iterator<MultiEntry> it;
         
         // The next and current multiEntry.
         private MultiEntry nextEntry;
@@ -210,7 +220,7 @@ public class IgnoreDoubleDataset
          * Iterates over the multi entries of the current entry map.
          */
         private IgnoreDoubleIterator() {
-            mapIt = entryMap.values().iterator();
+            it = new ArrayIterator<MultiEntry>(sortedArray);
         }
         
         @Override
@@ -270,8 +280,8 @@ public class IgnoreDoubleDataset
          * Simply returns when the next entry has already been calculated.
          */
         private void calcNextEntry() {
-            while (nextEntry == null && mapIt.hasNext()) {
-                MultiEntry me = mapIt.next();
+            while (nextEntry == null && it.hasNext()) {
+                MultiEntry me = it.next();
                 
                 if (me.hasNext()) {
                     nextEntry = me;
@@ -281,9 +291,40 @@ public class IgnoreDoubleDataset
         
     }
     
+    /**-------------------------------------------------------------------------
+     * Iterator for arrays.
+     * -------------------------------------------------------------------------
+     */
+    private class ArrayIterator<V> implements Iterator<V> {
+        // The array to iterate over.
+        final private V[] array;
+        
+        // The current element counter.
+        private int elemCounter = 0;
+        
+        private ArrayIterator(V[] array) {
+            this.array = array;
+        }
+        
+        @Override
+        public V next() {
+            if (elemCounter >= array.length)
+                throw new NoSuchElementException();
+            return array[elemCounter++];
+        }
+        
+        @Override
+        public boolean hasNext() {
+            return elemCounter < array.length;
+        }
+    }
+    
     
     /**-------------------------------------------------------------------------
-     * Constructor.
+     * Constructors.
+     * -------------------------------------------------------------------------
+     */
+    /**
      * Maps all entries in the dataset relative to their width and height.
      * 
      * @param data the source dataset.
@@ -292,7 +333,8 @@ public class IgnoreDoubleDataset
         this.dataset = data;
         float loadFactor = 0.75f;
         int numEntries = (int) (data.size() / loadFactor + 1);
-        entryMap = new HashMap<>(numEntries, loadFactor);
+        HashMap<MultiEntryKey, MultiEntry> entryMap
+                = new HashMap<>(numEntries, loadFactor);
         
         for (Dataset.Entry entry : data) {
             Rectangle rec = entry.getNormalRec();
@@ -307,14 +349,24 @@ public class IgnoreDoubleDataset
             
             me.add(entry);
         }
-        
-        sortedArray = (MultiEntry[]) entryMap.values().toArray();
+        sortedArray = toArray(entryMap.values(), MultiEntry.class);
     }
     
-    /**
-     * 
+    /**-------------------------------------------------------------------------
+     * Functions.
+     * -------------------------------------------------------------------------
      */
-
+    private static <V> V[] toArray(Collection<V> col, Class<V> c) {
+        V[] arr = (V[]) Array.newInstance(c, col.size());
+        
+        int counter = 0;
+        for (V v : col) {
+            arr[counter++] = v;
+        }
+        
+        return arr;
+    }
+    
     /**
      * Set the ordering of entries to be sorted according to {@code comparator}
      * @param comparator the comparison to sort on
@@ -343,12 +395,12 @@ public class IgnoreDoubleDataset
     // tmp
     public static void main(String[] args) {
         Dataset data = new Dataset(-1, true, 3);
-        data.add(new Rectangle(2, 6));
-        data.add(new Rectangle(2, 6));
+        //data.add(new Rectangle(2, 6));
+        //data.add(new Rectangle(2, 6));
         //data.add(new Rectangle(6, 2));
         //data.add(new Rectangle(4, 3));
         //data.add(new Rectangle(3, 4));
-        data.add(new Rectangle(100, 100));
+        //data.add(new Rectangle(100, 100));
         
         IgnoreDoubleDataset idd = new IgnoreDoubleDataset(data);
         

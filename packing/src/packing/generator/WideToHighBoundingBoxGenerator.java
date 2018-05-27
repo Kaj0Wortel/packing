@@ -3,14 +3,17 @@ package packing.generator;
 
 
 // Packing imports
-import packing.data.*;
-import packing.packer.*;
+import packing.data.CompareEntry;
+import packing.data.Dataset;
+import packing.packer.Packer;
+import packing.packer.PackerFactory;
 
 
 // Java imports
 import java.awt.Rectangle;
 import java.util.Arrays;
 import java.util.Comparator;
+
 
 /**
  * Generates bounding boxes starting at a wide, low bounding box,
@@ -29,7 +32,7 @@ public class WideToHighBoundingBoxGenerator extends Generator {
         // By default set the best solution to null.
         best = null;
 
-        dataset.setRotation(Dataset.NO_ROTATION);
+        dataset.setRotation(CompareEntry.NO_ROTATION);
 
         int width = 0;
         int height = 0;
@@ -53,9 +56,13 @@ public class WideToHighBoundingBoxGenerator extends Generator {
         // Loop until the time has run out, or the minimal
         // width has been reached.
         try {
-            Comparator<Dataset.Entry> bestOrdering = null;
+            Comparator<CompareEntry> bestOrdering = null;
 
-            for (Comparator<Dataset.Entry> comparator : Arrays.asList(Dataset.SORT_HEIGHT, Dataset.SORT_AREA, Dataset.SORT_WIDTH, Dataset.SORT_LONGEST_SIDE)) {
+            for (Comparator<CompareEntry> comparator : Arrays.asList(
+                    CompareEntry.SORT_HEIGHT,
+                    CompareEntry.SORT_AREA,
+                    CompareEntry.SORT_WIDTH,
+                    CompareEntry.SORT_LONGEST_SIDE)) {
                 dataset.setOrdering(comparator);
                 Packer packer = packerFactory.create(width, height);
                 Dataset packed = packer.pack(dataset);

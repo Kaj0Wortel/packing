@@ -1,9 +1,17 @@
+
 package packing.generator;
 
+
+// Packing imports/
+import packing.data.CompareEntry;
 import packing.data.Dataset;
 import packing.packer.Packer;
 import packing.packer.PackerFactory;
 
+
+/**
+ * Class description here.
+ */
 public class FixedHeightGenerator extends Generator {
     public FixedHeightGenerator(PackerFactory factory) {
         super(factory);
@@ -13,7 +21,7 @@ public class FixedHeightGenerator extends Generator {
     public void generateSolution(Dataset dataset) {
         // %%explaination needed%%
         // %%THIS IS NOT ALLOWED!!!
-        dataset.setRotation(Dataset.NO_ROTATION);
+        dataset.setRotation(CompareEntry.NO_ROTATION);
         
         int height = dataset.getHeight();
         int width;
@@ -37,7 +45,7 @@ public class FixedHeightGenerator extends Generator {
         while (height * width > minArea) {
             // Random Search
             dataset.shuffle();
-            dataset.setRotation(Dataset.RANDOM_ROTATION);
+            dataset.setRotation(CompareEntry.RANDOM_ROTATION);
             
             Packer packer = packerFactory.create(width, height);
             Dataset packed = packer.pack(dataset);

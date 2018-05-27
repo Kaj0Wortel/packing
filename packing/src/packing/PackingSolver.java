@@ -32,10 +32,10 @@ public class PackingSolver {
     // The test file
     final public static String testFile
         = System.getProperty("user.dir") + FS + "testcases" + FS
-            //+ "03_01_h20_rn.txt";
+            + "03_01_h20_rn.txt";
             //+ "test_case_9_10000.txt";
             //+ "25_01_h19_ry.txt";
-            + "25_04_h74_rn.txt";
+            //+ "25_04_h74_rn.txt";
     
     final public static File[] testFiles
         = new File(System.getProperty("user.dir") + FS + "testcases")
@@ -74,7 +74,7 @@ public class PackingSolver {
                 }
             }
         }, 300000L - 2000L); // 5*60*1000 = 300 000, use 2000 ms space
-//        }, 5000L); // tmp
+        //}, 5000L); // tmp
         
         // Create the output writer.
         OutputWriter ow = null;
@@ -100,7 +100,7 @@ public class PackingSolver {
             reader = new FileDataReader(inputFile, ow);
         }
         
-        DatasetDefault input = reader.readEntries();
+        Dataset input = reader.readEntries();
         if (input == null) {
             timer.cancel();
             return;

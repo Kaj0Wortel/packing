@@ -1,13 +1,17 @@
 
 package packing.generator;
 
+
 // Packing imports
+import packing.data.CompareEntry;
 import packing.data.Dataset;
 import packing.genetic.Population;
 import packing.packer.PackerFactory;
 
+
 // Java imports
 import java.awt.Rectangle;
+
 
 /**
  * Generator for the genetic variant.
@@ -22,7 +26,7 @@ public class GeneticGenerator
     @Override
     public void generateSolution(Dataset dataset) {
         // %%explaination needed%%
-        dataset.setRotation(Dataset.LONGEST_SIDE_VERTIAL);
+        dataset.setRotation(CompareEntry.LONGEST_SIDE_VERTIAL);
         
         int height = dataset.getHeight();
         int width;
@@ -47,21 +51,21 @@ public class GeneticGenerator
                 100 * (best.getArea() - minArea) / (double) best.getArea());
         
         Population population = new Population(best, packerFactory, dataset.getHeight());
-
+        
         Dataset current;
-
+        
         try {
             while (best.getArea() > minArea && width > minWidth) {
                 generation++;
                 population.calculateFitness();
                 current = population.getBest();
-
+                
                 if (current.getArea() < best.getArea()) {
                     System.err.printf("Found new solution: [%d x %d] (%.5f%% wasted space)\n", current.getWidth(), current.getHeight(),
                             100 * (current.getArea() - minArea) / (double) current.getArea());
                     best = current;
                 }
-
+                
                 population.performSelection();
                 population.performMutation();
             }

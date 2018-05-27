@@ -1,14 +1,24 @@
+
 package packing.genetic;
 
+
+// Packing imports
+import packing.data.CompareEntry;
 import packing.data.Dataset;
 import packing.packer.Packer;
 import packing.packer.PackerFactory;
 
+
+// Java imports
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+
+/**
+ * Class description here.
+ */
 public class Population {
     // The size of the population.
     public static final int POPULATION_SIZE = 200;
@@ -146,7 +156,7 @@ public class Population {
         while (instances.size() < POPULATION_SIZE) {
             Dataset clone = dataset.clone();
             clone.shuffle();
-            clone.setRotation(Dataset.RANDOM_ROTATION);
+            clone.setRotation(CompareEntry.RANDOM_ROTATION);
             instances.add(new Instance(clone));
         }
     }

@@ -41,43 +41,6 @@ public class Dataset
     // The list of entries
     protected List<Dataset.Entry> list = new ArrayList<>();
     
-    final protected static Random random = new Random();
-    
-    // Do not rotate rectangles
-    public static final Predicate<Entry> NO_ROTATION = entry -> false;
-    
-    // Rotate rectangles randomly
-    public static final Predicate<Entry> RANDOM_ROTATION = entry -> random.nextBoolean();
-    
-    // Rotate rectangles so their longest side is vertical
-    public static final Predicate<Entry> LONGEST_SIDE_VERTIAL = entry -> entry.getRec().width > entry.getRec().height;
-    
-    // Sort rectangles by decreasing height
-    public static final Comparator<Entry> SORT_HEIGHT = Collections.reverseOrder(
-            Comparator.comparingInt((Entry entry) -> entry.getRec().height)
-                    .thenComparing((Entry entry) -> entry.getRec().width)
-    );
-    
-    // Sort rectangles by decreasing area
-    public static final Comparator<Entry> SORT_AREA = Collections.reverseOrder(
-            Comparator.comparingInt((Entry entry) -> entry.getRec().height * entry.getRec().width)
-                    .thenComparing((Entry entry) -> entry.getRec().height)
-    );
-    
-    // Sort rectangles by decreasing width
-    public static final Comparator<Entry> SORT_WIDTH = Collections.reverseOrder(
-            Comparator.comparingInt((Entry entry) -> entry.getRec().width)
-                    .thenComparing((Entry entry) -> entry.getRec().height)
-    );
-    
-    // Sort rectangles by the length of their longest side, decreasing
-    public static final Comparator<Entry> SORT_LONGEST_SIDE = Collections.reverseOrder(
-            Comparator.comparingInt((Entry entry) -> Math.max(entry.getRec().height, entry.getRec().width))
-                    .thenComparing((Entry entry) -> Math.min(entry.getRec().height, entry.getRec().width))
-    );
-    
-    // Sort rectangles by id, ascending
-    public static final Comparator<Entry> SORT_ID = Comparator.comparingInt(entry -> entry.id);
     
     
     /* -------------------------------------------------------------------------
@@ -85,12 +48,10 @@ public class Dataset
      * -------------------------------------------------------------------------
      */
     public class Entry
+            extends CompareEntry
             implements packing.tools.Cloneable {
         // The rectangle.
         final private Rectangle rec;
-        
-        // The number denoting the order of occurance in the input.
-        final private int id;
         
         // The rotated rectangle.
         private Rectangle rotatedRec;
@@ -99,20 +60,33 @@ public class Dataset
         private boolean useRotation = false;
         
         
+        /**
+         * Default constructor.
+         * 
+         * @param rec the rectangle denoting the size and offset of the entry.
+         * @param id number denoting the order of occurance in the input.
+         */
         public Entry(Rectangle rec, int id) {
+            super(id);
             this.rec = rec;
-            this.id = id;
         }
         
+        /**
+         * Clone constructor.
+         * 
+         * @param clone entry to be cloned from.
+         */
         public Entry(Entry clone) {
+            super(clone.id);
+            this.useRotation = clone.useRotation;
             this.rec = (Rectangle) clone.getNormalRec().clone();
             if (clone.rotatedRec != null) this.rotatedRec
                     = (Rectangle) clone.rotatedRec.clone();
-            this.id = clone.id;
-            this.useRotation = clone.useRotation;
+            
         }
         
-        /* 
+        
+        /**
          * Ensures that the rotated rectangle is calculated.
          * @throws IllegalStateException iff rotations are not allowed.
          */
@@ -128,14 +102,14 @@ public class Dataset
             }
         }
         
-        /* 
+        /**
          * @return the rectangle {@code rec}.
          */
         public Rectangle getNormalRec() {
             return rec;
         }
         
-        /* 
+        /**
          * @return the rotated version of rec.
          * @throws IllegalStateException iff rotations are not allowed.
          */
@@ -145,23 +119,24 @@ public class Dataset
             return rotatedRec;
         }
         
-        /* 
+        /**
          * @return the rectangle depending on the default rotation.
          */
+        @Override
         public Rectangle getRec() {
             return (useRotation
                         ? getRotatedRec()
                         : getNormalRec());
         }
         
-        /* 
+        /**
          * @return the default rotation of the entry.
          */
         public boolean useRotation() {
             return useRotation;
         }
         
-        /* 
+        /**
          * Sets the default rotation of the entry.
          * 
          * @param rotation whether the entry is rotated by default.
@@ -391,7 +366,7 @@ public class Dataset
      * Set the rotation of each entry according to {@code predicate}
      * @param predicate when to rotate the entry
      */
-    public void setRotation(Predicate<Entry> predicate) {
+    public void setRotation(Predicate<CompareEntry> predicate) {
         if (allowRot) {
             if (fixedHeight) {
                 for (Entry entry : this) {
@@ -415,7 +390,7 @@ public class Dataset
      * Set the ordering of entries to be sorted according to {@code comparator}
      * @param comparator the comparison to sort on
      */
-    public void setOrdering(Comparator<Entry> comparator) {
+    public void setOrdering(Comparator<CompareEntry> comparator) {
         list.sort(comparator);
     }
 

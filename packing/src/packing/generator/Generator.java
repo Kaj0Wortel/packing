@@ -3,10 +3,11 @@ package packing.generator;
 
 
 // Packing imports
-import packing.tools.ThreadMonitor;
+import packing.data.CompareEntry;
 import packing.data.Dataset;
 import packing.packer.Packer;
 import packing.packer.PackerFactory;
+import packing.tools.ThreadMonitor;
 
 
 // Java imports
@@ -62,14 +63,16 @@ public abstract class Generator {
         
         Dataset upperBound = null;
         
-        for (Predicate<Dataset.Entry> predicate :
-                Arrays.asList(Dataset.NO_ROTATION,
-                        Dataset.LONGEST_SIDE_VERTIAL)) {
+        for (Predicate<CompareEntry> predicate :
+                Arrays.asList(CompareEntry.NO_ROTATION,
+                        CompareEntry.LONGEST_SIDE_VERTIAL)) {
             dataset.setRotation(predicate);
             
-            for (Comparator<Dataset.Entry> comparator :
-                    Arrays.asList(Dataset.SORT_HEIGHT, Dataset.SORT_AREA,
-                            Dataset.SORT_WIDTH, Dataset.SORT_LONGEST_SIDE)) {
+            for (Comparator<CompareEntry> comparator :
+                    Arrays.asList(CompareEntry.SORT_HEIGHT,
+                            CompareEntry.SORT_AREA,
+                            CompareEntry.SORT_WIDTH, 
+                           CompareEntry.SORT_LONGEST_SIDE)) {
                 dataset.setOrdering(comparator);
                 Packer packer = packerFactory.create(width, height);
                 Dataset packed = packer.pack(dataset);

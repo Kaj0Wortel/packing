@@ -3,7 +3,8 @@ package packing.io;
 
 
 // Packing imports
-import packing.data.*;
+import packing.data.CompareEntry;
+import packing.data.Dataset;
 
 
 // Java imports
@@ -57,7 +58,7 @@ public class OutputWriter {
         
         useRotation = dataset.allowRotation();
 
-        dataset.setOrdering(Dataset.SORT_ID);
+        dataset.setOrdering(CompareEntry.SORT_ID);
         
         for (Dataset.Entry entry : dataset) {
             write(entry);
