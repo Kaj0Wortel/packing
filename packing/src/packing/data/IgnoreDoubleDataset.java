@@ -4,6 +4,8 @@ package packing.data;
 // Java imports.
 import java.awt.Rectangle;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -35,6 +37,8 @@ public class IgnoreDoubleDataset
     // Map containing the multi entries.
     final protected HashMap<MultiEntryKey, MultiEntry> entryMap;
     
+    // Sorted array containing the same elements as the HashMap.
+    final protected MultiEntry[] sortedArray;
     
     /**-------------------------------------------------------------------------
      * Entry containing multiple {@code Dataset.Entry}'s.
@@ -303,6 +307,20 @@ public class IgnoreDoubleDataset
             
             me.add(entry);
         }
+        
+        sortedArray = (MultiEntry[]) entryMap.values().toArray();
+    }
+    
+    /**
+     * 
+     */
+
+    /**
+     * Set the ordering of entries to be sorted according to {@code comparator}
+     * @param comparator the comparison to sort on
+     */
+    public void setOrdering(Comparator<MultiEntry> comparator) {
+        Arrays.sort(sortedArray, comparator);
     }
     
     /**
