@@ -35,11 +35,15 @@ public class XCoordinatePacker extends Packer {
          */
         
         // create solution as an empty boundingBox with the same values as the input
-        Dataset solution = new Dataset(dataset.getWidth(),dataset.allowRotation(), dataset.getHeight());
+        Dataset solution = dataset.clone();
+        for(Dataset.Entry entry: solution){
+            Rectangle rec = entry.getRec();
+            solution.remove(rec);
+        }
         
         solution = backtracker(dataset, solution, 0);
-        
-        return null;
+        //System.out.println("Backtrack finished");
+        return solution;
     }
     /**
      * 
@@ -55,13 +59,18 @@ public class XCoordinatePacker extends Packer {
         
         
         if(solution.size()<input.size()){
+            //System.out.println("started");
             Dataset.Entry entry = input.get(current);
             for(int j = 0; j<width; j++){
                 Rectangle rec = entry.getRec();
+                if(j + rec.width > solution.getWidth()){
+                    continue;
+                }
                 rec.setLocation(j, 0);
                 solution.add(rec);
                 if(heightPruning(input, solution)){ // if solution is still viable continue backtracking
                     current++;
+                    System.out.println("Backtracking");
                     Dataset backtrackSolution = backtracker(input, solution, current);
                     if(backtrackSolution != null){
                         return backtrackSolution;
@@ -74,6 +83,7 @@ public class XCoordinatePacker extends Packer {
                 
             } 
         } else {
+            System.out.println("Making perfect packing");
             return yPacker.pack(solution);
         }        
         return null;

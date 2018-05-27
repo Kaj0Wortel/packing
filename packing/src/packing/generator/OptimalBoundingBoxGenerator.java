@@ -7,6 +7,8 @@ import java.awt.Rectangle;
 import packing.data.*;
 import packing.packer.*;
 import packing.generator.RectangleMinHeap;
+import packing.gui.ShowDataset;
+import packing.tools.MultiTool;
 
 
 /**
@@ -62,9 +64,14 @@ public class OptimalBoundingBoxGenerator extends Generator {
         
         while(best == null){
             Rectangle rect = boundingBoxHeap.extractMin();// get minimum boundingbox
-            width = (int)rect.getWidth();
-            height = (int)rect.getHeight();
-            Packer packer = packerFactory.create(width, height); //create packing instance for said box
+            System.out.println(rect + "rect");
+            System.out.println(rect.width + "width");
+            width = rect.width;
+            height = rect.height;
+            dataset.setWidth(width);
+            dataset.setHeight(height);
+            //System.out.println("" + dataset.getArea());
+            Packer packer = new XCoordinatePacker(new PerfectPackingTransformer(new YCoordinatePacker())); //create packing instance for said box
             Dataset packed = packer.pack(dataset); // try to pack the box
             
             //if possible, than this is the optimal solution
@@ -116,11 +123,11 @@ public class OptimalBoundingBoxGenerator extends Generator {
         if(minHeightHalfWidth < Integer.MAX_VALUE){
             possibleHeight += minHeightHalfWidth;
             minHeight = Math.max(minHeight, possibleHeight);
+            }
             // if current box is smaller than minimum box, increase height
             // to be sufficient
             if((minHeight * width) < minArea){
                 minHeight = minArea/width;
-            }
         }
         
         return minHeight;        
@@ -138,12 +145,61 @@ public class OptimalBoundingBoxGenerator extends Generator {
         RectangleMinHeap initialHeap = new RectangleMinHeap();
         // Loop over all possible widths
         for(int i = minWidth; i < maxWidth; i++){
-            int height = determinHeight(dataset, i, minArea);     
+            //System.out.println(i);
+            int height = determinHeight(dataset, i, minArea); 
+           // System.out.println(i + "Width and Height" + height);
             Rectangle rect = new Rectangle(i, height);
             initialHeap.insert(rect);
+            //System.out.println("added");
         }
         
         return initialHeap;
     }
     
+     // tmp
+    public static void main(String[] args) {
+        // Logger setup (to disable logging, comment next line).
+        
+        Dataset data = new Dataset(-1, false, 4);
+        //Logger.setDefaultLogger(new StreamLogger(System.out));
+        long startTime = System.currentTimeMillis();
+        data.add(new Rectangle(2, 6));
+        data.add(new Rectangle(2, 6));
+        //data.add(new Rectangle(6, 2));
+        data.add(new Rectangle(4, 3));
+        data.add(new Rectangle(3, 4));
+        //data.add(new Rectangle(10, 10));
+        /**//*
+        data.add(new Rectangle(1, 1));
+        data.add(new Rectangle(2, 2));
+        data.add(new Rectangle(3, 3));
+        data.add(new Rectangle(4, 4));
+        data.add(new Rectangle(5, 5));
+        data.add(new Rectangle(6, 6));
+        /**//*
+        data.add(new Rectangle(2, 6));
+        data.add(new Rectangle(6, 2));
+        data.add(new Rectangle(2, 6));
+        data.add(new Rectangle(6, 2));
+        data.add(new Rectangle(3, 4));
+        data.add(new Rectangle(4, 3));
+        /**//*
+        data.add(new Rectangle(2, 6));
+        data.add(new Rectangle(2, 6));
+        //data.add(new Rectangle(6, 2));
+        data.add(new Rectangle(4, 3));
+        data.add(new Rectangle(3, 4));
+        data.add(new Rectangle(10, 10));
+        /**/
+        //Dataset data = new Dataset(10, false, 1);
+        //data.add(new Rectangle(10, 10));
+        
+        Generator generator = new OptimalBoundingBoxGenerator(new GreedyPackerFactory());
+        Dataset result = generator.generate(data);
+        System.out.println(System.currentTimeMillis() - startTime);
+        MultiTool.sleepThread(200);
+        System.err.println();
+        System.err.println(result);
+        new ShowDataset(result);
+    }
 }
