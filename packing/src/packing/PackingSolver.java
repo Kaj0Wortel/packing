@@ -107,6 +107,25 @@ public class PackingSolver {
         }
         
         // Generate solution.
+        //according to the chart(v2)
+        if (input.size() > 25) {
+            if (input.isFixedHeight()) {
+                gen = new FixedHeightGenerator(new GreedyPackerFactory());
+            } else {
+                gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
+            }
+        } else if (input.size() >= 10 && input.size() <= 25) {
+            if (input.isFixedHeight()) {
+                gen = new GeneticGenerator(new GeneticPackerFactory());
+            } else {
+                gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
+            }
+        } else if (input.size() >= 0 && input.size() < 10) {
+            gen = new OptimalPointGenerator(new GreedyPackerFactory());
+        }
+        
+        //previous version(v1)
+        /*
         if (input.isFixedHeight()) {
             if (input.size() > 1000) {
                 gen = new FixedHeightGenerator(new GreedyPackerFactory());
@@ -117,6 +136,7 @@ public class PackingSolver {
             gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
             //gen = new WideToHighBoundingBoxGenerator(new SheetPackerFactory());
         }
+        */
         Dataset result = gen.generate(input);
         timer.cancel();
         
