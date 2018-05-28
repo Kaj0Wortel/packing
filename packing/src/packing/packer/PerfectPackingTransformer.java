@@ -29,7 +29,7 @@ public class PerfectPackingTransformer extends Packer {
          */
         
         // keep track of area per column of 1 width
-        int[] columns = new int[dataset.getWidth()-1];
+        int[] columns = new int[dataset.getWidth()];
         
         Dataset perfectDataSet = dataset.clone();
         for(Dataset.Entry entry: dataset){
@@ -46,7 +46,7 @@ public class PerfectPackingTransformer extends Packer {
         Every rectangle has a fixed x coordinate this way which means we do not 
         need to distinguish between fixed x and not when placing the y-coordinates
         */
-       for(int i : columns){
+       for(int i = 0; i < columns.length; i++){
             while(columns[i] < dataset.getHeight()){
                 Rectangle rec = new Rectangle(i,0,1,1);
                 perfectDataSet.add(rec);

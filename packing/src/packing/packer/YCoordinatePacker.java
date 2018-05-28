@@ -51,7 +51,7 @@ public class YCoordinatePacker extends Packer {
                         }
                     }
                     rec.y = p.y;
-                    solution.add(rec);
+                    solution.add(new Rectangle(rec));
                     input.remove(entry.getRec());
                     corners.remove(p);
                     List<Point> updatedCorners = updateCorners(solution, rec, corners);
@@ -60,7 +60,7 @@ public class YCoordinatePacker extends Packer {
                     input.add(entry.getRec());
                     solution.remove(rec);
                 }
-                solution.add(rec);
+                solution.add(new Rectangle(rec));
                 
             }
         }

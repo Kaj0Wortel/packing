@@ -41,7 +41,7 @@ public class XCoordinatePacker extends Packer {
             solution.remove(rec);
         }
         
-        solution = backtracker(dataset, solution, 0);
+        solution = backtracker(dataset.clone(), solution, 0);
         //System.out.println("Backtrack finished");
         return solution;
     }
@@ -67,7 +67,7 @@ public class XCoordinatePacker extends Packer {
                     continue;
                 }
                 rec.setLocation(j, 0);
-                solution.add(rec);
+                solution.add(new Rectangle(rec));
                 if(heightPruning(input, solution)){ // if solution is still viable continue backtracking
                     current++;
                     System.out.println("Backtracking");
