@@ -53,6 +53,8 @@ public class OptimalPointGenerator extends Generator {
     // Stack for keeping track of the total amount of wasted space
     // over the iterations.
     private Stack<Integer> wastedSpaceStack = new Stack<>();
+
+    private ShowDataset showDataset = null;
     
     /**-------------------------------------------------------------------------
      * PointNode class for creating a local linked list.
@@ -540,8 +542,12 @@ public class OptimalPointGenerator extends Generator {
             
         } else {
             Logger.write("Sol found: " + dataset.toString());
-            //new ShowDataset(dataset);
-            //MultiTool.sleepThread(100);
+//            if (showDataset == null) {
+//                showDataset = new ShowDataset(dataset);
+//            } else {
+//                showDataset.setDataset(dataset);
+//            }
+//            MultiTool.sleepThread(500);
         }
     }
     
@@ -711,13 +717,18 @@ public class OptimalPointGenerator extends Generator {
         /**/
         //Dataset data = new Dataset(10, false, 1);
         //data.add(new Rectangle(10, 10));
-        
-        Dataset result = new OptimalPointGenerator(null).generate(data);
+
+        OptimalPointGenerator generator = new OptimalPointGenerator(null);
+        Dataset result = generator.generate(data);
         System.out.println(System.currentTimeMillis() - startTime);
         MultiTool.sleepThread(200);
         System.err.println();
         System.err.println(result);
-        new ShowDataset(result);
+        if (generator.showDataset == null) {
+            generator.showDataset = new ShowDataset(result);
+        } else {
+            generator.showDataset.setDataset(result);
+        }
     }
     
 }

@@ -35,7 +35,7 @@ public class ShowDataset
     final private static int ZOOM_BUTTON_HEIGHT = 40;
     
     final private JScrollPane scrollPane;
-    final private AntiLayoutManagerJPanel contentPane;
+    private AntiLayoutManagerJPanel contentPane;
     final private JButton zoomInButton;
     final private JButton zoomOutButton;
     
@@ -53,6 +53,20 @@ public class ShowDataset
         AntiLayoutManagerJPanel(Dataset data) {
             super(null);
             this.data = data;
+
+            if (data != null) {
+                setSize(data.getWidth() * 10, data.getHeight() * 10);
+                overrideSize(data.getWidth() * 10, data.getHeight() * 10);
+
+                // Create all entry panels.
+                for (Dataset.Entry entry : data) {
+                    add(new EntryPanel(entry, this,
+                            data.getWidth(), data.getHeight()));
+                }
+            }
+
+            // Set the background.
+            setBackground(Color.RED);
         }
         
         @Override
@@ -94,9 +108,6 @@ public class ShowDataset
         // Setup contentpane and scroll pane.
         contentPane = new AntiLayoutManagerJPanel(data);
 
-        contentPane.setSize(data.getWidth() * 10, data.getHeight() * 10);
-        contentPane.overrideSize(data.getWidth() * 10, data.getHeight() * 10);
-        //contentPane.setSize(1000, 1000);
         scrollPane = new JScrollPane(contentPane);
         add(scrollPane);
 
@@ -133,14 +144,7 @@ public class ShowDataset
         setSize(1000, 1000);
         setLocation(10, 10);
         
-        // Create all entry panels.
-        for (Dataset.Entry entry : data) {
-            contentPane.add(new EntryPanel(entry, contentPane,
-                            data.getWidth(), data.getHeight()));
-        }
-        
         // Set the background.
-        contentPane.setBackground(Color.RED);
         scrollPane.getViewport().setBackground(Color.BLUE);
         
         addWindowListener(new WindowAdapter() {
@@ -164,6 +168,16 @@ public class ShowDataset
         
         setVisible(true);
         
+        SwingUtilities.invokeLater(() -> {
+            update();
+            repaint();
+        });
+    }
+
+    public void setDataset(Dataset data) {
+        contentPane = new AntiLayoutManagerJPanel(data);
+        scrollPane.setViewportView(contentPane);
+
         SwingUtilities.invokeLater(() -> {
             update();
             repaint();
