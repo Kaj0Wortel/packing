@@ -118,6 +118,10 @@ public class OptimalBoundingBoxGenerator extends Generator {
                     minHeight = Math.max(minHeight, rect.height + rect1.height);
                 }                    
             }
+            
+            if(minHeight < rect.height){
+                minHeight = rect.height;
+            }
         }
         
         if(minHeightHalfWidth < Integer.MAX_VALUE){
@@ -126,9 +130,10 @@ public class OptimalBoundingBoxGenerator extends Generator {
             }
             // if current box is smaller than minimum box, increase height
             // to be sufficient
-            if((minHeight * width) < minArea){
-                minHeight = minArea/width;
-        }
+        if((minHeight * width) < minArea){
+            minHeight = minArea/width;
+        }       
+            
         
         return minHeight;        
     }

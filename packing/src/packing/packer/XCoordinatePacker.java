@@ -95,15 +95,21 @@ public class XCoordinatePacker extends Packer {
      * @return false if current configuration does not fit
      */
     public boolean heightPruning(Dataset input, Dataset solution){
-        int[] height = new int[input.getWidth()]; // height of every column of width 1
+        int[] height = new int[solution.getWidth()]; // height of every column of width 1
         // e.g height[0] is the height of the column with x-coordinate 0 to x =1
+        
+        System.out.println("call");
         
         for(Dataset.Entry entry: solution){
             Rectangle rec = entry.getRec();
-            for(int i = rec.x; i<(rec.x + rec.width - 1); i++){
+            System.out.println("next rect");
+            System.out.println(rec.width);
+            for(int i = rec.x; i < (rec.x + rec.width); i++){
+                System.out.println(solution.getWidth() + " last index of array and " + i);
                 height[i] += rec.height;
                 // height of all rectangles in the column x=i is more than the height of the bounding box
                 if(height[i] > input.getHeight()){
+                    System.out.println("return");
                     return false;
                 }
             }
