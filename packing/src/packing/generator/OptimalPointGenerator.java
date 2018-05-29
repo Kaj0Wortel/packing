@@ -541,7 +541,7 @@ public class OptimalPointGenerator extends Generator {
         //MultiTool.sleepThread(100);
         if (best == null || best.getArea() > dataset.getArea()) {
             best = dataset.clone();
-            Logger.write("New best: " + best.toString());
+            //Logger.write("New best: " + best.toString());
             
         //} else {
             //Logger.write("Sol found: " + dataset.toString());
@@ -559,9 +559,11 @@ public class OptimalPointGenerator extends Generator {
         this.dataset = dataset;
         
         if (packerFactory != null) {
-            best = generateUpperBound(dataset);
+            best = generateUpperBound(dataset); // %%This function does not yet work!
             System.err.println("generated!");
         }
+        
+        // tmp
         System.err.println(best);
         new ShowDataset(best);
         MultiTool.sleepThread(1000);
