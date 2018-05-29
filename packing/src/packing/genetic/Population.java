@@ -68,7 +68,7 @@ public class Population {
         public void mutate() {
             for (int i = 0; i < dataset.size(); i++) {
                 if (random.nextDouble() < MUTATION_RATE) {
-                    Dataset.Entry entry = dataset.get(i);
+                    CompareEntry entry = dataset.get(i);
                     
                     if (dataset.allowRotation() && random.nextBoolean()) {
                         entry.setRotation(entry.useRotation());

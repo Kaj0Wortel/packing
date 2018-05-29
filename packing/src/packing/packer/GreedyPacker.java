@@ -314,7 +314,7 @@ class GreedyPacker extends Packer {
         queue.removeAll(toRemove);
     }
 
-    private boolean fitEntry(Dataset.Entry entry) {
+    private boolean fitEntry(CompareEntry entry) {
         Rectangle rect = entry.getRec();
         for (Space space : queue) {
             if (space.checkRectangle(rect)) {
@@ -333,7 +333,7 @@ class GreedyPacker extends Packer {
     public Dataset pack(Dataset dataset) {
         Dataset clone = dataset.clone();
         clone.setSize(width, height);
-        for (Dataset.Entry entry : clone) {
+        for (CompareEntry entry : clone) {
             if (!fitEntry(entry)) {
                 if (clone.allowRotation()) {
                     entry.setRotation(!entry.useRotation());

@@ -44,7 +44,7 @@ public class OptimalBoundingBoxGenerator extends Generator {
         RectangleMinHeap boundingBoxHeap = new RectangleMinHeap(); // heap to keep track of all the possible bounding boxes in order of non decreasing area
         
         // Determine minArea, greedyWidth, greedyHeight, minWidth, minHeight.
-        for (Dataset.Entry entry : dataset){
+        for (CompareEntry entry : dataset){
             Rectangle rect = entry.getRec();
             minArea += rect.width * rect.height;
             greedyWidth += rect.width;
@@ -99,7 +99,7 @@ public class OptimalBoundingBoxGenerator extends Generator {
         int possibleHeight = 0;
         int minHeightHalfWidth = Integer.MAX_VALUE;
         
-        for(Dataset.Entry entry : dataset){
+        for(CompareEntry entry : dataset){
             Rectangle rect = entry.getRec();
             if(rect.width == (width / 2)){
                 // rectangle of half width with smalles height
@@ -111,7 +111,7 @@ public class OptimalBoundingBoxGenerator extends Generator {
                 possibleHeight += rect.height;
             }
             
-            for(Dataset.Entry entry1 : dataset){
+            for(CompareEntry entry1 : dataset){
                 Rectangle rect1 = entry1.getRec();
                 // every pair greater than full width need to be stacked
                 if(rect.width + rect1.width > width){

@@ -766,7 +766,7 @@ public class Sheet extends Packer {
      * and will be modified to the location of where the rectangle has been
      * placed.
      */
-    public boolean add(Dataset.Entry entry) {
+    public boolean add(CompareEntry entry) {
         List<Sheet> mod = put(entry.getRec());
         if (mod == null) return false;
         
@@ -789,7 +789,7 @@ public class Sheet extends Packer {
         Dataset clone = dataset.clone();
         clone.setSize(bounds.width, bounds.height);
         
-        for (Dataset.Entry entry : clone) {
+        for (CompareEntry entry : clone) {
             if (!add(entry)) {
                 /*
                 if (dataset.allowRotation()) {

@@ -36,7 +36,7 @@ public class XCoordinatePacker extends Packer {
         
         // create solution as an empty boundingBox with the same values as the input
         Dataset solution = dataset.clone();
-        for(Dataset.Entry entry: solution){
+        for(CompareEntry entry: solution){
             Rectangle rec = entry.getRec();
             solution.remove(rec);
         }
@@ -60,7 +60,7 @@ public class XCoordinatePacker extends Packer {
         
         if(solution.size()<input.size()){
             //System.out.println("started");
-            Dataset.Entry entry = input.get(current);
+            CompareEntry entry = input.get(current);
             for(int j = 0; j<width; j++){
                 Rectangle rec = entry.getRec();
                 if(j + rec.width > solution.getWidth()){
@@ -100,7 +100,7 @@ public class XCoordinatePacker extends Packer {
         
         System.out.println("call");
         
-        for(Dataset.Entry entry: solution){
+        for(CompareEntry entry: solution){
             Rectangle rec = entry.getRec();
             System.out.println("next rect");
             System.out.println(rec.width);

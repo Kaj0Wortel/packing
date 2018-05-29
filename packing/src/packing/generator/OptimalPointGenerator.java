@@ -3,21 +3,22 @@ package packing.generator;
 
 
 // Packing imports
+import packing.data.CompareEntry;
 import packing.data.Dataset;
+import packing.data.IgnoreDoubleDataset;
+import packing.gui.ShowDataset;
+import packing.packer.GreedyPackerFactory;
+import packing.packer.PackerFactory;
+import packing.tools.Logger;
+import packing.tools.MultiTool;
+import packing.tools.StreamLogger;
 
 
 // Java imports
 import java.awt.Point;
 import java.awt.Rectangle;
 
-import java.util.Stack;
-import packing.data.IgnoreDoubleDataset;
-import packing.generator.OptimalPointGenerator.LinkAction;
-import packing.gui.ShowDataset;
-import packing.packer.PackerFactory;
-import packing.tools.Logger;
-import packing.tools.MultiTool;
-import packing.tools.StreamLogger;
+import java.util.Stack;;
 
 
 /**
@@ -301,10 +302,10 @@ public class OptimalPointGenerator extends Generator {
      * set by the maximum height and width of the rectangle.
      */
     private PointNode[] getPoints() {
-        Logger.write("curNode (pre): " + curNode);
+        //Logger.write("curNode (pre): " + curNode);
         // Initialization.
         if (nodeActions.isEmpty() || last == null || curNode == null) {
-            Logger.write("(-1)");
+            //Logger.write("(-1)");
             return new PointNode[] {new PointNode(new Point(0, 0))};
         }
         
@@ -313,9 +314,9 @@ public class OptimalPointGenerator extends Generator {
         // assumed that the property holds for the previous point (since
         // no modifications have been made below since the property was valid).
         if (curNode.prev != null && curNode.prev.point.x < curNode.point.x) {
-            Logger.write("(0)");
-            Logger.write(curNode);
-            Logger.write(curNode.prev);
+            //Logger.write("(0)");
+            //Logger.write(curNode);
+            //Logger.write(curNode.prev);
             curNode = curNode.prev;
             return new PointNode[] {curNode};
         }
@@ -325,24 +326,24 @@ public class OptimalPointGenerator extends Generator {
         // satisfy. If no invallid points, use the upper two points.
         while (curNode.next != null &&
                curNode.next.point.x < curNode.point.x) {
-            Logger.write("(1)");
+            //Logger.write("(1)");
             curNode = curNode.next;
         }
         
         if (curNode.next == null) {
-            Logger.write("(2)");
+            //Logger.write("(2)");
             if (last.prev != null) {
-                Logger.write("(2.1)");
+                //Logger.write("(2.1)");
                 return new PointNode[] {last, last.prev};
                 
             } else {
-                Logger.write("(2.2)");
+                //Logger.write("(2.2)");
                 return new PointNode[] {last};
             }
             
         } else {
-            Logger.write("(3)");
-            Logger.write(curNode);
+            //Logger.write("(3)");
+            //Logger.write(curNode);
             // Otherwise we know that {@code next} doesn't satisfy the main
             // property, hence we return {@code node}.
             //curNode.maxHeight = curNode.next.point.y - curNode.point.y;
@@ -360,7 +361,7 @@ public class OptimalPointGenerator extends Generator {
      *     placed
      * @return whether the entry was placed.
      */
-    private boolean checkAndAddEntry(Dataset.Entry entry, PointNode node) {
+    private boolean checkAndAddEntry(CompareEntry entry, PointNode node) {
         Rectangle rec = entry.getRec();
         
         // Check if the rectangle doesn't hit any overhanging rectangles.
@@ -474,8 +475,8 @@ public class OptimalPointGenerator extends Generator {
         if (prevX == nextX) { // prev != null
             // If the x-coords are equal, we can additionally remove the
             // {@code next} point.
-            Logger.write("[[0]]");
-            Logger.write(curNode);
+            //Logger.write("[[0]]");
+            //Logger.write(curNode);
             
             // left x = node.point.x right x is prevX
             wastedWidth = prevX - node.point.x;
@@ -484,14 +485,14 @@ public class OptimalPointGenerator extends Generator {
             
             LinkAction la = new RemoveLinkAction(node, next);
             curNode = prev;
-            Logger.write(curNode);
+            //Logger.write(curNode);
             return la;
             
         } else if (prevX < nextX) { // prev != null
             // If the previous x-coord is smaller, we can simply remove
             // the point.
-            Logger.write("[[1]]");
-            Logger.write(curNode);
+            //Logger.write("[[1]]");
+            //Logger.write(curNode);
             
             //left x = node.point.x right x = prevX
             wastedWidth = prevX - node.point.x;
@@ -500,7 +501,7 @@ public class OptimalPointGenerator extends Generator {
             
             LinkAction la = new RemoveLinkAction(node);
             curNode = prev;
-            Logger.write(curNode);
+            //Logger.write(curNode);
             return la;
             
         } else { // ==> prevX > nextX
@@ -509,8 +510,8 @@ public class OptimalPointGenerator extends Generator {
             // right intersection.
             PointNode newNode
                     = new PointNode(new Point(next.point.x, node.point.y));
-            Logger.write("[[2]]");
-            Logger.write(curNode);
+            //Logger.write("[[2]]");
+            //Logger.write(curNode);
             
             //left x = node.point.x right x = nextX
             wastedWidth = nextX - node.point.x;
@@ -520,7 +521,7 @@ public class OptimalPointGenerator extends Generator {
             LinkAction la = new ReplaceLinkAction(next, node,
                     new PointNode[] {newNode});
             curNode = newNode;
-            Logger.write(curNode);
+            //Logger.write(curNode);
             return la;
         }
     }
@@ -535,28 +536,40 @@ public class OptimalPointGenerator extends Generator {
         if (!dataset.isFixedHeight()) {
             dataset.setHeight(last.point.y);
         }
-        
+        //new ShowDataset(dataset);
+        //System.err.println(dataset);
+        //MultiTool.sleepThread(100);
         if (best == null || best.getArea() > dataset.getArea()) {
             best = dataset.clone();
             Logger.write("New best: " + best.toString());
             
-        } else {
-            Logger.write("Sol found: " + dataset.toString());
-//            if (showDataset == null) {
-//                showDataset = new ShowDataset(dataset);
-//            } else {
-//                showDataset.setDataset(dataset);
-//            }
-//            MultiTool.sleepThread(500);
+        //} else {
+            //Logger.write("Sol found: " + dataset.toString());
+            //if (showDataset == null) {
+            //    showDataset = new ShowDataset(dataset);
+            //} else {
+            //    showDataset.setDataset(dataset);
+            //}
+            //MultiTool.sleepThread(500);
         }
     }
     
     @Override
     public void generateSolution(Dataset dataset) {
         this.dataset = dataset;
-        doubleDataset = new IgnoreDoubleDataset(dataset);
         
-        for (Dataset.Entry entry : dataset) {
+        if (packerFactory != null) {
+            best = generateUpperBound(dataset);
+            System.err.println("generated!");
+        }
+        System.err.println(best);
+        new ShowDataset(best);
+        MultiTool.sleepThread(1000);
+        
+        doubleDataset = new IgnoreDoubleDataset(dataset);
+        doubleDataset.setOrdering(CompareEntry.SORT_AREA);
+        
+        for (CompareEntry entry : dataset) {
             totalInputArea += entry.area();
         }
         
@@ -572,12 +585,12 @@ public class OptimalPointGenerator extends Generator {
      */
     private void recursion() {
         if (best != null && last != null &&
-                last.point.y * width >= best.size()) return;
+                last.point.y * width >= best.getArea()) return;
         
-        Logger.write("recursion!");
-        Logger.write("first: " + first);
-        Logger.write("last: " + last);
-        printTree();
+        //Logger.write("recursion!");
+        //Logger.write("first: " + first);
+        //Logger.write("last: " + last);
+        //printTree();
         
         PointNode[] nodes = getPoints();
         if (nodes == null) throw new IllegalStateException();
@@ -586,7 +599,7 @@ public class OptimalPointGenerator extends Generator {
             PointNode node = nodes[i];
             // tmp
             if (node == null) {
-                Logger.write("null node found!------------------");
+                //Logger.write("null node found!------------------");
                 continue;
             }
             
@@ -599,11 +612,11 @@ public class OptimalPointGenerator extends Generator {
             PointNode nextNode = node.next;
             PointNode prevNode = node.prev;
             
-            for (Dataset.Entry entry : doubleDataset) {
+            for (CompareEntry entry : doubleDataset) {
                 recsAvailable = true;
-                printTree();
-                Logger.write("point: " + node);
-                Logger.write("entry: " + entry);
+                //printTree();
+                //Logger.write("point: " + node);
+                //Logger.write("entry: " + entry);
                 
                 Rectangle rec = entry.getRec();
                 boolean isSmallWidthEntryUp = nextNode == null || // If this is the last entry, true by default.
@@ -619,7 +632,7 @@ public class OptimalPointGenerator extends Generator {
                 
                 curNodeStack.add(curNode);
                 if (checkAndAddEntry(entry, node)) {
-                    Logger.write("valid entry!");
+                    //Logger.write("valid entry!");
                     
                     if (isSmallWidthEntry) {
                         // There exists at least one solution that doesn't
@@ -628,7 +641,7 @@ public class OptimalPointGenerator extends Generator {
                     }
                     
                     recursion();
-                    Logger.write("return");
+                    //Logger.write("return");
                     nodeActions.pop().revert();
                 }
                 curNode = curNodeStack.pop();
@@ -642,7 +655,7 @@ public class OptimalPointGenerator extends Generator {
             }
             
             if (!smallSolExists) {
-                Logger.write("no small sol---------------------------------------------");
+                //Logger.write("no small sol---------------------------------------------");
                 LinkAction la = fillAreaPointAction(node);
                 
                 wastedSpaceStack.add(wastedSpace);
@@ -661,7 +674,7 @@ public class OptimalPointGenerator extends Generator {
                 
                 curNodeStack.add(curNode);
                 recursion();
-                Logger.write("return");
+                //Logger.write("return");
                 la.revert();
                 curNode = curNodeStack.pop();
                 wastedSpace = wastedSpaceStack.pop();
@@ -669,6 +682,7 @@ public class OptimalPointGenerator extends Generator {
             
         }
     }
+    
     
     public void printTree() {
         Logger.write("------------");
@@ -683,16 +697,16 @@ public class OptimalPointGenerator extends Generator {
     // tmp
     public static void main(String[] args) {
         // Logger setup (to disable logging, comment next line).
+        Logger.setDefaultLogger(new StreamLogger(System.out));
         
-        Dataset data = new Dataset(-1, false, 6);
-        //Logger.setDefaultLogger(new StreamLogger(System.out));
+        Dataset data = new Dataset(-1, true, 3);
         long startTime = System.currentTimeMillis();
-        data.add(new Rectangle(2, 6));
-        data.add(new Rectangle(2, 6));
-        data.add(new Rectangle(6, 2));
-        data.add(new Rectangle(4, 3));
-        data.add(new Rectangle(3, 4));
-        data.add(new Rectangle(10, 10));
+        data.add(new Rectangle(20, 6));
+        data.add(new Rectangle(2, 4));
+        data.add(new Rectangle(7, 1));
+        //data.add(new Rectangle(12, 19));
+        //data.add(new Rectangle(17, 23));
+        //data.add(new Rectangle(10, 15));
         /**//*
         data.add(new Rectangle(1, 1));
         data.add(new Rectangle(2, 2));
@@ -718,17 +732,20 @@ public class OptimalPointGenerator extends Generator {
         //Dataset data = new Dataset(10, false, 1);
         //data.add(new Rectangle(10, 10));
 
-        OptimalPointGenerator generator = new OptimalPointGenerator(null);
+        OptimalPointGenerator generator = new OptimalPointGenerator(new GreedyPackerFactory());
         Dataset result = generator.generate(data);
         System.out.println(System.currentTimeMillis() - startTime);
+        
         MultiTool.sleepThread(200);
         System.err.println();
         System.err.println(result);
+        /*
         if (generator.showDataset == null) {
             generator.showDataset = new ShowDataset(result);
         } else {
             generator.showDataset.setDataset(result);
-        }
+        }*/
+        new ShowDataset(result);
     }
     
 }

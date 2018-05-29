@@ -1,6 +1,7 @@
 
 package packing.packer;
 
+import packing.data.CompareEntry;
 import packing.data.Dataset;
 
 /**
@@ -16,7 +17,7 @@ public class GeneticPacker extends Packer {
     public Dataset pack(Dataset data) {
         Dataset clone = data.clone();
         
-        for (Dataset.Entry entry : clone) {
+        for (CompareEntry entry : clone) {
             // TODO
         }
         

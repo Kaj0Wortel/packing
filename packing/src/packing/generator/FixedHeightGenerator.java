@@ -27,7 +27,7 @@ public class FixedHeightGenerator extends Generator {
         int width;
         int minArea = 0;
         
-        for (Dataset.Entry entry : dataset) {
+        for (CompareEntry entry : dataset) {
             minArea += entry.getRec().width * entry.getRec().height;
         }
         

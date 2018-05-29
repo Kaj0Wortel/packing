@@ -34,7 +34,7 @@ public class GeneticGenerator
         int minArea = 0;
         int generation = 0;
         
-        for (Dataset.Entry entry : dataset) {
+        for (CompareEntry entry : dataset) {
             Rectangle rect = entry.getRec();
             minArea += rect.width * rect.height;
             minWidth = Math.max(minWidth, rect.width);

@@ -60,7 +60,7 @@ public class OutputWriter {
 
         dataset.setOrdering(CompareEntry.SORT_ID);
         
-        for (Dataset.Entry entry : dataset) {
+        for (CompareEntry entry : dataset) {
             write(entry);
         }
     }
@@ -68,7 +68,7 @@ public class OutputWriter {
     /* 
      * Writes a single entry to the output stream.
      */
-    private void write(Dataset.Entry entry) throws IOException {
+    private void write(CompareEntry entry) throws IOException {
         StringBuilder sb = new StringBuilder();
         
         if (useRotation) {

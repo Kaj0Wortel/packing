@@ -29,7 +29,7 @@ public class YCoordinatePacker extends Packer {
         corners.add(new Point(0,0));
         
         Dataset solution = dataset.clone();
-        for(Dataset.Entry entry: solution){
+        for(CompareEntry entry: solution){
             Rectangle rec = entry.getRec();
             solution.remove(rec);
         }
@@ -42,7 +42,7 @@ public class YCoordinatePacker extends Packer {
     public Dataset backtracker(Dataset input, Dataset solution, List<Point> corners){
         
         for(Point p: corners){
-            for(Dataset.Entry entry: input){
+            for(CompareEntry entry: input){
                 Rectangle rec = entry.getRec();
                 if(rec.x == p.x && checkIfFits(rec)){
                     for(int i = rec.x; i < (rec.x + rec.width -1); i++){
@@ -91,7 +91,7 @@ public class YCoordinatePacker extends Packer {
         Point topLeft = null;
         Point bottomRight = null;
         
-        for(Dataset.Entry entry: solution){
+        for(CompareEntry entry: solution){
             if((entry.getRec() != rec &&     //entry is not the same rectangle as rec
                     // left side of rec touches the right side of the other rectangle
                     rec.x == (entry.getRec().x + entry.getRec().width) &&  

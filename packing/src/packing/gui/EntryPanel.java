@@ -38,7 +38,7 @@ public class EntryPanel
      * @param fieldWidth the maximum width of the dataset.
      * @param fieldHeight the maximum height of the dataset.
      */
-    public EntryPanel(Dataset.Entry entry, Container container,
+    public EntryPanel(CompareEntry entry, Container container,
             int dataWidth, int dataHeight) {
         // Create JPanel with null layout.
         super(null);

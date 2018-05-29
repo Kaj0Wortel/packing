@@ -59,7 +59,7 @@ public class ShowDataset
                 overrideSize(data.getWidth() * 10, data.getHeight() * 10);
 
                 // Create all entry panels.
-                for (Dataset.Entry entry : data) {
+                for (CompareEntry entry : data) {
                     add(new EntryPanel(entry, this,
                             data.getWidth(), data.getHeight()));
                 }

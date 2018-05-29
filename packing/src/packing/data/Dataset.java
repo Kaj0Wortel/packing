@@ -12,12 +12,12 @@ import java.util.*;
 import java.util.function.Predicate;
 
 
-/* 
+/**
  * Abstract dataset for the rectangles and additional parameters.
  */
 public class Dataset
-        implements Iterable<Dataset.Entry>, packing.tools.Cloneable {
-    /* -------------------------------------------------------------------------
+        implements Iterable<CompareEntry>, packing.tools.Cloneable {
+    /**-------------------------------------------------------------------------
      * Variables
      * -------------------------------------------------------------------------
      */
@@ -39,11 +39,11 @@ public class Dataset
     protected int height;
     
     // The list of entries
-    protected List<Dataset.Entry> list = new ArrayList<>();
+    protected List<CompareEntry> list = new ArrayList<>();
     
     
     
-    /* -------------------------------------------------------------------------
+    /**-------------------------------------------------------------------------
      * Entry class
      * -------------------------------------------------------------------------
      */
@@ -51,13 +51,13 @@ public class Dataset
             extends CompareEntry
             implements packing.tools.Cloneable {
         // The rectangle.
-        final private Rectangle rec;
+        final protected Rectangle rec;
         
         // The rotated rectangle.
-        private Rectangle rotatedRec;
+        protected Rectangle rotatedRec;
         
         // Whether to use rotation by default.
-        private boolean useRotation = false;
+        protected boolean useRotation = false;
         
         
         /**
@@ -102,9 +102,14 @@ public class Dataset
             }
         }
         
-        /**
-         * @return the rectangle {@code rec}.
-         */
+        @Override
+        public Rectangle getRec() {
+            return (useRotation
+                        ? getRotatedRec()
+                        : getNormalRec());
+        }
+        
+        @Override
         public Rectangle getNormalRec() {
             return rec;
         }
@@ -113,63 +118,38 @@ public class Dataset
          * @return the rotated version of rec.
          * @throws IllegalStateException iff rotations are not allowed.
          */
+        @Override
         public Rectangle getRotatedRec()
                 throws IllegalStateException {
             calcRotatedRec();
             return rotatedRec;
         }
         
-        /**
-         * @return the rectangle depending on the default rotation.
-         */
         @Override
-        public Rectangle getRec() {
-            return (useRotation
-                        ? getRotatedRec()
-                        : getNormalRec());
-        }
-        
-        /**
-         * @return the default rotation of the entry.
-         */
         public boolean useRotation() {
             return useRotation;
         }
         
-        /**
-         * Sets the default rotation of the entry.
-         * 
-         * @param rotation whether the entry is rotated by default.
-         * @throws IllegalStateException iff
-         *     {@code rotation == true} and rotations are not allowed.
-         */
+        @Override
         public void setRotation(boolean rotation) {
             if (rotation && !Dataset.this.allowRot)
                 throw new IllegalStateException("Rotation is not allowed.");
             useRotation = rotation;
         }
         
-        /**
-         * Rotates the entry.
-         */
+        @Override
         public void rotate() {
             if (!Dataset.this.allowRot)
                 throw new IllegalStateException("Rotation is not allowed.");
             useRotation = !useRotation;
         }
         
-        /* 
-         * @return the area of the rectangle.
-         */
+        @Override
         public int area() {
             return rec.x * rec.y;
         }
         
-        /* 
-         * Sets the location of the rectangle.
-         * @param x the new x coord.
-         * @param y the new y coord.
-         */
+        @Override
         public void setLocation(int x, int y) {
             rec.setLocation(x, y);
             if (rotatedRec != null) {
@@ -206,11 +186,11 @@ public class Dataset
     }
     
     
-    /* -------------------------------------------------------------------------
+    /**-------------------------------------------------------------------------
      * Constructor
      * -------------------------------------------------------------------------
      */
-    /* 
+    /**
      * @param rotation whether to allow rotation.
      * @param the height restriction. Use -1 for no height restriction.
      * @param numRect the total number of rectangles.
@@ -220,10 +200,15 @@ public class Dataset
         this.fixedHeight = height != -1;
         this.allowRot = rotation;
         this.numRect = numRect;
-
+        
         if (fixedHeight) this.height = height;
     }
     
+    /**
+     * Clone constructor.
+     * 
+     * @param clone 
+     */
     public Dataset(Dataset clone) {
         this((clone.fixedHeight ? clone.height : -1),
                 clone.allowRot, clone.numRect);
@@ -231,13 +216,25 @@ public class Dataset
         this.width = clone.width;
         this.height = clone.height;
         
-        for (Dataset.Entry entry : clone.list) {
+        for (CompareEntry entry : clone.list) {
             list.add(entry.clone());
         }
     }
     
+    /**
+     * Constructor to be used for sub-classes.
+     */
+    protected Dataset(int height, int width, boolean allowRot,
+            int numRect, boolean fixedHeight) {
+        this.height = height;
+        this.width = width;
+        this.allowRot = allowRot;
+        this.numRect = numRect;
+        this.fixedHeight = fixedHeight;
+    }
     
-    /* -------------------------------------------------------------------------
+    
+    /**-------------------------------------------------------------------------
      * Functions
      * -------------------------------------------------------------------------
      */
@@ -260,14 +257,14 @@ public class Dataset
     }
     
     @Override
-    public Iterator<Entry> iterator() {
+    public Iterator<CompareEntry> iterator() {
         return list.iterator();
     }
     
     /**
      * @return the i'th object that was added.
      */
-    public Dataset.Entry get(int i) {
+    public CompareEntry get(int i) {
         return list.get(i);
     }
     
@@ -296,7 +293,7 @@ public class Dataset
      * @return the number of rectangles in the dataset.
      */
     public int size() {
-        return idCounter;
+        return list.size();
     }
     
     /**
@@ -325,7 +322,7 @@ public class Dataset
      */
     public int getEffectiveWidth() {
         int max = 0;
-        for (Entry entry : this) {
+        for (CompareEntry entry : this) {
             max = Math.max(max, entry.getRec().x + entry.getRec().width);
         }
         return max;
@@ -361,7 +358,7 @@ public class Dataset
         }
         
     }
-
+    
     /**
      * Set the rotation of each entry according to {@code predicate}
      * @param predicate when to rotate the entry
@@ -369,23 +366,22 @@ public class Dataset
     public void setRotation(Predicate<CompareEntry> predicate) {
         if (allowRot) {
             if (fixedHeight) {
-                for (Entry entry : this) {
-                    if (entry.getNormalRec().height > height) {
-                        entry.setRotation(true);
-                    } else if (entry.getNormalRec().width > height) {
-                        entry.setRotation(false);
-                    } else {
+                for (CompareEntry entry : this) {
+                    if (entry.getNormalRec().height == height) {
                         entry.setRotation(predicate.test(entry));
+                        
+                    } else {
+                        entry.setRotation(entry.getNormalRec().height > height);
                     }
                 }
             } else {
-                for (Entry entry : this) {
+                for (CompareEntry entry : this) {
                     entry.setRotation(predicate.test(entry));
                 }
             }
         }
     }
-
+    
     /**
      * Set the ordering of entries to be sorted according to {@code comparator}
      * @param comparator the comparison to sort on
@@ -393,22 +389,22 @@ public class Dataset
     public void setOrdering(Comparator<CompareEntry> comparator) {
         list.sort(comparator);
     }
-
+    
     public void shuffle() {
         Collections.shuffle(list);
     }
-
+    
     public void swap(int i, int j) {
         Collections.swap(list, i, j);
     }
-
+    
     public void rotate(int i) {
         if (allowRot) {
-            Entry entry = list.get(i);
+            CompareEntry entry = list.get(i);
             entry.setRotation(!entry.useRotation());
         }
     }
-
+    
     @Override
     public Dataset clone() {
         return new Dataset(this);

@@ -42,7 +42,7 @@ public class WideToHighBoundingBoxGenerator extends Generator {
         int numPacked = 0, numSkipped = 0;
 
         // Initialize the local variables.
-        for (Dataset.Entry entry : dataset) {
+        for (CompareEntry entry : dataset) {
             Rectangle rect = entry.getRec();
             width += rect.width;
             minWidth = Math.max(minWidth, rect.width);

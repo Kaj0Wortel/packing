@@ -77,4 +77,53 @@ public abstract class CompareEntry {
      */
     public abstract Rectangle getRec();
     
+    /**
+     * @return the non-rotated rectangle.
+     */
+    public abstract Rectangle getNormalRec();
+    
+    /**
+     * @return the rotated version of rec.
+     * @throws IllegalStateException iff rotations are not allowed.
+     */
+    public abstract Rectangle getRotatedRec()
+            throws IllegalStateException;
+    
+    /**
+     * @return the default rotation of the entry.
+     */
+    public abstract boolean useRotation();
+    
+    /**
+     * Sets the default rotation of the entry.
+     * 
+     * @param rotation whether the entry is rotated by default.
+     * @throws IllegalStateException iff
+     *     {@code rotation == true} and rotations are not allowed.
+     */
+    public abstract void setRotation(boolean rotate);
+    
+    /**
+     * Rotates the rectangle.
+     */
+    public abstract void rotate();
+    
+    /**
+     * @return the area of the rectangle.
+     */
+    public abstract int area();
+    
+    /**
+     * Sets the location of the rectangle.
+     * @param x the new x coord.
+     * @param y the new y coord.
+     */
+    public abstract void setLocation(int x, int y);
+    
+    /**
+     * Clone function.
+     */
+    @Override
+    public abstract CompareEntry clone();
+    
 }

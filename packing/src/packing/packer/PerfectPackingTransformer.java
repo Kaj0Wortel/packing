@@ -32,7 +32,7 @@ public class PerfectPackingTransformer extends Packer {
         int[] columns = new int[dataset.getWidth()];
         
         Dataset perfectDataSet = dataset.clone();
-        for(Dataset.Entry entry: dataset){
+        for(CompareEntry entry: dataset){
             Rectangle rec = entry.getRec();
             for(int i = rec.x; i <(rec.x + rec.width -1); i++){
                 columns[i] += rec.height;
