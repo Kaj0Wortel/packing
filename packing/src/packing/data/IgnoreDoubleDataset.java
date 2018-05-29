@@ -94,7 +94,7 @@ public class IgnoreDoubleDataset
          * @return the remaining available entries to be returned.
          */
         public int getRemaining() {
-            return entries.size() - entryPointer;
+            return entries.size() - entryPointer + 1;
         }
         
         /**
@@ -110,7 +110,7 @@ public class IgnoreDoubleDataset
          */
         @Override
         public boolean hasNext() {
-            return entryPointer < entries.size();
+            return entryPointer + 1 < entries.size();
         }
         
         /**
@@ -134,42 +134,42 @@ public class IgnoreDoubleDataset
         
         @Override
         public Rectangle getRec() {
-            return entries.get(entryPointer).getRec();
+            return entries.get(Math.max(entryPointer, 0)).getRec();
         }
         
         @Override
         public Rectangle getNormalRec() {
-            return entries.get(entryPointer).getNormalRec();
+            return entries.get(Math.max(entryPointer, 0)).getNormalRec();
         }
         
         @Override
         public Rectangle getRotatedRec() {
-            return entries.get(entryPointer).getRotatedRec();
+            return entries.get(Math.max(entryPointer, 0)).getRotatedRec();
         }
         
         @Override
         public boolean useRotation() {
-            return entries.get(entryPointer).useRotation();
+            return entries.get(Math.max(entryPointer, 0)).useRotation();
         }
         
         @Override
         public void setRotation(boolean rotate) {
-            entries.get(entryPointer).setRotation(rotate);
+            entries.get(Math.max(entryPointer, 0)).setRotation(rotate);
         }
         
         @Override
         public void rotate() {
-            entries.get(entryPointer).rotate();
+            entries.get(Math.max(entryPointer, 0)).rotate();
         }
         
         @Override
         public int area() {
-            return entries.get(entryPointer).area();
+            return entries.get(Math.max(entryPointer, 0)).area();
         }
         
         @Override
         public void setLocation(int x, int y) {
-            entries.get(entryPointer).setLocation(x, y);
+            entries.get(Math.max(entryPointer, 0)).setLocation(x, y);
         }
         
         /**
