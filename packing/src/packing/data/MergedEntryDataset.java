@@ -2,6 +2,7 @@ package packing.data;
 
 import java.awt.Rectangle;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -12,7 +13,7 @@ import java.util.List;
 public class MergedEntryDataset
         extends Dataset
         implements packing.tools.Cloneable {
-    
+
     public class MergedEntry
             extends Dataset.Entry {
         final List<CompareEntry> entries;
@@ -81,7 +82,7 @@ public class MergedEntryDataset
             list.add(entry);
         }
         
-        idCounter += list.size();
+        idCounter = dataset.idCounter;
     }
     
     
@@ -115,14 +116,17 @@ public class MergedEntryDataset
      * of the new entry however are delegated to the old entries, which are
      * changed in the initial dataset.
      * 
-     * @param entryNums the entries to be merged.
+     * @param entryIndices the entries to be merged.
      */
     public void mergeEntries(int... entryIndices) {
         List<CompareEntry> entries = new ArrayList<CompareEntry>();
-        
-        for (int i : entryIndices) {
-            entries.add(list.get(i));
-            list.remove((int) i);
+
+        // Iterate entryIndices in reverse sorted order, so the indices
+        // of the entries we still have to remove don't shift before
+        // we can remove them.
+        Arrays.sort(entryIndices);
+        for (int i = entryIndices.length - 1; i >= 0; i--) {
+            entries.add(list.remove(entryIndices[i]));
         }
         
         list.add(new MergedEntry(entries, idCounter++));
