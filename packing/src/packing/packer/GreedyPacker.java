@@ -336,7 +336,7 @@ class GreedyPacker extends Packer {
         for (CompareEntry entry : clone) {
             if (!fitEntry(entry)) {
                 if (clone.allowRotation()) {
-                    entry.setRotation(!entry.useRotation());
+                    entry.rotate();
                     if (fitEntry(entry)) continue;
                 }
                 return null;
