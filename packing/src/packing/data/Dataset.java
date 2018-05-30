@@ -248,9 +248,12 @@ public class Dataset
      * Adds an entry to the data set.
      *
      * @param rec the rectangle to be added.
+     * @return the new added entry.
      */
-    public void add(Rectangle rec) {
-        list.add(new Dataset.Entry(rec, idCounter++));
+    public CompareEntry add(Rectangle rec) {
+        CompareEntry entry = new Dataset.Entry(rec, idCounter++);
+        list.add(entry);
+        return entry;
     }
     
     /**
@@ -259,7 +262,8 @@ public class Dataset
      * @param rec the rectangle to be removed.
      */
     public void remove(Rectangle rec) {
-        list.remove(new Dataset.Entry(rec, idCounter--));
+        throw new UnsupportedOperationException();
+        //list.remove(new Dataset.Entry(rec, idCounter--));
     }
     
     /**

@@ -50,44 +50,34 @@ public class XCoordinatePacker extends Packer {
      * @param current index of rectangle currently being placed
      * @return 
      */
-    public Dataset backtracker(Dataset input, Dataset solution, int current){
+    public Dataset backtracker(Dataset input, Dataset solution, int current) {
         int width = input.getWidth();
         
         
-        if(solution.size()<input.size()){
             System.out.println("started");
+        if (solution.size() < input.size()) {
             CompareEntry entry = input.get(current);
-            
-            for(int j = 0; j<width; j++){
+            for (int j = 0; j < width; j++) {
                 Rectangle rec = entry.getRec();
-                if(j + rec.width > solution.getWidth()){
+                if (j + rec.width > solution.getWidth()) {
                     continue;
                 }
-                
                 rec.setLocation(j, 0);
-                solution.add(new Rectangle(rec));
-                System.out.println("add "+ rec.height + ","+ rec.width + " at " + j);
-                // if solution is still viable continue backtracking
-                if(heightPruning(input, solution)){ 
+                CompareEntry addedEntry = solution.add(new Rectangle(rec));
+                if (heightPruning(input, solution)) { // if solution is still viable continue backtracking
                     current++;
-                    System.out.println("Backtracking");
+                    //System.out.println("Backtracking");
                     Dataset backtrackSolution = backtracker(input, solution, current);
-                    if(backtrackSolution != null){
-                        System.out.println("Succesful Backtracking");
+                    if (backtrackSolution != null) {
                         return backtrackSolution;
                     }
-                    System.out.println("1st Remove " + rec.height + ","+ rec.width);
-                    solution.remove(rec);
                     current--;
-                    
-                } else { 
-                    // otherwise remove placed rectangle and try next position
-                    System.out.println("2nd Remove " + rec.height + ","+ rec.width);
-                    solution.remove(rec);
                 }
+                solution.remove(addedEntry);
+                
             } 
         } else {
-            System.out.println("Making perfect packing");
+            //System.out.println("Making perfect packing");
             return yPacker.pack(solution);
         }        
         return null;
@@ -98,22 +88,22 @@ public class XCoordinatePacker extends Packer {
      * @param dataset current configuration
      * @return false if current configuration does not fit
      */
-    public boolean heightPruning(Dataset input, Dataset solution){
+    public boolean heightPruning(Dataset input, Dataset solution) {
         int[] height = new int[solution.getWidth()]; // height of every column of width 1
         // e.g height[0] is the height of the column with x-coordinate 0 to x =1
         
         //System.out.println("call");
         
-        for(CompareEntry entry: solution){
+        for (CompareEntry entry : solution) {
             Rectangle rec = entry.getRec();
             //System.out.println("next rect");
             //System.out.println(rec.width);
-            for(int i = rec.x; i < (rec.x + rec.width); i++){
+            for (int i = rec.x; i < (rec.x + rec.width); i++) {
               //  System.out.println(solution.getWidth() + " last index of array and " + i);
                 height[i] += rec.height;
                 System.out.println("height: " + height[i] + " at " + i);
                 // height of all rectangles in the column x=i is more than the height of the bounding box
-                if(height[i] > input.getHeight()){
+                if (height[i] > input.getHeight()) {
                     //System.out.println("return");
                     return false;
                 }
