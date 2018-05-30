@@ -123,10 +123,8 @@ public class ShowDataset
         zoomInButton.addActionListener((e) -> {
             AntiLayoutManagerJPanel panel = ShowDataset.this.contentPane;
             if (panel != null) {
-                int scalingFactor = (int) (panel.getWidth() / data.getWidth() * 1.25);
-                if (scalingFactor == 1) {
-                    scalingFactor = 2;
-                }
+                int scalingFactor = panel.getWidth() / data.getWidth();
+                scalingFactor = Math.max((int) (scalingFactor * 1.25), scalingFactor + 1);
                 panel.overrideSize(scalingFactor * data.getWidth(),
                         scalingFactor * data.getHeight());
                 update();
