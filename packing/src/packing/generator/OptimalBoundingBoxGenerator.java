@@ -214,7 +214,7 @@ public class OptimalBoundingBoxGenerator extends Generator {
         
         Generator generator = new OptimalBoundingBoxGenerator(new GreedyPackerFactory());
         Dataset result = generator.generate(data);
-        System.out.println(System.currentTimeMillis() - startTime);
+        System.out.println(System.currentTimeMillis() - startTime + " ms");
         MultiTool.sleepThread(200);
         System.err.println();
         System.err.println(result);
