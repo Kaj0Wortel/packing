@@ -28,11 +28,8 @@ public class YCoordinatePacker extends Packer {
         List<Point> corners = new ArrayList<Point>();
         corners.add(new Point(0,0));
         
-        Dataset solution = dataset.clone();
-        for(CompareEntry entry: solution){
-            Rectangle rec = entry.getRec();
-            solution.remove(rec);
-        }
+        Dataset solution = Dataset.createEmptyDataset(dataset);
+        
         entries = new boolean[dataset.getWidth()-1][dataset.getHeight()-1];
         return backtracker(dataset, solution, corners);
     }
