@@ -32,9 +32,25 @@ public class PackingSolver {
     // The test file
     final public static String testFile
         = System.getProperty("user.dir") + FS + "testcases" + FS
-            + "03_01_h20_rn.txt";
-            //+ "test_case_9_10000.txt";
+            //+ "03_01_h20_rn.txt";
+            //+ "03_02_hf_rn.txt";
+            //+ "03_03_h12_ry.txt";
+            //+ "03_04_hf_ry.txt";
+            //+ "05_01_h7_ry.txt";
+            //+ "05_02_hf_ry.txt";
+            //+ "05_03_h25_rn.txt";
+            //+ "05_04_hf_rn.txt";
+            + "10_01_h11_rn.txt";
+            //+ "10_02_h15_ry.txt";
+            //+ "10_03_hf_ry.txt";
+            //+ "10_04_hf_rn.txt";
+            //+ "10000_01_h300_rn.txt";
+            //+ "10000_02_hf_ry.txt";
+            //+ "10000_03_hf_rn.txt";
+            //+ "10000_04_h1315_ry.txt";
             //+ "25_01_h19_ry.txt";
+            //+ "25_02_hf_ry.txt";
+            //+ "25_03_hf_rn.txt";
             //+ "25_04_h74_rn.txt";
     
     final public static File[] testFiles
@@ -63,7 +79,6 @@ public class PackingSolver {
             @Override
             public void run() {
                 Generator gen = getGenerator();
-                System.err.println("EXIT!");
                 synchronized(PackingSolver.this) {
                     if (gen != null) {
                         gen.interrupt();
@@ -120,7 +135,7 @@ public class PackingSolver {
             } else {
                 gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
             }
-        } else if (input.size() >= 0 && input.size() < 10) {
+        } else if (input.size() >= 0 && input.size() <= 10) {
             gen = new OptimalPointGenerator(new GreedyPackerFactory());
         }
         
@@ -137,6 +152,7 @@ public class PackingSolver {
             //gen = new WideToHighBoundingBoxGenerator(new SheetPackerFactory());
         }
         */
+        
         Dataset result = gen.generate(input);
         timer.cancel();
         
@@ -149,9 +165,11 @@ public class PackingSolver {
         }
         
         // tmp
+        System.err.println(result);
         System.err.println("Total runtime: "
                 + (System.currentTimeMillis() - startTime) + " ms");
         if (result != null) new ShowDataset(result);
+        
     }
     
     /* 
@@ -168,13 +186,14 @@ public class PackingSolver {
         if (args != null) {
             if (args.length >= 1) in = args[0];
             if (args.length >= 2) out = args[1];
-//            in = testFile;
+            in = testFile;
         }
         
         new PackingSolver().run(in, out);
         /*
         for (File file : testFiles) {
             in = file.toString();
+            MultiTool.sleepThread(2000);
             System.err.println("Testfile: " + in);
             
             try {    
