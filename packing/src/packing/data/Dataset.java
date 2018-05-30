@@ -162,13 +162,14 @@ public class Dataset
             if (!(obj instanceof Dataset.Entry)) return false;
             Entry entry = (Entry) obj;
             
-            return rec.equals(entry.rec) && useRotation;
+            return rec.equals(entry.rec) &&
+                    useRotation == entry.useRotation &&
+                    id == entry.id;
         }
         
         @Override
         public int hashCode() {
-            return MultiTool.calcHashCode(rec.x, rec.y, rec.width, rec.height,
-                                          useRotation);
+            return MultiTool.calcHashCode(rec, useRotation);
         }
         
         @Override
@@ -224,7 +225,7 @@ public class Dataset
     /**
      * Constructor to be used for sub-classes.
      */
-    protected Dataset(int height, int width, boolean allowRot,
+    public Dataset(int height, int width, boolean allowRot,
             int numRect, boolean fixedHeight) {
         this.height = height;
         this.width = width;
@@ -238,6 +239,11 @@ public class Dataset
      * Functions
      * -------------------------------------------------------------------------
      */
+    public static Dataset createEmptyDataset(Dataset data) {
+        return new Dataset(data.height, data.width, data.allowRot,
+                data.numRect, data.fixedHeight);
+    }
+    
     /**
      * Adds an entry to the data set.
      *
@@ -329,34 +335,37 @@ public class Dataset
     }
     
     /**
-     * Sets the width of the sheet.
+     * Sets the width and height of the dataset.
+     * Does so without bound checking.
      * 
-     * @param newWidth the new width of the sheet.
+     * @param width
+     * @param height 
      */
-    public void setWidth(int newWidth) {
-        width = newWidth;
-    }
-    
     public void setSize(int width, int height) {
         this.width = width;
         this.height = height;
     }
     
     /**
+     * Sets the width of the sheet.
+     * 
+     * @param newWidth the new width of the sheet.
+     * 
+     * Delegates the functionality to {@link #setSize(int, int)}.
+     */
+    public void setWidth(int newWidth) {
+        setSize(newWidth, height);
+    }
+    
+    /**
      * Sets the height of the sheet.
      * 
      * @param newHeight the new height of the sheet.
-     * @throws IllegalArgumentException iff the height of the sheet is fixed.
+     * 
+     * Delegates the functionality to {@link #setSize(int, int)}.
      */
-    public void setHeight(int newHeight)
-            throws IllegalArgumentException {
-        if (fixedHeight) {
-            throw new IllegalArgumentException("The height cannot be set!");
-            
-        } else {
-            height = newHeight;
-        }
-        
+    public void setHeight(int newHeight) {
+        setSize(width, newHeight);
     }
     
     /**
