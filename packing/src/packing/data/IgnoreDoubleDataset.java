@@ -6,10 +6,12 @@ import java.awt.Rectangle;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.function.Predicate;
 
 
 /**
@@ -35,6 +37,12 @@ public class IgnoreDoubleDataset
     // The dataset used as source.
     final protected Dataset dataset;
     
+    // Map containing the entries. Used to find width/height matches in O(1).
+    protected HashMap<MultiEntryKey, MultiEntry> entryMap;
+    
+    // Whether there were any unprocessed modifications to {@link #entryMap}.
+    protected boolean modified = false;
+    
     
     /**-------------------------------------------------------------------------
      * Entry containing multiple {@code CompareEntry}'s.
@@ -56,7 +64,7 @@ public class IgnoreDoubleDataset
         final private int width;
         final private int height;
         
-        // Pointer for the entries to be returned via {@link #next()}.
+        // Pointer for the current entry.
         private int entryPointer = -1;
         
         
@@ -80,6 +88,7 @@ public class IgnoreDoubleDataset
             super(clone.id);
             this.width = clone.width;
             this.height = clone.height;
+            this.entryPointer = clone.entryPointer;
         }
         
         
@@ -122,6 +131,22 @@ public class IgnoreDoubleDataset
         public CompareEntry next() {
             if (getRemaining() <= 0) throw new NoSuchElementException();
             return entries.get(++entryPointer);
+        }
+        
+        @Override
+        public void remove() {
+            entries.remove(entryPointer--);
+        }
+        
+        
+        /**
+         * Removes the element at the given index from the list
+         * 
+         * @param i index of the element to be removed.
+         * @return the removed element.
+         */
+        public CompareEntry remove(int i) {
+            return entries.remove(i);
         }
         
         /**
@@ -181,6 +206,20 @@ public class IgnoreDoubleDataset
          */
         public void add(CompareEntry entry) {
             entries.add(entry);
+        }
+        
+        /**
+         * Merges with the given multiEntry.
+         * Assumes that both entries have the same width and height.
+         * Only modifies it's own entries.
+         * The other entry should be disposed of after the merge.
+         * 
+         * @param entry entry to merge with.
+         */
+        public void merge(MultiEntry entry) {
+            for (int i = 0; i < entry.size(); i++) {
+                entries.add(entry.get(i));
+            }
         }
         
         @Override
@@ -272,7 +311,8 @@ public class IgnoreDoubleDataset
          * Iterates over the multi entries of the current entry map.
          */
         private IgnoreDoubleIterator() {
-            it = list.iterator();//new ArrayIterator<MultiEntry>(sortedArray);
+            it = list.iterator();
+            //new ArrayIterator<MultiEntry>(sortedArray);
         }
         
         @Override
@@ -369,6 +409,7 @@ public class IgnoreDoubleDataset
         public boolean hasNext() {
             return elemCounter < array.length;
         }
+        
     }
     
     
@@ -388,8 +429,7 @@ public class IgnoreDoubleDataset
         this.dataset = data;
         float loadFactor = 0.75f;
         int numEntries = (int) (data.size() / loadFactor + 1);
-        HashMap<MultiEntryKey, MultiEntry> entryMap
-                = new HashMap<>(numEntries, loadFactor);
+        entryMap = new HashMap<>(numEntries, loadFactor);
         
         for (CompareEntry entry : data) {
             Rectangle rec = entry.getNormalRec();
@@ -406,8 +446,26 @@ public class IgnoreDoubleDataset
         }
         //sortedArray = toArray(entryMap.values(), MultiEntry.class);
         for (MultiEntry entry : entryMap.values()) {
-            list.add(entry);
+            super.list.add(entry);
         }
+        
+        modified = false;
+    }
+    
+    /**
+     * Clone constructor.
+     * 
+     * @param height
+     * @param width
+     * @param allowRot
+     * @param numRect
+     * @param fixedHeight
+     * @param dataset 
+     */
+    private IgnoreDoubleDataset(int height, int width, boolean allowRot,
+           int numRect, boolean fixedHeight, Dataset dataset) {
+        super(height, width, allowRot, numRect, fixedHeight);
+        this.dataset = dataset;
     }
     
     
@@ -438,12 +496,34 @@ public class IgnoreDoubleDataset
         return arr;
     }
     
-    
     /**
      * @return the used dataset.
      */
     public Dataset getDataset() {
         return dataset;
+    }
+    
+    @Override
+    public void setSize(int width, int height) {
+        dataset.setSize(width, height);
+    }
+    
+    @Override
+    public void setRotation(Predicate<CompareEntry> predicate) {
+        update();
+        super.setRotation(predicate);
+    }
+    
+    @Override
+    public void setOrdering(Comparator<CompareEntry> comparator) {
+        update();
+        super.setOrdering(comparator);
+    }
+    
+    @Override
+    public void shuffle() {
+        update();
+        super.shuffle();
     }
     
     @Override
@@ -453,7 +533,73 @@ public class IgnoreDoubleDataset
     
     @Override
     public IgnoreDoubleDataset clone() {
-        return new IgnoreDoubleDataset(dataset.clone());
+        IgnoreDoubleDataset clone = new IgnoreDoubleDataset(height, width,
+                allowRot, numRect, fixedHeight, dataset);
+        
+        for (MultiEntry entry : entryMap.values()) {
+            Rectangle rec = entry.getNormalRec();
+            MultiEntryKey key
+                    = new MultiEntryKey(rec.width, rec.height);
+            
+            MultiEntry clonedEntry = entry.clone();
+            clone.entryMap.put(key, clonedEntry);
+            list.add(clonedEntry);
+        }
+        
+        return clone;
+    }
+    
+    @Override
+    public CompareEntry add(Rectangle rec) {
+        Dataset.Entry entry = new Dataset.Entry(rec, idCounter++);
+        add(entry);
+        return entry;
+    }
+    
+    /**
+     * Adds the given entry to the mapping.
+     * @param entry 
+     */
+    public void add(CompareEntry entry) {
+        Rectangle rec = entry.getRec();
+        MultiEntryKey key = new MultiEntryKey(rec.width, rec.height);
+        MultiEntry me = entryMap.get(key);
+        
+        if (me == null) {
+            if (entry instanceof MultiEntry) {
+                me = (MultiEntry) entry;
+                
+            } else {
+                me = new MultiEntry(rec.width, rec.height);
+                me.add(entry);
+            }
+            
+            modified = true;
+            entryMap.put(key, me);
+            
+        } else {
+            if (entry instanceof MultiEntry) {
+                me.merge((MultiEntry) entry);
+                
+            } else {
+                me.add(entry);
+            }
+        }
+    }
+    
+    @Override
+    public void update() {
+        // Note: any previous order that was set in the same list will be
+        // overwritten by the new one.
+        if (modified) {
+            modified = false;
+            list.clear();
+            for (MultiEntry entry : entryMap.values()) {
+                list.add(entry);
+            }
+        }
+        
+        dataset.update();
     }
     
     
