@@ -35,7 +35,7 @@ public class PerfectPackingTransformer extends Packer {
         for(CompareEntry entry: dataset){
             Rectangle rec = entry.getRec();
             for(int i = rec.x; i <(rec.x + rec.width ); i++){
-                 System.out.println("column: " + i + " created");
+                 System.out.println("column: " + i + " with height: " + columns[i]);
                 columns[i] += rec.height;
             }
         }

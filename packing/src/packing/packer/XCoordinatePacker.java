@@ -93,7 +93,7 @@ public class XCoordinatePacker extends Packer {
         int[] height = new int[solution.getWidth()]; // height of every column of width 1
         // e.g height[0] is the height of the column with x-coordinate 0 to x =1
         
-        //System.out.println("call");
+        //System.out.println("call height pruning");
         
         for (CompareEntry entry : solution) {
             Rectangle rec = entry.getRec();
