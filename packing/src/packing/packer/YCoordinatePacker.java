@@ -39,7 +39,9 @@ public class YCoordinatePacker extends Packer {
     boolean[][] entries;
    
     public Dataset backtracker(Dataset input, Dataset solution, List<Point> corners){
-        
+        if(solution.size() == solution.size()){
+            return solution;
+        }
         for(Point p: corners){
             for(CompareEntry entry: input){
                 Rectangle rec = entry.getRec();

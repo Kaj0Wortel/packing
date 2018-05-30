@@ -35,7 +35,6 @@ public class PerfectPackingTransformer extends Packer {
         for(CompareEntry entry: dataset){
             Rectangle rec = entry.getRec();
             for(int i = rec.x; i <(rec.x + rec.width ); i++){
-                 System.out.println("column: " + i + " created");
                 columns[i] += rec.height;
             }
         }
@@ -48,7 +47,6 @@ public class PerfectPackingTransformer extends Packer {
         need to distinguish between fixed x and not when placing the y-coordinates
         */
        for(int i = 0; i < columns.length; i++){
-           System.out.println("column: " + i);
             while(columns[i] < dataset.getHeight()){
                 Rectangle rec = new Rectangle(i,0,1,1);
                 perfectDataSet.add(rec);

@@ -79,6 +79,10 @@ public class XCoordinatePacker extends Packer {
             } 
         } else {
             //System.out.println("Making perfect packing");
+            for(CompareEntry rectEntry: solution){
+                Rectangle rects = rectEntry.getRec();
+                System.out.println(rects);
+            }
             return yPacker.pack(solution);
         }        
         return null;
@@ -102,7 +106,7 @@ public class XCoordinatePacker extends Packer {
             for (int i = rec.x; i < (rec.x + rec.width); i++) {
               //  System.out.println(solution.getWidth() + " last index of array and " + i);
                 height[i] += rec.height;
-                System.out.println("height: " + height[i] + " at " + i);
+                //System.out.println("height: " + height[i] + " at " + i);
                 // height of all rectangles in the column x=i is more than the height of the bounding box
                 if (height[i] > input.getHeight()) {
                     //System.out.println("return");
