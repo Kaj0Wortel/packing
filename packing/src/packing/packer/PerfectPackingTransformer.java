@@ -61,16 +61,20 @@ public class PerfectPackingTransformer extends Packer {
         
         Dataset wrappedDataSet = wrappedPacker.pack(perfectDataSet);
         
-        Dataset originalSolved = wrappedDataSet.clone();
+        Dataset Solved = wrappedDataSet.clone();
         
         for(CompareEntry placed: wrappedDataSet){
             Rectangle placedRec = placed.getRec();
             Rectangle compareRec = new Rectangle(placedRec.x, 0, placedRec.width, placedRec.height);
             if(!original.contains(compareRec)){
-                originalSolved.remove(placed);
+                Solved.remove(placed);
             }
+            // remove rec from original
+            // this is to avoid cases in which the original has a 1x1 rec, and it adds all 1x1 recs
+            // instead of only the ones in original
+            original.remove(compareRec);
         }
         
-        return originalSolved;
+        return Solved;
     }
 }

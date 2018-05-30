@@ -183,7 +183,7 @@ public class OptimalBoundingBoxGenerator extends Generator {
     public static void main(String[] args) {
         // Logger setup (to disable logging, comment next line).
         
-        Dataset data = new Dataset(-1, false, 4);
+        Dataset data = new Dataset(-1, false, 10);
         //Logger.setDefaultLogger(new StreamLogger(System.out));
         long startTime = System.currentTimeMillis();
         data.add(new Rectangle(2, 6));
