@@ -25,7 +25,7 @@ public class YCoordinatePacker extends Packer {
         and use a backtracking algorithm to fill rectangles with the correct
         X-coordinate.
          */
-        System.out.println("started Y");
+        //System.out.println("started Y");
         List<Point> corners = new ArrayList<Point>();
         corners.add(new Point(0,0));
         
@@ -33,29 +33,58 @@ public class YCoordinatePacker extends Packer {
         IgnoreDoubleDataset doubleDataset = new IgnoreDoubleDataset(dataset);
         
         entries = new boolean[dataset.getWidth()][dataset.getHeight()];
+        inputSize = dataset.size();
         return backtracker(doubleDataset, solution, corners);
     }
     
     boolean[][] entries;
+    int inputSize;
    
     public Dataset backtracker(Dataset input, Dataset solution, List<Point> corners){
-        if(solution.size() == solution.size()){
+        //System.out.println("input size " + input.size());
+        if(solution.size() == inputSize){
+          //  System.out.println("yay");
             return solution;
         }
+        
+        /*            System.out.println("all corners to try:");
+        for(Point ohNo: corners){
+
+            System.out.println(ohNo);
+        }*/
+        
         for(Point p: corners){
+            //System.out.println("current point");
+            //System.out.println(p);
+            //List<Point> seenRects = new ArrayList<Point>();
             for(CompareEntry entry: input){
                 Rectangle rec = entry.getRec();
-                if(rec.x == p.x && checkIfFits(rec)){
+                
+                if(rec.x == p.x && checkIfFits(rec, p, input)){
+                   /* if(!seenRects.contains(new Point(rec.width, rec.height))){
+                        seenRects.add(new Point(rec.width, rec.height));
+                    } else {
+                        System.out.println("Dupe");
+                        continue;
+                    }*/
+                    //System.out.println(rec + " rect currently trying and point" + p);
+                    rec.y = p.y;
+                    CompareEntry addedEntry = solution.add(new Rectangle(rec));
                     for(int i = rec.x; i < (rec.x + rec.width ); i++){
                         for(int j = rec.y; j < (rec.y + rec.height ); j++){
                             entries[i][j] = true;
                         }
                     }
-                    rec.y = p.y;
-                    CompareEntry addedEntry = solution.add(new Rectangle(rec));
                     //input.remove(entry.getRec());
                     List<Point> updatedCorners = updateCorners(solution, rec, corners, p);
-                    backtracker(input, solution,updatedCorners);
+                    //System.out.println("backtrack");
+                  /*  for(Point pee: updatedCorners){
+                        System.out.println(pee);
+                    }*/
+                    Dataset possibleSolution = backtracker(input, solution, updatedCorners);
+                    if(possibleSolution != null){
+                        return possibleSolution;
+                    }
                     for(int i = rec.x; i < (rec.x + rec.width ); i++){
                         for(int j = rec.y; j < (rec.y + rec.height ); j++){
                             entries[i][j] = false;
@@ -64,7 +93,7 @@ public class YCoordinatePacker extends Packer {
                     //input.add(entry.getRec());
                     solution.remove(addedEntry);
                 }
-                solution.add(new Rectangle(rec));
+               // solution.add(new Rectangle(rec));
                 
             }
         }
@@ -72,10 +101,15 @@ public class YCoordinatePacker extends Packer {
         return null;
     }
     
-    public boolean checkIfFits(Rectangle rec){
+    public boolean checkIfFits(Rectangle rec, Point p, Dataset input){
         for(int i = rec.x; i < (rec.x + rec.width ); i++){
-                        for(int j = rec.y; j < (rec.y + rec.height ); j++){
+                        for(int j = p.y; j < (p.y + rec.height ); j++){
+                            if(i > input.getWidth()-1 || j > input.getHeight()-1){
+                               // System.out.println(rec + "Doesn't fit");
+                                return false;
+                            }
                             if(entries[i][j]){
+                               // System.out.println(rec + "Doesn't fit");
                                 return false;
                             }
                         }
@@ -98,7 +132,7 @@ public class YCoordinatePacker extends Packer {
         Point bottomRight = null;
         
         for(CompareEntry entry: solution){
-            if((entry.getRec() != rec &&     //entry is not the same rectangle as rec
+            if(topLeft == null && ((entry.getRec() != rec &&     //entry is not the same rectangle as rec
                     // left side of rec touches the right side of the other rectangle
                     rec.x == (entry.getRec().x + entry.getRec().width) &&  
                     // right rectangle starts below or at the same point as top of rec
@@ -107,14 +141,15 @@ public class YCoordinatePacker extends Packer {
                     (rec.y +rec.height) < (entry.getRec().y + entry.getRec().height)) ||
                     // rec is agains the right handside of the box
                     rec.x == 0
-                    ) {
+                    )) {
                 topLeft = new Point(rec.x, rec.y + rec.height);
                 updatedCorners.add(topLeft);
             }
             
             if((entry.getRec() != rec &&  //entry is not the same rectangle as rec
                     // right rectangle touches the right side of rec
-                    (rec.x + rec.width) == entry.getRec().x &&
+                    (rec.x + rec.width) >= entry.getRec().x &&
+                    (rec.x + rec.width) < entry.getRec().x + entry.getRec().width &&
                     // right rectangle does not end above the bottom of rec
                     rec.y >= (entry.getRec().y + entry.getRec().height) &&
                     // right rectangle starts below rec
@@ -127,9 +162,16 @@ public class YCoordinatePacker extends Packer {
             }
             
             if(topLeft != null && bottomRight != null){
+                /*for(Point pee: updatedCorners){
+                    System.out.println(pee);
+                }*/
                 return updatedCorners;
             }              
         }
+        
+        /*for(Point pee: updatedCorners){
+            System.out.println(pee);
+        }*/
         return updatedCorners;
     }
 }

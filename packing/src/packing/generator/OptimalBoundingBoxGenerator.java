@@ -59,12 +59,11 @@ public class OptimalBoundingBoxGenerator extends Generator {
         maxArea = greedyPacked.getArea();
         maxWidth = greedyPacked.getWidth();
         
-        //UNCOMMENT
-        //boundingBoxHeap = createInitialHeap(dataset, minWidth, maxWidth, minArea);
+        boundingBoxHeap = createInitialHeap(dataset, minWidth, maxWidth, minArea);
         
         //REMOVE AFTER
-        Rectangle rectangle = new Rectangle(4,13);
-        boundingBoxHeap.insert(rectangle);
+        //Rectangle rectangle = new Rectangle(4,13);
+        //boundingBoxHeap.insert(rectangle);
         while(best == null){
             Rectangle rect = boundingBoxHeap.extractMin();// get minimum boundingbox
             //System.out.println(rect + "rect");
@@ -84,16 +83,15 @@ public class OptimalBoundingBoxGenerator extends Generator {
                 best = packed;
             } else {
                 // else increase height and put the new boundingBox in the heap
-                System.out.println("Nope");                
-                //UNCOMMENT
-                /*height++;
+                System.out.println("Nope");
+                height++;
                 rect.setSize(width, height);
                 
-                if((rect.width * rect.height) >= greedyPacked.getArea()){*/
+                if((rect.width * rect.height) >= greedyPacked.getArea()){
                     best = greedyPacked;
-               /* } else {
+                } else {
                     boundingBoxHeap.insert(rect);
-                }*/
+                }
 
             }
         }

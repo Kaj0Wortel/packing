@@ -4,6 +4,8 @@ package packing.packer;
 
 // Packing imports
 import java.awt.Rectangle;
+import java.util.ArrayList;
+import java.util.List;
 import packing.data.*;
 
 
@@ -30,10 +32,12 @@ public class PerfectPackingTransformer extends Packer {
         
         // keep track of area per column of 1 width
         int[] columns = new int[dataset.getWidth()];
+        List<Rectangle> original = new ArrayList<Rectangle>();
         
         Dataset perfectDataSet = dataset.clone();
         for(CompareEntry entry: dataset){
             Rectangle rec = entry.getRec();
+            original.add(rec);
             for(int i = rec.x; i <(rec.x + rec.width ); i++){
                 columns[i] += rec.height;
             }
@@ -57,6 +61,16 @@ public class PerfectPackingTransformer extends Packer {
         
         Dataset wrappedDataSet = wrappedPacker.pack(perfectDataSet);
         
-        return wrappedDataSet;
+        Dataset originalSolved = wrappedDataSet.clone();
+        
+        for(CompareEntry placed: wrappedDataSet){
+            Rectangle placedRec = placed.getRec();
+            Rectangle compareRec = new Rectangle(placedRec.x, 0, placedRec.width, placedRec.height);
+            if(!original.contains(compareRec)){
+                originalSolved.remove(placed);
+            }
+        }
+        
+        return originalSolved;
     }
 }
