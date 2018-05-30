@@ -17,7 +17,7 @@ import java.util.List;
 public class MergedEntryDataset
         extends Dataset
         implements packing.tools.Cloneable {
-    
+
     public class MergedEntry
             extends Dataset.Entry {
         final List<CompareEntry> entries;
@@ -165,14 +165,13 @@ public class MergedEntryDataset
      */
     public void mergeEntries(int... entryIndices) {
         List<CompareEntry> entries = new ArrayList<CompareEntry>();
-        
         // Iterate entryIndices in reverse sorted order, so the indices
         // of the entries we still have to remove don't shift before
         // we can remove them.
         Arrays.sort(entryIndices);
         for (int i = entryIndices.length - 1; i >= 0; i--) {
             entries.add(list.remove(entryIndices[i]));
-         }
+        }
         
         list.add(new MergedEntry(entries, idCounter++));
     }

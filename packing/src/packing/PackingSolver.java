@@ -116,7 +116,7 @@ public class PackingSolver {
             }
         } else if (input.size() >= 10 && input.size() <= 25) {
             if (input.isFixedHeight()) {
-                gen = new GeneticGenerator(new GeneticPackerFactory());
+                gen = new GeneticGenerator(new GreedyPackerFactory());
             } else {
                 gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
             }
