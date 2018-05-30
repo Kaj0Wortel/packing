@@ -19,6 +19,7 @@ import java.awt.Rectangle;
 public class YCoordinatePacker extends Packer {
     @Override
     public Dataset pack(Dataset dataset) {
+        System.out.println("Packing Y");
         /*
         Keep track of corners (starting with just (0,0) as the initial corner,
         and use a backtracking algorithm to fill rectangles with the correct
@@ -30,7 +31,7 @@ public class YCoordinatePacker extends Packer {
         
         Dataset solution = Dataset.createEmptyDataset(dataset);
         
-        entries = new boolean[dataset.getWidth()-1][dataset.getHeight()-1];
+        entries = new boolean[dataset.getWidth()][dataset.getHeight()];
         return backtracker(dataset, solution, corners);
     }
     
@@ -42,8 +43,8 @@ public class YCoordinatePacker extends Packer {
             for(CompareEntry entry: input){
                 Rectangle rec = entry.getRec();
                 if(rec.x == p.x && checkIfFits(rec)){
-                    for(int i = rec.x; i < (rec.x + rec.width -1); i++){
-                        for(int j = rec.y; j < (rec.y + rec.height -1); j++){
+                    for(int i = rec.x; i < (rec.x + rec.width ); i++){
+                        for(int j = rec.y; j < (rec.y + rec.height ); j++){
                             entries[i][j] = true;
                         }
                     }
@@ -66,8 +67,8 @@ public class YCoordinatePacker extends Packer {
     }
     
     public boolean checkIfFits(Rectangle rec){
-        for(int i = rec.x; i < (rec.x + rec.width -1); i++){
-                        for(int j = rec.y; j < (rec.y + rec.height -1); j++){
+        for(int i = rec.x; i < (rec.x + rec.width ); i++){
+                        for(int j = rec.y; j < (rec.y + rec.height ); j++){
                             if(entries[i][j]){
                                 return false;
                             }

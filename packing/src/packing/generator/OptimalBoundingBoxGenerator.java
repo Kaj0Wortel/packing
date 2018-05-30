@@ -64,8 +64,8 @@ public class OptimalBoundingBoxGenerator extends Generator {
         
         while(best == null){
             Rectangle rect = boundingBoxHeap.extractMin();// get minimum boundingbox
-            System.out.println(rect + "rect");
-            System.out.println(rect.width + "width");
+            //System.out.println(rect + "rect");
+            //System.out.println(rect.width + "width");
             width = rect.width;
             height = rect.height;
             dataset.setWidth(width);
