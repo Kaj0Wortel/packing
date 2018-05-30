@@ -123,8 +123,9 @@ public class ShowDataset
         zoomInButton.addActionListener((e) -> {
             AntiLayoutManagerJPanel panel = ShowDataset.this.contentPane;
             if (panel != null) {
-                panel.overrideSize((int) (panel.getWidth() * 1.25),
-                                   (int) (panel.getHeight() * 1.25));
+                int scalingFactor = (int) (panel.getWidth() / data.getWidth() * 1.25);
+                panel.overrideSize(scalingFactor * data.getWidth(),
+                        scalingFactor * data.getHeight());
                 update();
             }
         });
@@ -132,9 +133,12 @@ public class ShowDataset
         zoomOutButton.addActionListener((e) -> {
             AntiLayoutManagerJPanel panel = ShowDataset.this.contentPane;
             if (panel != null) {
-                panel.overrideSize((int) (panel.getWidth() * 0.8),
-                                   (int) (panel.getHeight() * 0.8));
-                update();
+                int scalingFactor = (int) (panel.getWidth() / data.getWidth() * 0.8);
+                if (scalingFactor > 0) {
+                    panel.overrideSize(scalingFactor * data.getWidth(),
+                            scalingFactor * data.getHeight());
+                    update();
+                }
             }
         });
         
