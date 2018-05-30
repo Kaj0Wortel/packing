@@ -72,6 +72,7 @@ public class XCoordinatePacker extends Packer {
                         return backtrackSolution;
                     }
                     current--;
+                    
                 }
                 solution.remove(addedEntry);
                 

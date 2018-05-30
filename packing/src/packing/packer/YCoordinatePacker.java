@@ -25,7 +25,7 @@ public class YCoordinatePacker extends Packer {
         and use a backtracking algorithm to fill rectangles with the correct
         X-coordinate.
          */
-        
+        System.out.println("started Y");
         List<Point> corners = new ArrayList<Point>();
         corners.add(new Point(0,0));
         
@@ -50,7 +50,7 @@ public class YCoordinatePacker extends Packer {
                         }
                     }
                     rec.y = p.y;
-                    solution.add(new Rectangle(rec));
+                    CompareEntry addedEntry = solution.add(new Rectangle(rec));
                     //input.remove(entry.getRec());
                     List<Point> updatedCorners = updateCorners(solution, rec, corners, p);
                     backtracker(input, solution,updatedCorners);
@@ -60,7 +60,7 @@ public class YCoordinatePacker extends Packer {
                         }
                     }
                     //input.add(entry.getRec());
-                    solution.remove(rec);
+                    solution.remove(addedEntry);
                 }
                 solution.add(new Rectangle(rec));
                 
