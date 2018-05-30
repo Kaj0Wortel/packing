@@ -12,16 +12,14 @@ import packing.packer.PackerFactory;
 import packing.tools.Logger;
 import packing.tools.MultiTool;
 import packing.tools.StreamLogger;
+import packing.tools.ThreadMonitor;
 
 
 // Java imports
 import java.awt.Point;
 import java.awt.Rectangle;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Stack;import packing.tools.ThreadMonitor;
-;
+import java.util.Stack;
 
 
 /**
@@ -378,7 +376,7 @@ public class OptimalPointGenerator extends Generator {
         
         // Check if the rectangle fits in the bounding box.
         if (dataset.isFixedHeight() &&
-                dataset.getHeight() > node.point.y + rec.height) {
+                dataset.getHeight() < node.point.y + rec.height) {
             return false;
         }
         
@@ -570,7 +568,7 @@ public class OptimalPointGenerator extends Generator {
         
         if (packerFactory != null) {
             best = generateUpperBound(dataset);
-            System.err.println("generated!");
+            //System.err.println("generated!");
         }
         
         // tmp
@@ -768,11 +766,27 @@ public class OptimalPointGenerator extends Generator {
         // Logger setup (to disable logging, comment next line).
         //Logger.setDefaultLogger(new StreamLogger(System.out));
         
-        Dataset data = new Dataset(20, true, 3);
+        Dataset data = new Dataset(7, true, 3);
         long startTime = System.currentTimeMillis();
+        /*03_01_h20_rn.txt
         data.add(new Rectangle(3, 9));
         data.add(new Rectangle(8, 9));
         data.add(new Rectangle(11, 3));
+        /*03_03_h12_ry.txt
+        data.add(new Rectangle(22, 3));
+        data.add(new Rectangle(2, 9));
+        data.add(new Rectangle(1, 15));
+        data.add(new Rectangle(1, 4));
+        data.add(new Rectangle(1, 5));
+        /*05_01_h7_ry.txt*/
+        data.add(new Rectangle(18, 1));
+        data.add(new Rectangle(14, 3));
+        data.add(new Rectangle(1, 2));
+        data.add(new Rectangle(8, 4));
+        data.add(new Rectangle(14, 1));
+        
+        
+        
         /*data.add(new Rectangle(20, 6));
         data.add(new Rectangle(2, 4));
         data.add(new Rectangle(7, 1));
@@ -804,7 +818,7 @@ public class OptimalPointGenerator extends Generator {
         /**/
         //Dataset data = new Dataset(10, false, 1);
         //data.add(new Rectangle(10, 10));
-
+        
         OptimalPointGenerator generator = new OptimalPointGenerator(new GreedyPackerFactory());
         Dataset result = generator.generate(data);
         System.out.println(System.currentTimeMillis() - startTime);
@@ -812,13 +826,16 @@ public class OptimalPointGenerator extends Generator {
         MultiTool.sleepThread(200);
         System.err.println();
         System.err.println(result);
+        for (CompareEntry entry : result) {
+            System.err.println(entry);
+        }
         /*
         if (generator.showDataset == null) {
             generator.showDataset = new ShowDataset(result);
         } else {
             generator.showDataset.setDataset(result);
         }*/
-        //new ShowDataset(result);
+        new ShowDataset(result);
     }
     
 }
