@@ -124,6 +124,9 @@ public class ShowDataset
             AntiLayoutManagerJPanel panel = ShowDataset.this.contentPane;
             if (panel != null) {
                 int scalingFactor = (int) (panel.getWidth() / data.getWidth() * 1.25);
+                if (scalingFactor == 1) {
+                    scalingFactor = 2;
+                }
                 panel.overrideSize(scalingFactor * data.getWidth(),
                         scalingFactor * data.getHeight());
                 update();
