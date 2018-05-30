@@ -35,11 +35,7 @@ public class XCoordinatePacker extends Packer {
          */
         
         // create solution as an empty boundingBox with the same values as the input
-        Dataset solution = dataset.clone();
-        for(CompareEntry entry: solution){
-            Rectangle rec = entry.getRec();
-            solution.remove(rec);
-        }
+        Dataset solution = Dataset.createEmptyDataset(dataset);
         
         solution = backtracker(dataset.clone(), solution, 0);
         //System.out.println("Backtrack finished");
