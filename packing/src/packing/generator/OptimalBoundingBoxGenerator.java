@@ -76,6 +76,7 @@ public class OptimalBoundingBoxGenerator extends Generator {
             //System.out.println("" + dataset.getArea());
             System.out.println(dataset.getHeight() + " height and width " + dataset.getWidth());
             Packer packer = new XCoordinatePacker(new PerfectPackingTransformer(new YCoordinatePacker())); //create packing instance for said box
+            System.out.println("tst");
             Dataset packed = packer.pack(dataset); // try to pack the box
             
             //if possible, than this is the optimal solution
