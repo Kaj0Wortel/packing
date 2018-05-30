@@ -94,13 +94,20 @@ public class XCoordinatePacker extends Packer {
      * @return false if current configuration does not fit
      */
     public boolean heightPruning(Dataset input, Dataset solution) {
-        int[] height = new int[solution.getWidth()]; // height of every column of width 1
+        // height of every column of width 1
         // e.g height[0] is the height of the column with x-coordinate 0 to x =1
+        int[] height = new int[solution.getWidth()]; 
         
-        //System.out.println("call height pruning");
+        // clone of input
+        Dataset toBePlaced = input.clone(); 
         
         for (CompareEntry entry : solution) {
             Rectangle rec = entry.getRec();
+            // clone entry to remove it from the toBePlaced dataset
+            CompareEntry cloneEntry = entry.clone();
+            // set location of cloneEntry to that of its duplicate in the original dataset
+            cloneEntry.setLocation(0, 0);
+            toBePlaced.remove(cloneEntry);
             //System.out.println("next rect");
             //System.out.println(rec.width);
             for (int i = rec.x; i < (rec.x + rec.width); i++) {
@@ -115,6 +122,50 @@ public class XCoordinatePacker extends Packer {
             }
         }
         
+        /* create an array with the following info:
+         for every column of height i, indicate how many empty cells there are
+        e.g {3,0,9} means there are 3 empty cells in columns of height 1,
+        0 in columns of height 2 and 9 in clumns of height 9
+        */
+        int[] emptySpace = new int[solution.getHeight()];
+        for(int j = 0; j < solution.getWidth(); j++){
+            // height of the empty column
+            int columnHeight = solution.getHeight() - height[j];
+            
+            /*
+            amount of empty cells in column of height columnHeight
+            increases by columnHeight
+            */
+            if(columnHeight > 0){
+                emptySpace[columnHeight-1] += columnHeight;
+            }         
+        }
+        
+        /*
+        Wasted space pruning
+        if there are not enough cells of height > rect.height for 
+        every rectangle still to be placed. Not all the rectangles 
+        can be placed, thus we prune
+        */
+        for(CompareEntry entry1: toBePlaced){
+            Rectangle rect = entry1.getRec();
+            int areaToBeFilled = entry1.area();
+            boolean rectFits = false;
+            for(int k = rect.height-1; k < solution.getHeight(); k++){
+                if(areaToBeFilled > 0){
+                    while(emptySpace[k] > 0 && areaToBeFilled > 0)
+                    emptySpace[k] --;
+                    areaToBeFilled --;                            
+                } else {
+                    rectFits = true;
+                    break;
+                }
+            }
+            // if there is a rect that does not fit, we prune
+            if(!rectFits){
+                return false;
+            }
+        }
         return true;
     }
 }
