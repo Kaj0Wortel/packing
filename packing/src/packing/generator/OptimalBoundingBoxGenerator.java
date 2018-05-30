@@ -71,6 +71,7 @@ public class OptimalBoundingBoxGenerator extends Generator {
             dataset.setWidth(width);
             dataset.setHeight(height);
             //System.out.println("" + dataset.getArea());
+            System.out.println(dataset.getHeight() + " height and width " + dataset.getWidth());
             Packer packer = new XCoordinatePacker(new PerfectPackingTransformer(new YCoordinatePacker())); //create packing instance for said box
             Dataset packed = packer.pack(dataset); // try to pack the box
             
@@ -79,9 +80,15 @@ public class OptimalBoundingBoxGenerator extends Generator {
                 best = packed;
             } else {
                 // else increase height and put the new boundingBox in the heap
+                System.out.println("Nope");
                 height++;
                 rect.setSize(width, height);
-                boundingBoxHeap.insert(rect);
+                if((rect.width * rect.height) >= greedyPacked.getArea()){
+                    best = greedyPacked;
+                } else {
+                    boundingBoxHeap.insert(rect);
+                }
+
             }
         }
     }

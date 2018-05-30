@@ -66,7 +66,7 @@ public class XCoordinatePacker extends Packer {
                 solution.add(new Rectangle(rec));
                 if(heightPruning(input, solution)){ // if solution is still viable continue backtracking
                     current++;
-                    System.out.println("Backtracking");
+                    //System.out.println("Backtracking");
                     Dataset backtrackSolution = backtracker(input, solution, current);
                     if(backtrackSolution != null){
                         return backtrackSolution;
@@ -79,7 +79,7 @@ public class XCoordinatePacker extends Packer {
                 
             } 
         } else {
-            System.out.println("Making perfect packing");
+            //System.out.println("Making perfect packing");
             return yPacker.pack(solution);
         }        
         return null;

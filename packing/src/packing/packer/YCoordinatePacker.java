@@ -19,7 +19,7 @@ import java.awt.Rectangle;
 public class YCoordinatePacker extends Packer {
     @Override
     public Dataset pack(Dataset dataset) {
-        System.out.println("Packing Y");
+        //System.out.println("Packing Y");
         /*
         Keep track of corners (starting with just (0,0) as the initial corner,
         and use a backtracking algorithm to fill rectangles with the correct
@@ -30,9 +30,10 @@ public class YCoordinatePacker extends Packer {
         corners.add(new Point(0,0));
         
         Dataset solution = Dataset.createEmptyDataset(dataset);
+        IgnoreDoubleDataset doubleDataset = new IgnoreDoubleDataset(dataset);
         
         entries = new boolean[dataset.getWidth()][dataset.getHeight()];
-        return backtracker(dataset, solution, corners);
+        return backtracker(doubleDataset, solution, corners);
     }
     
     boolean[][] entries;
@@ -50,12 +51,15 @@ public class YCoordinatePacker extends Packer {
                     }
                     rec.y = p.y;
                     solution.add(new Rectangle(rec));
-                    input.remove(entry.getRec());
-                    corners.remove(p);
-                    List<Point> updatedCorners = updateCorners(solution, rec, corners);
+                    //input.remove(entry.getRec());
+                    List<Point> updatedCorners = updateCorners(solution, rec, corners, p);
                     backtracker(input, solution,updatedCorners);
-                    corners.add(p);
-                    input.add(entry.getRec());
+                    for(int i = rec.x; i < (rec.x + rec.width ); i++){
+                        for(int j = rec.y; j < (rec.y + rec.height ); j++){
+                            entries[i][j] = false;
+                        }
+                    }
+                    //input.add(entry.getRec());
                     solution.remove(rec);
                 }
                 solution.add(new Rectangle(rec));
@@ -82,10 +86,12 @@ public class YCoordinatePacker extends Packer {
      * @param solution current solution
      * @param rec last placed rectangle
      * @param corners list of corners before rec was placed excluding corner where x was placed
+     * @param p point to be removed
      * @return updated list of corners
      */
-    public List<Point> updateCorners(Dataset solution, Rectangle rec, List<Point> corners){
-        List<Point> updatedCorners = corners;
+    public List<Point> updateCorners(Dataset solution, Rectangle rec, List<Point> corners, Point p){
+        List<Point> updatedCorners = new ArrayList<Point>(corners);
+        updatedCorners.remove(p);
         Point topLeft = null;
         Point bottomRight = null;
         
