@@ -17,11 +17,10 @@ import java.util.List;
 public class MergedEntryDataset
         extends Dataset
         implements packing.tools.Cloneable {
-
+    
     public class MergedEntry
             extends Dataset.Entry {
         final List<CompareEntry> entries;
-        
         
         /**
          * Default constructor.
