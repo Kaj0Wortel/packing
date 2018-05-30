@@ -262,6 +262,15 @@ public class Dataset
         list.remove(new Dataset.Entry(rec, idCounter--));
     }
     
+    /**
+     * Removes the entry from the list.
+     * 
+     * @param entry entry to be remvoed
+     */
+    public void remove(CompareEntry entry) {
+        list.remove(entry);
+    }
+    
     @Override
     public Iterator<CompareEntry> iterator() {
         return list.iterator();
@@ -413,6 +422,11 @@ public class Dataset
             entry.setRotation(!entry.useRotation());
         }
     }
+    
+    /**
+     * If there were any modifications, update {@link #list}.
+     */
+    public void update() { }
     
     @Override
     public Dataset clone() {
