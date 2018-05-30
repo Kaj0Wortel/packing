@@ -60,7 +60,13 @@ public abstract class Generator {
     public Dataset generateUpperBound(Dataset dataset) {
         int height = dataset.getHeight();
         int width = Integer.MAX_VALUE;
-        
+
+        if (height == 0 && !dataset.isFixedHeight()) {
+            for (CompareEntry entry : dataset) {
+                height = Math.max(height, entry.getRec().height);
+            }
+        }
+
         Dataset upperBound = null;
         
         for (Predicate<CompareEntry> predicate :
