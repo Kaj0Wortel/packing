@@ -4,6 +4,8 @@ package packing.generator;
 
 // Packing imports
 import java.awt.Rectangle;
+import java.util.ArrayList;
+import java.util.List;
 import packing.data.*;
 import packing.packer.*;
 import packing.generator.RectangleMinHeap;
@@ -66,33 +68,32 @@ public class OptimalBoundingBoxGenerator extends Generator {
         //boundingBoxHeap.insert(rectangle);
         while(best == null){
             Rectangle rect = boundingBoxHeap.extractMin();// get minimum boundingbox
-            //System.out.println(rect + "rect");
-            //System.out.println(rect.width + "width");
-            width = rect.width;
-            height = rect.height;
-            dataset.setWidth(width);
-            dataset.setHeight(height);
-            //System.out.println("" + dataset.getArea());
-            System.out.println(dataset.getHeight() + " height and width " + dataset.getWidth());
-            Packer packer = new XCoordinatePacker(new PerfectPackingTransformer(new YCoordinatePacker())); //create packing instance for said box
-            System.out.println("tst");
-            Dataset packed = packer.pack(dataset); // try to pack the box
+            System.out.println(rect + "BoundingBox");
             
-            //if possible, than this is the optimal solution
-            if(packed != null){
-                best = packed;
+            if((rect.width * rect.height) >= greedyPacked.getArea()){
+                best = greedyPacked;
             } else {
-                // else increase height and put the new boundingBox in the heap
-                System.out.println("Nope");
-                height++;
-                rect.setSize(width, height);
-                
-                if((rect.width * rect.height) >= greedyPacked.getArea()){
-                    best = greedyPacked;
+                //System.out.println(rect.width + "width");
+                width = rect.width;
+                height = rect.height;
+                dataset.setWidth(width);
+                dataset.setHeight(height);
+                //System.out.println("" + dataset.getArea());
+                //System.out.println(dataset.getHeight() + " height and width " + dataset.getWidth());
+                Packer packer = new XCoordinatePacker(new PerfectPackingTransformer(new YCoordinatePacker())); //create packing instance for said box
+                //System.out.println("tst");
+                Dataset packed = packer.pack(dataset); // try to pack the box
+            
+                //if possible, than this is the optimal solution
+                if(packed != null){
+                    best = packed;
                 } else {
+                    // else increase height and put the new boundingBox in the heap
+                    //System.out.println("Nope");
+                    height++;
+                    rect.setSize(width, height);
                     boundingBoxHeap.insert(rect);
                 }
-
             }
         }
     }
@@ -110,6 +111,8 @@ public class OptimalBoundingBoxGenerator extends Generator {
         int possibleHeight = 0;
         int minHeightHalfWidth = Integer.MAX_VALUE;
         
+        System.out.println(minArea);
+        
         for(CompareEntry entry : dataset){
             Rectangle rect = entry.getRec();
             if(rect.width == (width / 2)){
@@ -123,6 +126,9 @@ public class OptimalBoundingBoxGenerator extends Generator {
             }
             
             for(CompareEntry entry1 : dataset){
+                if(entry1 == entry){
+                    continue;
+                }
                 Rectangle rect1 = entry1.getRec();
                 // every pair greater than full width need to be stacked
                 if(rect.width + rect1.width > width){
@@ -142,9 +148,10 @@ public class OptimalBoundingBoxGenerator extends Generator {
             // if current box is smaller than minimum box, increase height
             // to be sufficient
         if((minHeight * width) < minArea){
-            minHeight = minArea/width;
+            //round up
+            minHeight = (int)Math.ceil((double)minArea/width);
         }       
-            
+        System.out.println(width + " width and height " + minHeight);
         
         return minHeight;        
     }
@@ -181,17 +188,18 @@ public class OptimalBoundingBoxGenerator extends Generator {
         long startTime = System.currentTimeMillis();
         data.add(new Rectangle(2, 6));
         data.add(new Rectangle(2, 6));
-        //data.add(new Rectangle(6, 2));
+        data.add(new Rectangle(6, 2));
         data.add(new Rectangle(4, 3));
         data.add(new Rectangle(3, 4));
-        //data.add(new Rectangle(10, 10));
-        /**//*
+        data.add(new Rectangle(10, 10));
+        data.add(new Rectangle(10,10));
+        /**/
         data.add(new Rectangle(1, 1));
         data.add(new Rectangle(2, 2));
         data.add(new Rectangle(3, 3));
-        data.add(new Rectangle(4, 4));
-        data.add(new Rectangle(5, 5));
-        data.add(new Rectangle(6, 6));
+        //data.add(new Rectangle(4, 4));
+        //data.add(new Rectangle(5, 5));
+        //data.add(new Rectangle(6, 6));
         /**//*
         data.add(new Rectangle(2, 6));
         data.add(new Rectangle(6, 2));

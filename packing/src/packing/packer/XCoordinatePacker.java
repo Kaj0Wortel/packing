@@ -54,7 +54,7 @@ public class XCoordinatePacker extends Packer {
         int width = input.getWidth();
         
         
-            System.out.println("started");
+           // System.out.println("started");
         if (solution.size() < input.size()) {
             CompareEntry entry = input.get(current);
             for (int j = 0; j < width; j++) {
@@ -79,10 +79,10 @@ public class XCoordinatePacker extends Packer {
             } 
         } else {
             //System.out.println("Making perfect packing");
-            for(CompareEntry rectEntry: solution){
+            /*for(CompareEntry rectEntry: solution){
                 Rectangle rects = rectEntry.getRec();
                 System.out.println(rects);
-            }
+            }*/
             return yPacker.pack(solution);
         }        
         return null;
