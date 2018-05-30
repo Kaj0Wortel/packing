@@ -18,7 +18,10 @@ import packing.tools.StreamLogger;
 import java.awt.Point;
 import java.awt.Rectangle;
 
-import java.util.Stack;;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;import packing.tools.ThreadMonitor;
+;
 
 
 /**
@@ -358,7 +361,8 @@ public class OptimalPointGenerator extends Generator {
      * 
      * @param entry the entry to be placed.
      * @param node the node describing the point where the entry should be
-     *     placed
+     *     placed.
+     * @param dataset the used dataset.
      * @return whether the entry was placed.
      */
     private boolean checkAndAddEntry(CompareEntry entry, PointNode node) {
@@ -530,6 +534,8 @@ public class OptimalPointGenerator extends Generator {
      * Checks whether the current solution is the best solution found so far.
      * If so, update {@code best} with the new found value.
      * Also update if {@code best} is {@code null}.
+     * 
+     * @param dataset the used dataset.
      */
     public void checkSolution() {
         dataset.setWidth(width);
@@ -578,7 +584,62 @@ public class OptimalPointGenerator extends Generator {
         // wasted space = unfillable space + area of all rectangle and
         // can therefore be initialized as totalInputArea.
         wastedSpace = totalInputArea;
-        recursion();
+        
+        //if (dataset.size() <= 3) {
+            recursion();
+//        } else {
+//            begin();
+//        }
+    }
+    
+    private void begin() {
+        int cores = Runtime.getRuntime().availableProcessors();
+        
+        if (cores <= doubleDataset.size()) {
+            Runnable run = null;
+            for (CompareEntry entry : doubleDataset) {
+                if (run != null) ThreadMonitor.startThread(run);
+                List<CompareEntry> list = new ArrayList<>();
+                list.add(entry);
+                run = createRunnable(list, dataset);
+            }
+            
+            run.run(); // No nullpointer sicne dataset.size() > 4
+            
+        } else {
+            final double num = doubleDataset.size() / cores;
+            int sumNum = 0;
+            List<CompareEntry> list = new ArrayList<>();
+            
+            for (CompareEntry entry : doubleDataset) {
+                if (++sumNum <= num) {
+                    list.add(entry);
+                    
+                } else {
+                    sumNum = 1;
+                    
+                    ThreadMonitor.startThread(createRunnable(list, dataset));
+                    
+                    list = new ArrayList<>();
+                    list.add(entry);
+                }
+            }
+            
+            createRunnable(list, dataset).run();
+        }
+    }
+    
+    private Runnable createRunnable(List<CompareEntry> entries, Dataset data) {
+        return () -> {
+            for (CompareEntry entry : entries) {
+                Dataset clone = data.clone();
+                checkAndAddEntry(entry, getPoints()[0]);
+                dataset.remove(entry);
+                IgnoreDoubleDataset dDataset = new IgnoreDoubleDataset(dataset);
+                doubleDataset = dDataset;
+                recursion();
+            }
+        };
     }
     
     /**
@@ -706,9 +767,9 @@ public class OptimalPointGenerator extends Generator {
         data.add(new Rectangle(20, 6));
         data.add(new Rectangle(2, 4));
         data.add(new Rectangle(7, 1));
-        //data.add(new Rectangle(12, 19));
-        //data.add(new Rectangle(17, 23));
-        //data.add(new Rectangle(10, 15));
+        data.add(new Rectangle(12, 19));
+        data.add(new Rectangle(17, 23));
+        data.add(new Rectangle(10, 15));
         /**//*
         data.add(new Rectangle(1, 1));
         data.add(new Rectangle(2, 2));
