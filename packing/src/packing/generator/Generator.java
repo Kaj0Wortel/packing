@@ -35,15 +35,21 @@ public abstract class Generator {
             generateSolution(dataset);
             
         } catch (ThreadDeath e) {
-            System.err.println("TERMINATED BY TIME-OUT!");
+            // tmp
+            //System.err.println("TERMINATED BY TIME-OUT!");
+            
+            // Clear the interrupted flag.
+            try {
+                Thread.sleep(0);
+            } catch (InterruptedException e2) { } 
             
         } catch (Exception e) {
             e.printStackTrace(System.err);
+            
         } finally {
             ThreadMonitor.killAll();
             return best;
         }
-
     }
     
     /**
@@ -78,7 +84,7 @@ public abstract class Generator {
                     Arrays.asList(CompareEntry.SORT_HEIGHT,
                             CompareEntry.SORT_AREA,
                             CompareEntry.SORT_WIDTH, 
-                           CompareEntry.SORT_LONGEST_SIDE)) {
+                            CompareEntry.SORT_LONGEST_SIDE)) {
                 dataset.setOrdering(comparator);
                 Packer packer = packerFactory.create(width, height);
                 Dataset packed = packer.pack(dataset);
@@ -106,7 +112,7 @@ public abstract class Generator {
      */
     @SuppressWarnings("deprecation")
     public void interrupt() {
-        System.err.println("INTERRUPT!");
+        //System.err.println("INTERRUPT!");
         genThread.stop();
     }
     
