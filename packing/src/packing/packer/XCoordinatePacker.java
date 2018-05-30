@@ -54,7 +54,7 @@ public class XCoordinatePacker extends Packer {
         int width = input.getWidth();
         
         
-            System.out.println("started");
+           // System.out.println("started");
         if (solution.size() < input.size()) {
             CompareEntry entry = input.get(current);
             for (int j = 0; j < width; j++) {
@@ -72,12 +72,17 @@ public class XCoordinatePacker extends Packer {
                         return backtrackSolution;
                     }
                     current--;
+                    
                 }
                 solution.remove(addedEntry);
                 
             } 
         } else {
             //System.out.println("Making perfect packing");
+            /*for(CompareEntry rectEntry: solution){
+                Rectangle rects = rectEntry.getRec();
+                System.out.println(rects);
+            }*/
             return yPacker.pack(solution);
         }        
         return null;
@@ -92,7 +97,7 @@ public class XCoordinatePacker extends Packer {
         int[] height = new int[solution.getWidth()]; // height of every column of width 1
         // e.g height[0] is the height of the column with x-coordinate 0 to x =1
         
-        //System.out.println("call");
+        //System.out.println("call height pruning");
         
         for (CompareEntry entry : solution) {
             Rectangle rec = entry.getRec();
@@ -101,7 +106,7 @@ public class XCoordinatePacker extends Packer {
             for (int i = rec.x; i < (rec.x + rec.width); i++) {
               //  System.out.println(solution.getWidth() + " last index of array and " + i);
                 height[i] += rec.height;
-                System.out.println("height: " + height[i] + " at " + i);
+                //System.out.println("height: " + height[i] + " at " + i);
                 // height of all rectangles in the column x=i is more than the height of the bounding box
                 if (height[i] > input.getHeight()) {
                     //System.out.println("return");

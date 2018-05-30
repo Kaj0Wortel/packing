@@ -93,7 +93,7 @@ public class IgnoreDoubleDataset
         
         
         /**
-         * @return the total number of enties in this class.
+         * @return the total number of entries in this class.
          */
         public int size() {
             return entries.size();

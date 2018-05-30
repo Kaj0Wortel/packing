@@ -4,6 +4,8 @@ package packing.packer;
 
 // Packing imports
 import java.awt.Rectangle;
+import java.util.ArrayList;
+import java.util.List;
 import packing.data.*;
 
 
@@ -30,12 +32,13 @@ public class PerfectPackingTransformer extends Packer {
         
         // keep track of area per column of 1 width
         int[] columns = new int[dataset.getWidth()];
+        List<Rectangle> original = new ArrayList<Rectangle>();
         
         Dataset perfectDataSet = dataset.clone();
         for(CompareEntry entry: dataset){
             Rectangle rec = entry.getRec();
-            for(int i = rec.x; i <(rec.x + rec.width -1); i++){
-                 System.out.println("column: " + i + " created");
+            original.add(rec);
+            for(int i = rec.x; i <(rec.x + rec.width ); i++){
                 columns[i] += rec.height;
             }
         }
@@ -48,7 +51,6 @@ public class PerfectPackingTransformer extends Packer {
         need to distinguish between fixed x and not when placing the y-coordinates
         */
        for(int i = 0; i < columns.length; i++){
-           System.out.println("column: " + i);
             while(columns[i] < dataset.getHeight()){
                 Rectangle rec = new Rectangle(i,0,1,1);
                 perfectDataSet.add(rec);
@@ -59,6 +61,20 @@ public class PerfectPackingTransformer extends Packer {
         
         Dataset wrappedDataSet = wrappedPacker.pack(perfectDataSet);
         
-        return wrappedDataSet;
+        Dataset Solved = wrappedDataSet.clone();
+        
+        for(CompareEntry placed: wrappedDataSet){
+            Rectangle placedRec = placed.getRec();
+            Rectangle compareRec = new Rectangle(placedRec.x, 0, placedRec.width, placedRec.height);
+            if(!original.contains(compareRec)){
+                Solved.remove(placed);
+            }
+            // remove rec from original
+            // this is to avoid cases in which the original has a 1x1 rec, and it adds all 1x1 recs
+            // instead of only the ones in original
+            original.remove(compareRec);
+        }
+        
+        return Solved;
     }
 }

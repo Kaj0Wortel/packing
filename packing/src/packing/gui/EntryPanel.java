@@ -64,11 +64,11 @@ public class EntryPanel
         int containerHeight = container.getHeight() - in.top - in.bottom;
         
         // Set the size and location of the rectangle.
-        setSize(containerWidth  * rec.width  / dataWidth,
-                containerHeight * rec.height / dataHeight);
-        setLocation(containerWidth / dataWidth * rec.x,
-                    containerHeight - getHeight()
-                            - containerHeight / dataHeight * rec.y);
+        setSize((int) (((long) containerWidth) * ((long) rec.width) / ((long) dataWidth)),
+                (int) (((long) containerHeight) * ((long) rec.height) / ((long) dataHeight)));
+        setLocation((int) (((long) containerWidth) * ((long) rec.x) / ((long) dataWidth)),
+                (int) (((long) containerHeight) - ((long) getHeight())
+                            - ((long) containerHeight) * ((long) rec.y) / ((long) dataHeight)));
     }
     
     @Override
