@@ -170,7 +170,7 @@ public class MultiTool {
             throws IllegalArgumentException, IllegalStateException {
         
         if (rootDir.isFile()) {
-            new IllegalArgumentException
+            throw new IllegalArgumentException
                 ("The file \"" + rootDir.getPath() + "\" is no dir.");
         }
         
