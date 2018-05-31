@@ -191,26 +191,27 @@ public class OptimalBoundingBoxGenerator extends Generator {
         data.add(new Rectangle(6, 2));
         data.add(new Rectangle(4, 3));
         data.add(new Rectangle(3, 4));
+        /**/
         data.add(new Rectangle(10, 10));
         data.add(new Rectangle(10,10));
-        /**/
         data.add(new Rectangle(1, 1));
         data.add(new Rectangle(2, 2));
         data.add(new Rectangle(3, 3));
-        //data.add(new Rectangle(4, 4));
-        //data.add(new Rectangle(5, 5));
-        //data.add(new Rectangle(6, 6));
-        /**//*
+        /**
+        data.add(new Rectangle(4, 4));
+        data.add(new Rectangle(5, 5));
+        data.add(new Rectangle(6, 6));
         data.add(new Rectangle(2, 6));
         data.add(new Rectangle(6, 2));
+        /**
         data.add(new Rectangle(2, 6));
         data.add(new Rectangle(6, 2));
         data.add(new Rectangle(3, 4));
         data.add(new Rectangle(4, 3));
-        /**//*
         data.add(new Rectangle(2, 6));
+        /**
         data.add(new Rectangle(2, 6));
-        //data.add(new Rectangle(6, 2));
+        data.add(new Rectangle(6, 2));
         data.add(new Rectangle(4, 3));
         data.add(new Rectangle(3, 4));
         data.add(new Rectangle(10, 10));
@@ -220,6 +221,12 @@ public class OptimalBoundingBoxGenerator extends Generator {
         
         Generator generator = new OptimalBoundingBoxGenerator(new GreedyPackerFactory());
         Dataset result = generator.generate(data);
+        long runtime = System.currentTimeMillis() - startTime;
+        int mins = (int) runtime/60000;
+        int remainder = (int)runtime-mins*60000;
+        int secs = remainder/1000;
+        int millsecs = remainder - secs*1000;
+        System.out.println("Runtime: " + mins + "min " + secs + "s " + millsecs + "ms." );               
         System.out.println("Runtime: " + (System.currentTimeMillis() - startTime) + " ms");
         MultiTool.sleepThread(200);
         System.err.println();
