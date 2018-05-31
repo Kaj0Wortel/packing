@@ -4,16 +4,15 @@ package packing;
 
 // Package imports
 import packing.data.Dataset;
-import packing.generator.FixedHeightGenerator;
-import packing.generator.Generator;
-import packing.generator.GeneticGenerator;
-import packing.generator.OptimalPointGenerator;
-import packing.generator.WideToHighBoundingBoxGenerator;
+import packing.generator.*;
 import packing.io.AbstractReader;
 import packing.io.FileDataReader;
 import packing.io.OutputWriter;
 import packing.io.StreamDataReader;
 import packing.packer.GreedyPackerFactory;
+import packing.packer.OptimalPackerFactory;
+import packing.tools.Logger;
+import packing.tools.StreamLogger;
 
 
 //##########
@@ -127,23 +126,26 @@ public class PackingSolver {
             timer.cancel();
             return;
         }
+
+        Logger.setDefaultLogger(new StreamLogger(System.err));
         
         // Generate solution.
         //according to the chart(v2)
-        if (input.size() > 25) {
-            if (input.isFixedHeight()) {
-                gen = new FixedHeightGenerator(new GreedyPackerFactory());
-            } else {
-                gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
-            }
+        if (input.size() >= 0 && input.size() <= 10) {
+            // gen = new OptimalPointGenerator(new GreedyPackerFactory());
+            gen = new OptimalBoundingBoxGenerator(new OptimalPackerFactory());
         } else if (input.size() > 10 && input.size() <= 25) {
             if (input.isFixedHeight()) {
                 gen = new GeneticGenerator(new GreedyPackerFactory());
             } else {
                 gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
             }
-        } else if (input.size() >= 0 && input.size() <= 10) {
-            gen = new OptimalPointGenerator(new GreedyPackerFactory());
+        } else if (input.size() > 25) {
+            if (input.isFixedHeight()) {
+                gen = new FixedHeightGenerator(new GreedyPackerFactory());
+            } else {
+                gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
+            }
         }
         
         //previous version(v1)

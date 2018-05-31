@@ -5,11 +5,7 @@ package packing.data;
 //##########
 // Java imports
 import java.awt.Rectangle;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 
 /**
@@ -184,7 +180,7 @@ public class MergedEntryDataset
      * @param dataset the input dataset.
      */
     public MergedEntryDataset(Dataset dataset) {
-        this(dataset, new LinkedList<CompareEntry>(dataset.list));
+        this(dataset, (Stack<CompareEntry>) dataset.list.clone());
     }
     
     /**
@@ -199,7 +195,7 @@ public class MergedEntryDataset
      * Note thet the provide list is not cloned.
      */
     public MergedEntryDataset(Dataset dataset,
-            List<CompareEntry> list) {
+            Stack<CompareEntry> list) {
         super(dataset.height, dataset.width, dataset.allowRot, dataset.numRect,
                 dataset.fixedHeight);
         this.list = list;

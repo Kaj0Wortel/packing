@@ -9,11 +9,10 @@ import packing.tools.MultiTool;
 //##########
 // Java imports
 import java.awt.Rectangle;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Stack;
 import java.util.function.Predicate;
 
 
@@ -44,9 +43,8 @@ public class Dataset
     protected int height;
     
     // The list of entries
-    protected List<CompareEntry> list = new ArrayList<>();
-    
-    
+    protected Stack<CompareEntry> list = new Stack<>();
+
     /**-------------------------------------------------------------------------
      * Entry class
      * -------------------------------------------------------------------------
@@ -72,6 +70,7 @@ public class Dataset
         public Entry(Rectangle rec, int id) {
             super(id);
             this.rec = rec;
+            if (Dataset.this.allowRotation()) calcRotatedRec();
         }
         
         /**
@@ -155,11 +154,21 @@ public class Dataset
         @Override
         public void setLocation(int x, int y) {
             rec.setLocation(x, y);
-            if (rotatedRec != null) {
+            if (allowRotation()) {
+                calcRotatedRec();
                 rotatedRec.setLocation(x, y);
             }
         }
-        
+
+        @Override
+        public void setSize(int width, int height) {
+            rec.setSize(width, height);
+            if (allowRotation()) {
+                calcRotatedRec();
+                rotatedRec.setSize(height, width);
+            }
+        }
+
         @Override
         public boolean equals(Object obj) {
             if (!(obj instanceof Dataset.Entry)) return false;
@@ -179,7 +188,7 @@ public class Dataset
         public String toString() {
             return "[rec: [x=" + rec.x + ", y=" + rec.y + ", width="
                     + rec.width + ", height=" + rec.height + "], "
-                    + "rotation: " + useRotation + "]";
+                    + "rotation: " + useRotation + ", id=" + id + "]";
         }
         
         @Override
@@ -196,9 +205,8 @@ public class Dataset
      */
     /**
      * @param rotation whether to allow rotation.
-     * @param the height restriction. Use -1 for no height restriction.
+     * @param height the height restriction. Use -1 for no height restriction.
      * @param numRect the total number of rectangles.
-     * @param gen the generator to be used on this dataset.
      */
     public Dataset(int height, boolean rotation, int numRect) {
         this.fixedHeight = height != -1;
@@ -257,6 +265,42 @@ public class Dataset
         CompareEntry entry = new Dataset.Entry(rec, idCounter++);
         list.add(entry);
         return entry;
+    }
+
+    public CompareEntry add(CompareEntry entry) {
+        idCounter = Math.max(idCounter, entry.getId() + 1);
+        CompareEntry newEntry = entry.clone();
+        list.add(newEntry);
+        return newEntry;
+    }
+
+    /**
+     * Adds an entry to the data set with a specific id.
+     *
+     * Only use this when reconstructing from an existing
+     * dataset!!
+     *
+     * @param rec the rectangle to be added.
+     * @param id the id of the new entry.
+     * @return the new added entry.
+     */
+    public CompareEntry add(Rectangle rec, int id) {
+        idCounter = Math.max(idCounter, id + 1);
+        CompareEntry entry = new Dataset.Entry(rec, id);
+        list.add(entry);
+        return entry;
+    }
+
+    public CompareEntry push(CompareEntry entry) {
+        idCounter = Math.max(idCounter, entry.getId() + 1);
+        CompareEntry newEntry = entry.clone();
+        list.push(newEntry);
+        return newEntry;
+    }
+
+    public CompareEntry pop(CompareEntry entry) {
+        if (idCounter == entry.getId() + 1) idCounter--;
+        return list.pop();
     }
     
     /**

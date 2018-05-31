@@ -198,7 +198,12 @@ public class IgnoreDoubleDataset
         public void setLocation(int x, int y) {
             entries.get(Math.max(entryPointer, 0)).setLocation(x, y);
         }
-        
+
+        @Override
+        public void setSize(int width, int height) {
+            entries.get(Math.max(entryPointer, 0)).setSize(width, height);
+        }
+
         /**
          * Adds the given entry.
          * Assumes that the entry is already of the correct format.
@@ -562,7 +567,7 @@ public class IgnoreDoubleDataset
      * Adds the given entry to the mapping.
      * @param entry 
      */
-    public void add(CompareEntry entry) {
+    public CompareEntry add(CompareEntry entry) {
         Rectangle rec = entry.getRec();
         MultiEntryKey key = new MultiEntryKey(rec.width, rec.height);
         MultiEntry me = entryMap.get(key);
@@ -587,6 +592,7 @@ public class IgnoreDoubleDataset
                 me.add(entry);
             }
         }
+        return entry;
     }
     
     @Override

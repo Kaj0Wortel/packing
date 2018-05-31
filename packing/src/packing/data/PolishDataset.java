@@ -5,13 +5,8 @@ package packing.data;
 //##########
 // Java imports
 import java.awt.Rectangle;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.NoSuchElementException;
-import java.util.Random;
+import java.util.*;
+
 import packing.tools.MultiTool;
 
 
@@ -307,7 +302,7 @@ public class PolishDataset
      */
     public PolishDataset(Dataset dataset) {
         super(dataset);
-        list = new LinkedList<CompareEntry>();
+        list = new Stack<>();
     }
     
     /**
@@ -319,7 +314,7 @@ public class PolishDataset
      * 
      * Note that the list is not cloned.
      */
-    public PolishDataset(Dataset dataset, LinkedList<CompareEntry> list) {
+    public PolishDataset(Dataset dataset, Stack<CompareEntry> list) {
         super(dataset);
         this.list = list;
     }
@@ -327,7 +322,7 @@ public class PolishDataset
     
     @Override
     public PolishDataset clone() {
-        return new PolishDataset(dataset.clone(), new LinkedList<>(list));
+        return new PolishDataset(dataset.clone(), (Stack<CompareEntry>) list.clone());
     }
     
     /**
