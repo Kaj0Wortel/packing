@@ -5,6 +5,11 @@ package packing.packer;
 // Packing imports
 import java.awt.Rectangle;
 import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.Stack;
+
 import packing.data.*;
 
 
@@ -16,6 +21,8 @@ import packing.data.*;
  */
 public class XCoordinatePacker extends Packer {
     private Packer yPacker;
+
+    public static int recursions = 0;
 
     public XCoordinatePacker(Packer packer) {
         this.yPacker = packer;
@@ -33,14 +40,103 @@ public class XCoordinatePacker extends Packer {
         - Wasted space pruning
         - Empty-strip dominance
          */
+
+        Stack<CompareEntry> entries = new Stack<>();
+
+        for (CompareEntry entry : dataset) {
+            entries.push(entry.clone());
+        }
         
         // create solution as an empty boundingBox with the same values as the input
         Dataset solution = Dataset.createEmptyDataset(dataset);
+
+        int[] columns = new int[dataset.getWidth()];
+
+        solution = backtrack(entries, solution, columns);
         
-        solution = backtracker(dataset.clone(), solution, 0);
+//        solution = backtracker(dataset.clone(), solution, 0);
+        System.err.printf("X-packer: %,d recursions\n", recursions);
+        recursions = 0;
         //System.out.println("Backtrack finished");
         return solution;
     }
+
+    public boolean addRectangle(Rectangle rec, int[] columns, int height) {
+        for (int i = rec.x; i < rec.x + rec.width; i++) {
+            if (columns[i] + rec.height > height) {
+                for (i--; i >= rec.x; i--) {
+                    columns[i] -= rec.height;
+                }
+                return false;
+            }
+
+            columns[i] += rec.height;
+        }
+        return true;
+    }
+
+    public void removeRectangle(Rectangle rec, int[] columns) {
+        for (int i = rec.x; i < rec.x + rec.width; i++) {
+            columns[i] -= rec.height;
+        }
+    }
+
+    public boolean pruneWastedSpace(List<CompareEntry> entries, int[] columns, int height) {
+        int[] emptySpace = new int[height + 1];
+        for (int j = 0; j < columns.length; j++){
+            int columnHeight = height - columns[j];
+            emptySpace[columnHeight] += columnHeight;
+        }
+
+        for(CompareEntry entry: entries){
+            Rectangle rect = entry.getRec();
+            int areaToBeFilled = entry.area();
+            for (int k = rect.height; k < height; k++){
+                while (emptySpace[k] > 0 && areaToBeFilled > 0) {
+                    emptySpace[k]--;
+                    areaToBeFilled--;
+                }
+            }
+            if (areaToBeFilled > 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public Dataset backtrack(Stack<CompareEntry> entries, Dataset solution, int[] columns) {
+        recursions++;
+        if (!entries.isEmpty()) {
+            int width = solution.getWidth();
+            int height = solution.getHeight();
+
+            CompareEntry entry = entries.pop();
+            Rectangle rec = entry.getRec();
+            for (int j = 0; j + rec.width <= width; j++) {
+                entry.setLocation(j, 0);
+                CompareEntry added = solution.add(new Rectangle(rec));
+                if (addRectangle(rec, columns, height)) {
+                    if (pruneWastedSpace(entries, columns, height)) {
+                        Dataset backtrackSolution = backtrack(entries, solution, columns);
+                        if (backtrackSolution != null) {
+                            return backtrackSolution;
+                        }
+                    }
+                    removeRectangle(rec, columns);
+                }
+                solution.remove(added);
+            }
+            entries.push(entry);
+            return null;
+        } else {
+            long startTime = System.currentTimeMillis();
+            solution = yPacker.pack(solution);
+            System.out.println("Runtime (Y-packer): " + (System.currentTimeMillis() - startTime) + " ms");
+            return solution;
+        }
+    }
+
+
     /**
      * 
      * @param input the input dataset
@@ -51,14 +147,15 @@ public class XCoordinatePacker extends Packer {
      * @return 
      */
     public Dataset backtracker(Dataset input, Dataset solution, int current) {
+        recursions++;
         int width = input.getWidth();
         
         
            // System.out.println("started");
         if (solution.size() < input.size()) {
             CompareEntry entry = input.get(current);
+            Rectangle rec = entry.getRec();
             for (int j = 0; j < width; j++) {
-                Rectangle rec = entry.getRec();
                 if (j + rec.width > solution.getWidth()) {
                     continue;
                 }
@@ -89,8 +186,9 @@ public class XCoordinatePacker extends Packer {
     }
     
     /**
-     * 
-     * @param dataset current configuration
+     *
+     * @param input full dataset
+     * @param solution current configuration
      * @return false if current configuration does not fit
      */
     public boolean heightPruning(Dataset input, Dataset solution) {

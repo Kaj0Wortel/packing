@@ -60,6 +60,10 @@ public class PerfectPackingTransformer extends Packer {
         
         
         Dataset wrappedDataSet = wrappedPacker.pack(perfectDataSet);
+
+       if (wrappedDataSet == null) {
+           return null;
+       }
         
         Dataset Solved = wrappedDataSet.clone();
         
