@@ -3,13 +3,20 @@ package packing;
 
 
 // Package imports
-import packing.data.*;
-import packing.generator.*;
-import packing.gui.*;
-import packing.io.*;
-import packing.packer.*;
+import packing.data.Dataset;
+import packing.generator.FixedHeightGenerator;
+import packing.generator.Generator;
+import packing.generator.GeneticGenerator;
+import packing.generator.OptimalPointGenerator;
+import packing.generator.WideToHighBoundingBoxGenerator;
+import packing.io.AbstractReader;
+import packing.io.FileDataReader;
+import packing.io.OutputWriter;
+import packing.io.StreamDataReader;
+import packing.packer.GreedyPackerFactory;
 
 
+//##########
 // Java imports
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +28,7 @@ import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
 
 
-/* 
+/**
  * The mainclass of the project.
  */
 public class PackingSolver {
@@ -40,14 +47,14 @@ public class PackingSolver {
             //+ "05_02_hf_ry.txt";
             //+ "05_03_h25_rn.txt";
             //+ "05_04_hf_rn.txt";
-            + "10_01_h11_rn.txt";
+            //+ "10_01_h11_rn.txt";
             //+ "10_02_h15_ry.txt";
             //+ "10_03_hf_ry.txt";
             //+ "10_04_hf_rn.txt";
             //+ "10000_01_h300_rn.txt";
             //+ "10000_02_hf_ry.txt";
             //+ "10000_03_hf_rn.txt";
-            //+ "10000_04_h1315_ry.txt";
+            + "10000_04_h1315_ry.txt";
             //+ "25_01_h19_ry.txt";
             //+ "25_02_hf_ry.txt";
             //+ "25_03_hf_rn.txt";
@@ -165,11 +172,12 @@ public class PackingSolver {
         }
         
         // tmp
+        /*
         System.err.println(result);
         System.err.println("Total runtime: "
                 + (System.currentTimeMillis() - startTime) + " ms");
         if (result != null) new ShowDataset(result);
-        
+        */
     }
     
     /* 
@@ -182,12 +190,12 @@ public class PackingSolver {
     public static void main(String[] args) {
         String in = null;
         String out = null;
-        
+        /*
         if (args != null) {
             if (args.length >= 1) in = args[0];
             if (args.length >= 2) out = args[1];
-            in = testFile;
-        }
+            //in = testFile;
+        }*/
         
         new PackingSolver().run(in, out);
         /*

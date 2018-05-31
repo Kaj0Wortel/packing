@@ -3,14 +3,21 @@ package packing.generator;
 
 
 // Packing imports
-import java.awt.Rectangle;
-import java.util.ArrayList;
-import java.util.List;
-import packing.data.*;
-import packing.packer.*;
-import packing.generator.RectangleMinHeap;
+import packing.data.CompareEntry;
+import packing.data.Dataset;
 import packing.gui.ShowDataset;
+import packing.packer.GreedyPackerFactory;
+import packing.packer.Packer;
+import packing.packer.PackerFactory;
+import packing.packer.PerfectPackingTransformer;
+import packing.packer.XCoordinatePacker;
+import packing.packer.YCoordinatePacker;
 import packing.tools.MultiTool;
+
+
+//##########
+// Java imports
+import java.awt.Rectangle;
 
 
 /**

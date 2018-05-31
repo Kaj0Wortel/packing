@@ -3,9 +3,13 @@ package packing.packer;
 
 
 // Packing imports
+import packing.data.CompareEntry;
+import packing.data.Dataset;
+
+
+//##########
+// Java imports
 import java.awt.Rectangle;
-import java.lang.reflect.Array;
-import packing.data.*;
 
 
 /**

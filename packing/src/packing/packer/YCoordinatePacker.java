@@ -3,11 +3,17 @@ package packing.packer;
 
 
 // Packing imports
+import packing.data.CompareEntry;
+import packing.data.Dataset;
+import packing.data.IgnoreDoubleDataset;
+
+
+//##########
+// Java imports
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
-import packing.data.*;
-import java.awt.Rectangle;
 
 
 /**

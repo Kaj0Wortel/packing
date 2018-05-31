@@ -3,10 +3,12 @@ package packing.gui;
 
 
 // Packing imports
-import packing.data.*;
+import packing.data.CompareEntry;
+import packing.data.Dataset;
 import packing.tools.MultiTool;
 
 
+//##########
 // Java imports
 import java.awt.Color;
 import java.awt.Component;
@@ -18,8 +20,6 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-import java.util.Iterator;
-
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -27,7 +27,7 @@ import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
 
-/* 
+/**
  * GUI interface showing a visualisation of a {@link packing.data.Dataset}.
  */
 public class ShowDataset

@@ -2,12 +2,16 @@
 package packing.data;
 
 
+//##########
 // Java imports
 import java.awt.Rectangle;
 
 import java.util.List;
 
 
+/**
+ * Factory class for creating the initial dataset.
+ */
 public class DatasetFactory {
     
     

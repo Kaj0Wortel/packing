@@ -3,15 +3,22 @@ package packing.packer;
 
 
 // Packing imports
-import packing.data.*;
+import packing.data.CompareEntry;
+import packing.data.Dataset;
 
 
+//##########
+// Java imports
 import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+
+/**
+ * Greedy packer algorithm.
+ */
 class GreedyPacker extends Packer {
     class Space {
         int x = 0;
@@ -61,84 +68,97 @@ class GreedyPacker extends Packer {
             if (!isEmpty) return false;
 
             if (rect.width > horizontalSpace || rect.height > verticalSpace) return false;
-
+            
             if (rect.width <= this.width && rect.height <= this.height) {
                 return true;
+                
             } else if (rect.width <= this.width) {
-                return getTop() != null && getTop().checkRectangle(new Rectangle(rect.width, rect.height - this.height));
+                return getTop() != null && getTop()
+                        .checkRectangle(new Rectangle(
+                                rect.width,
+                                rect.height - this.height));
+                
             } else if (rect.height <= this.height) {
-                return getRight() != null && getRight().checkRectangle(new Rectangle(rect.width - this.width, rect.height));
+                return getRight() != null && getRight()
+                        .checkRectangle(new Rectangle(
+                                rect.width - this.width,
+                                rect.height));
             } else {
-                // First split into left/right, then split remaining rectangle in top/bottom and check them.
+                // First split into left/right, then split remaining rectangle
+                // in top/bottom and check them.
                 return getRight() != null && getTop() != null
-                        && getRight().checkRectangle(new Rectangle(rect.width - this.width, rect.height))
-                        && getTop().checkRectangle(new Rectangle(width, rect.height - this.height));
+                        && getRight().checkRectangle(new Rectangle(
+                                rect.width - this.width,
+                                rect.height))
+                        && getTop().checkRectangle(new Rectangle(
+                                width,
+                                rect.height - this.height));
             }
         }
-
+        
         /**
-         * @return the x
+         * @return the x.
          */
         public int getX() {
             return x;
         }
-
+        
         /**
          * @param x the x to set
          */
         public void setX(int x) {
             this.x = x;
         }
-
+        
         /**
          * @return the y
          */
         public int getY() {
             return y;
         }
-
+        
         /**
          * @param y the y to set
          */
         public void setY(int y) {
             this.y = y;
         }
-
+        
         /**
          * @return the width
          */
         public int getWidth() {
             return width;
         }
-
+        
         /**
          * @param width the width to set
          */
         public void setWidth(int width) {
             this.width = width;
         }
-
+        
         /**
          * @return the height
          */
         public int getHeight() {
             return height;
         }
-
+        
         /**
          * @param height the height to set
          */
         public void setHeight(int height) {
             this.height = height;
         }
-
+        
         /**
          * @return the bottom
          */
         public Space getBottom() {
             return bottom;
         }
-
+        
         /**
          * @param bottom the bottom to set
          */
@@ -148,14 +168,14 @@ class GreedyPacker extends Packer {
                 bottom.top = this;
             }
         }
-
+        
         /**
          * @return the top
          */
         public Space getTop() {
             return top;
         }
-
+        
         /**
          * @param top the top to set
          */
@@ -165,14 +185,14 @@ class GreedyPacker extends Packer {
                 top.bottom = this;
             }
         }
-
+        
         /**
          * @return the left
          */
         public Space getLeft() {
             return left;
         }
-
+        
         /**
          * @param left the left to set
          */
@@ -182,14 +202,14 @@ class GreedyPacker extends Packer {
                 left.right = this;
             }
         }
-
+        
         /**
          * @return the right
          */
         public Space getRight() {
             return right;
         }
-
+        
         /**
          * @param right the right to set
          */
@@ -199,14 +219,14 @@ class GreedyPacker extends Packer {
                 right.left = this;
             }
         }
-
+        
         /**
          * @return is empty
          */
         public boolean isEmpty() {
             return isEmpty;
         }
-
+        
         public void fill() {
             isEmpty = false;
             horizontalSpace = 0;
@@ -237,7 +257,7 @@ class GreedyPacker extends Packer {
             this.verticalSpace = verticalSpace;
         }
     }
-
+    
     private int width;
     private int height;
     private Space root;

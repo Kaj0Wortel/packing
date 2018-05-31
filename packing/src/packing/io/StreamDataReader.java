@@ -3,9 +3,11 @@ package packing.io;
 
 
 // Packing imports
-import packing.data.*;
+import packing.data.Dataset;
+import packing.data.DatasetFactory;
 
 
+//##########
 // Java imports
 import java.io.InputStream;
 
@@ -14,7 +16,7 @@ import java.util.List;
 import java.util.Scanner;
 
 
-/* 
+/**
  * Reads data from a stream and provides a Dataset for this data.
  */
 public class StreamDataReader

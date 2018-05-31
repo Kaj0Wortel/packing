@@ -3,10 +3,15 @@ package packing.packer;
 
 
 // Packing imports
-import packing.data.*;
-import packing.tools.*;
+import packing.data.CompareEntry;
+import packing.data.Dataset;
+import packing.tools.FileLogger;
+import packing.tools.HalfLine;
+import packing.tools.Logger;
+import packing.tools.MultiTool;
 
 
+//##########
 // Java imports
 import java.awt.Rectangle;
 

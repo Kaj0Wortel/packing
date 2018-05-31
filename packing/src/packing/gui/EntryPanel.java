@@ -3,22 +3,25 @@ package packing.gui;
 
 
 // Packing imports
-import packing.data.*;
+import packing.data.CompareEntry;
 
 
+//##########
 // Java imports
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Insets;
 import java.awt.Rectangle;
 
 import javax.swing.JPanel;
 
-import java.awt.Insets;
 
-
+/**
+ * Panel representing a single rectangle for the visualisation.
+ */
 public class EntryPanel
         extends JPanel {
     // The parent container.

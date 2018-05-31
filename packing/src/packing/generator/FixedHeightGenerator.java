@@ -2,12 +2,13 @@
 package packing.generator;
 
 
-// Packing imports/
+// Packing imports
 import packing.data.CompareEntry;
 import packing.data.Dataset;
 import packing.packer.Packer;
 import packing.packer.PackerFactory;
 
+//##########
 
 /**
  * Class description here.
@@ -38,8 +39,8 @@ public class FixedHeightGenerator extends Generator {
         best = generateUpperBound(dataset);
         width = best.getWidth();
         
-        System.err.printf("Found initial solution: [%d x %d] (%.5f%% wasted space)\n", best.getWidth(), best.getHeight(),
-                100 * (best.getArea() - minArea) / (double) best.getArea());
+        //System.err.printf("Found initial solution: [%d x %d] (%.5f%% wasted space)\n", best.getWidth(), best.getHeight(),
+        //        100 * (best.getArea() - minArea) / (double) best.getArea());
         
         // %%explaination needed%%
         while (height * width > minArea) {

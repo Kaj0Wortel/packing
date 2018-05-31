@@ -9,6 +9,7 @@ import packing.packer.Packer;
 import packing.packer.PackerFactory;
 
 
+//##########
 // Java imports
 import java.awt.Rectangle;
 import java.util.Arrays;

@@ -1,13 +1,18 @@
+
 package packing.generator;
+
+
+//##########
+// Java imports
+import java.awt.Rectangle;
+import java.util.ArrayList;
+
+
 /**
  * A class to represent a min-heap for rectangles based on their area
  * An adaptation of https://gist.github.com/flexelem/70b120ac9bf2965f419f
  * made to work for rectangles.
  */
-
-import java.awt.Rectangle;
-import java.util.ArrayList;
-
 public class RectangleMinHeap {
 
     private ArrayList<Rectangle> list;

@@ -2,9 +2,9 @@
 package packing.tools;
 
 
+//##########
 // Java imports
 import java.awt.Rectangle;
-import java.awt.Point;
 
 
 /**

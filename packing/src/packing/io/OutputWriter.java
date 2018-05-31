@@ -7,6 +7,7 @@ import packing.data.CompareEntry;
 import packing.data.Dataset;
 
 
+//##########
 // Java imports
 import java.awt.Rectangle;
 
@@ -16,7 +17,7 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 
 
-/* 
+/**
  * Writer used to output text to a stream. Also formats datasets to a
  * correct output format.
  */
@@ -31,7 +32,7 @@ public class OutputWriter {
     private boolean useRotation;
     
     
-    /* -------------------------------------------------------------------------
+    /**-------------------------------------------------------------------------
      * Constructor
      * -------------------------------------------------------------------------
      */
@@ -42,7 +43,7 @@ public class OutputWriter {
         this.stream = stream;
     }
     
-    /* 
+    /**
      * Writes all entries of a data set according the the format
      * to the output stream.
      * 
@@ -65,7 +66,7 @@ public class OutputWriter {
         }
     }
     
-    /* 
+    /**
      * Writes a single entry to the output stream.
      */
     private void write(CompareEntry entry) throws IOException {
@@ -83,14 +84,14 @@ public class OutputWriter {
         print(sb.toString());
     }
     
-    /* 
+    /**
      * @param text to be printed to the output stream.
      */
     void print(String text) throws IOException {
         stream.write(text.getBytes(CHARSET));
     }
     
-    /* 
+    /**
      * @param text line of text to be printed to the output stream.
      */
     void println(String text) throws IOException {

@@ -1,7 +1,9 @@
 
 package packing.data;
 
-// Java imports.
+
+//##########
+// Java imports
 import java.awt.Rectangle;
 import java.lang.reflect.Array;
 import java.util.ArrayList;

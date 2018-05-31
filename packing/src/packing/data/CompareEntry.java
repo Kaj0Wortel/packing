@@ -1,12 +1,19 @@
 
 package packing.data;
 
+
+//##########
+// Java imports
 import java.awt.Rectangle;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Random;
 import java.util.function.Predicate;
 
+
+/**
+ * Main entry class for entries in the dataset.
+ */
 public abstract class CompareEntry {
     /**-------------------------------------------------------------------------
      * Variables.
