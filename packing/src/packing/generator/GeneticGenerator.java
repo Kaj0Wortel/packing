@@ -9,6 +9,7 @@ import packing.genetic.Population;
 import packing.packer.PackerFactory;
 
 
+//##########
 // Java imports
 import java.awt.Rectangle;
 
@@ -47,8 +48,8 @@ public class GeneticGenerator
         best = generateUpperBound(dataset);
         width = best.getWidth();
         
-        System.err.printf("Found initial solution: [%d x %d] (%.5f%% wasted space)\n", best.getWidth(), best.getHeight(),
-                100 * (best.getArea() - minArea) / (double) best.getArea());
+        //System.err.printf("Found initial solution: [%d x %d] (%.5f%% wasted space)\n", best.getWidth(), best.getHeight(),
+        //        100 * (best.getArea() - minArea) / (double) best.getArea());
         
         Population population = new Population(best, packerFactory, dataset.getHeight());
         
@@ -61,8 +62,8 @@ public class GeneticGenerator
                 current = population.getBest();
                 
                 if (current.getArea() < best.getArea()) {
-                    System.err.printf("Found new solution: [%d x %d] (%.5f%% wasted space)\n", current.getWidth(), current.getHeight(),
-                            100 * (current.getArea() - minArea) / (double) current.getArea());
+                    //System.err.printf("Found new solution: [%d x %d] (%.5f%% wasted space)\n", current.getWidth(), current.getHeight(),
+                    //        100 * (current.getArea() - minArea) / (double) current.getArea());
                     best = current;
                 }
                 
@@ -70,7 +71,7 @@ public class GeneticGenerator
                 population.performMutation();
             }
         } finally {
-            System.err.printf("Generated %d generations...\n", generation);
+            //System.err.printf("Generated %d generations...\n", generation);
         }
     }
     
