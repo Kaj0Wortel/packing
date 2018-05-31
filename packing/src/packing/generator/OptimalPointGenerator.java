@@ -11,10 +11,9 @@ import packing.packer.GreedyPackerFactory;
 import packing.packer.PackerFactory;
 import packing.tools.Logger;
 import packing.tools.MultiTool;
-import packing.tools.StreamLogger;
-import packing.tools.ThreadMonitor;
 
 
+//##########
 // Java imports
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -766,7 +765,7 @@ public class OptimalPointGenerator extends Generator {
         // Logger setup (to disable logging, comment next line).
         //Logger.setDefaultLogger(new StreamLogger(System.out));
         
-        Dataset data = new Dataset(7, true, 3);
+        Dataset data = new Dataset(-1, true, 10);
         long startTime = System.currentTimeMillis();
         /*03_01_h20_rn.txt
         data.add(new Rectangle(3, 9));
@@ -778,13 +777,23 @@ public class OptimalPointGenerator extends Generator {
         data.add(new Rectangle(1, 15));
         data.add(new Rectangle(1, 4));
         data.add(new Rectangle(1, 5));
-        /*05_01_h7_ry.txt*/
+        /*05_01_h7_ry.txt
         data.add(new Rectangle(18, 1));
         data.add(new Rectangle(14, 3));
         data.add(new Rectangle(1, 2));
         data.add(new Rectangle(8, 4));
         data.add(new Rectangle(14, 1));
-        
+        */
+        data.add(new Rectangle(14, 47));
+        data.add(new Rectangle(15, 84));
+        data.add(new Rectangle(2, 27));
+        data.add(new Rectangle(37, 2));
+        data.add(new Rectangle(7, 35));
+        data.add(new Rectangle(69, 2));
+        data.add(new Rectangle(15, 57));
+        data.add(new Rectangle(34, 4));
+        data.add(new Rectangle(53, 4));
+        data.add(new Rectangle(4, 9));
         
         
         /*data.add(new Rectangle(20, 6));
