@@ -10,7 +10,9 @@ import packing.data.*;
 import packing.packer.*;
 import packing.generator.RectangleMinHeap;
 import packing.gui.ShowDataset;
+import packing.tools.Logger;
 import packing.tools.MultiTool;
+import packing.tools.StreamLogger;
 
 
 /**
@@ -56,7 +58,7 @@ public class OptimalBoundingBoxGenerator extends Generator {
         }
         
         // Determine maxArea and maxWidth.
-        Packer greedyPacker = packerFactory.create(greedyWidth, greedyHeight);
+        Packer greedyPacker = new GreedyPackerFactory().create(greedyWidth, greedyHeight);
         Dataset greedyPacked = greedyPacker.pack(dataset);
         maxArea = greedyPacked.getArea();
         maxWidth = greedyPacked.getWidth();
@@ -80,7 +82,7 @@ public class OptimalBoundingBoxGenerator extends Generator {
                 dataset.setHeight(height);
                 //System.out.println("" + dataset.getArea());
                 //System.out.println(dataset.getHeight() + " height and width " + dataset.getWidth());
-                Packer packer = new XCoordinatePacker(new PerfectPackingTransformer(new YCoordinatePacker())); //create packing instance for said box
+                Packer packer = packerFactory.create(width, height); //create packing instance for said box
                 //System.out.println("tst");
                 Dataset packed = packer.pack(dataset); // try to pack the box
             
@@ -219,7 +221,7 @@ public class OptimalBoundingBoxGenerator extends Generator {
         //Dataset data = new Dataset(10, false, 1);
         //data.add(new Rectangle(10, 10));
         
-        Generator generator = new OptimalBoundingBoxGenerator(new GreedyPackerFactory());
+        Generator generator = new OptimalBoundingBoxGenerator(new OptimalPackerFactory());
         Dataset result = generator.generate(data);
         long runtime = System.currentTimeMillis() - startTime;
         int mins = (int) runtime/60000;

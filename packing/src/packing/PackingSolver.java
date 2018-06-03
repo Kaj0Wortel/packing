@@ -137,6 +137,7 @@ public class PackingSolver {
             }
         } else if (input.size() >= 0 && input.size() <= 10) {
             gen = new OptimalPointGenerator(new GreedyPackerFactory());
+            // gen = new OptimalBoundingBoxGenerator(new OptimalPackerFactory());
         }
         
         //previous version(v1)

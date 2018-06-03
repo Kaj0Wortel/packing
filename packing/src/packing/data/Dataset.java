@@ -156,7 +156,15 @@ public class Dataset
                 rotatedRec.setLocation(x, y);
             }
         }
-        
+
+        @Override
+        public void setSize(int width, int height) {
+            rec.setSize(width, height);
+            if (rotatedRec != null) {
+                rotatedRec.setSize(height, width);
+            }
+        }
+
         @Override
         public boolean equals(Object obj) {
             if (!(obj instanceof Dataset.Entry)) return false;

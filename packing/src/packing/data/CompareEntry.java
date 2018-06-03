@@ -119,7 +119,14 @@ public abstract class CompareEntry {
      * @param y the new y coord.
      */
     public abstract void setLocation(int x, int y);
-    
+
+    /**
+     * Sets the dimensions of the rectangle.
+     * @param width the new width.
+     * @param height the new height.
+     */
+    public abstract void setSize(int width, int height);
+
     /**
      * Clone function.
      */
