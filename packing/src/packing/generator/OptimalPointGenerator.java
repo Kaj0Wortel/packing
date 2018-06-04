@@ -338,6 +338,7 @@ public class OptimalPointGenerator extends Generator {
             if (last.prev != null) {
                 //Logger.write("(2.1)");
                 return new PointNode[] {last, last.prev};
+                //return new PointNode[] {last.prev};
                 
             } else {
                 //Logger.write("(2.2)");
@@ -744,7 +745,21 @@ public class OptimalPointGenerator extends Generator {
                 la.revert();
                 curNode = curNodeStack.pop();
                 wastedSpace = wastedSpaceStack.pop();
-            }
+                
+            }/* else if (!smallSolExists && nodes[0] == last.prev) {
+                for (CompareEntry entry : doubleDataset) {
+                    curNodeStack.add(curNode);
+                    
+                    
+                    if (checkAndAddEntry(entry, node)) {
+                        recursion();
+                        //Logger.write("return");
+                        nodeActions.pop().revert();
+                    }
+                    
+                    curNode = curNodeStack.pop();
+                }
+            }/**/
             
         }
     }
@@ -765,7 +780,7 @@ public class OptimalPointGenerator extends Generator {
         // Logger setup (to disable logging, comment next line).
         //Logger.setDefaultLogger(new StreamLogger(System.out));
         
-        Dataset data = new Dataset(-1, true, 10);
+        Dataset data = new Dataset(-1, true, 25);
         long startTime = System.currentTimeMillis();
         /*03_01_h20_rn.txt
         data.add(new Rectangle(3, 9));
@@ -783,7 +798,7 @@ public class OptimalPointGenerator extends Generator {
         data.add(new Rectangle(1, 2));
         data.add(new Rectangle(8, 4));
         data.add(new Rectangle(14, 1));
-        */
+        *//*
         data.add(new Rectangle(14, 47));
         data.add(new Rectangle(15, 84));
         data.add(new Rectangle(2, 27));
@@ -794,6 +809,13 @@ public class OptimalPointGenerator extends Generator {
         data.add(new Rectangle(34, 4));
         data.add(new Rectangle(53, 4));
         data.add(new Rectangle(4, 9));
+        /**/
+        
+        
+        //data.add(new Rectangle(29, 59));
+        //data.add(new Rectangle(11, 46));
+        //data.add(new Rectangle(45, 1));
+        //data.add(new Rectangle(34, 23));
         
         
         /*data.add(new Rectangle(20, 6));
