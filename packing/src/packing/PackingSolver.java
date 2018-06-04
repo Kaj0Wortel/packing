@@ -8,6 +8,8 @@ import packing.generator.*;
 import packing.gui.*;
 import packing.io.*;
 import packing.packer.*;
+import packing.tools.Logger;
+import packing.tools.StreamLogger;
 
 
 // Java imports
@@ -120,6 +122,8 @@ public class PackingSolver {
             timer.cancel();
             return;
         }
+
+        // Logger.setDefaultLogger(new StreamLogger(System.err));
         
         // Generate solution.
         //according to the chart(v2)
@@ -136,8 +140,8 @@ public class PackingSolver {
                 gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
             }
         } else if (input.size() >= 0 && input.size() <= 10) {
-            gen = new OptimalPointGenerator(new GreedyPackerFactory());
-            // gen = new OptimalBoundingBoxGenerator(new OptimalPackerFactory());
+            // gen = new OptimalPointGenerator(new GreedyPackerFactory());
+            gen = new OptimalBoundingBoxGenerator(new OptimalPackerFactory());
         }
         
         //previous version(v1)
@@ -166,7 +170,7 @@ public class PackingSolver {
         }
         
         // tmp
-        System.err.println(result);
+//        System.err.println(result);
         System.err.println("Total runtime: "
                 + (System.currentTimeMillis() - startTime) + " ms");
         if (result != null) new ShowDataset(result);

@@ -4,11 +4,9 @@ package packing.generator;
 
 // Packing imports
 import java.awt.Rectangle;
-import java.util.ArrayList;
-import java.util.List;
+
 import packing.data.*;
 import packing.packer.*;
-import packing.generator.RectangleMinHeap;
 import packing.gui.ShowDataset;
 import packing.tools.Logger;
 import packing.tools.MultiTool;
@@ -70,9 +68,10 @@ public class OptimalBoundingBoxGenerator extends Generator {
         //boundingBoxHeap.insert(rectangle);
         while(best == null){
             Rectangle rect = boundingBoxHeap.extractMin();// get minimum boundingbox
-            System.out.println(rect + "BoundingBox");
+            Logger.write(rect + " BoundingBox");
             
             if((rect.width * rect.height) >= greedyPacked.getArea()){
+                Logger.write("Using greedy solution...");
                 best = greedyPacked;
             } else {
                 //System.out.println(rect.width + "width");
@@ -108,12 +107,12 @@ public class OptimalBoundingBoxGenerator extends Generator {
      * @param minArea minimum needed area
      * @return minimum height required for this box
      */
-    public int determinHeight(Dataset dataset, int width, int minArea) {
+    public int determineHeight(Dataset dataset, int width, int minArea) {
         int minHeight = 0;
         int possibleHeight = 0;
         int minHeightHalfWidth = Integer.MAX_VALUE;
         
-        System.out.println(minArea);
+        Logger.write(minArea);
         
         for(CompareEntry entry : dataset){
             Rectangle rect = entry.getRec();
@@ -153,7 +152,7 @@ public class OptimalBoundingBoxGenerator extends Generator {
             //round up
             minHeight = (int)Math.ceil((double)minArea/width);
         }       
-        System.out.println(width + " width and height " + minHeight);
+        Logger.write(width + " width and height " + minHeight);
         
         return minHeight;        
     }
@@ -171,7 +170,7 @@ public class OptimalBoundingBoxGenerator extends Generator {
         // Loop over all possible widths
         for(int i = minWidth; i < maxWidth; i++){
             //System.out.println(i);
-            int height = determinHeight(dataset, i, minArea); 
+            int height = determineHeight(dataset, i, minArea);
            // System.out.println(i + "Width and Height" + height);
             Rectangle rect = new Rectangle(i, height);
             initialHeap.insert(rect);

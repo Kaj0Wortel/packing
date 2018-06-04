@@ -49,7 +49,7 @@ public class YCoordinatePacker extends Packer {
         boolean[][] cells = new boolean[dataset.getWidth()][dataset.getHeight()];
 
         solution =  backtrack(entryLists, solution, cells, corners);
-        Logger.write(String.format("Y-packer: %,d recursions", recursions));
+//        Logger.write(String.format("Y-packer: %,d recursions", recursions));
         recursions = 0;
         return solution;
     }
@@ -199,7 +199,7 @@ public class YCoordinatePacker extends Packer {
                 entryList.remove(k);
 
                 placeRectangle(cells, rec, p);
-                CompareEntry addedEntry = solution.add(new Rectangle(rec));
+                CompareEntry addedEntry = solution.add(new Rectangle(rec), entry.getId());
                 corners.addAll(updatedCorners);
 
                 Dataset possibleSolution = backtrack(entryLists, solution, cells, corners);

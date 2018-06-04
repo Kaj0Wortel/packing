@@ -4,9 +4,7 @@ package packing.packer;
 
 // Packing imports
 import java.awt.Rectangle;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 import packing.data.*;
 import packing.tools.Logger;
@@ -41,6 +39,10 @@ public class XCoordinatePacker extends Packer {
         - Empty-strip dominance
          */
 
+        dataset.setOrdering(Collections.reverseOrder(CompareEntry.SORT_WIDTH));
+
+        List<Integer> positions = calculateSubsetSums(dataset);
+
         // All entries that have to be placed.
         Stack<CompareEntry> entries = new Stack<>();
 
@@ -55,11 +57,34 @@ public class XCoordinatePacker extends Packer {
         int[] columns = new int[dataset.getWidth()];
         Arrays.fill(columns, dataset.getHeight());
 
-        solution = backtrack(entries, solution, columns);
+        solution = backtrack(entries, solution, positions, columns);
         
         Logger.write(String.format("X-packer: %,d recursions", recursions));
         recursions = 0;
         return solution;
+    }
+
+    public List<Integer> calculateSubsetSums(Dataset dataset) {
+        Set<Integer> positionSet = new HashSet<>();
+        positionSet.add(0);
+        int maxWidth = dataset.getWidth();
+
+        for (CompareEntry entry : dataset) {
+            Rectangle rec = entry.getNormalRec();
+            Set<Integer> newPositions = new HashSet<>();
+            for (int position : positionSet) {
+                if (position + rec.width < maxWidth) {
+                    newPositions.add(position + rec.width);
+                }
+                if (dataset.allowRotation() && position + rec.height < maxWidth) {
+                    newPositions.add(position + rec.height);
+                }
+            }
+            positionSet.addAll(newPositions);
+        }
+        List<Integer> positions = new ArrayList<>(positionSet);
+        positions.sort(Integer::compare);
+        return positions;
     }
 
     /**
@@ -71,6 +96,10 @@ public class XCoordinatePacker extends Packer {
      * @return Whether the rectangle can be placed.
      */
     private boolean canPlaceRectangle(Rectangle rec, int[] columns) {
+        if (rec.x + rec.width > columns.length) {
+            return false;
+        }
+
         for (int i = rec.x; i < rec.x + rec.width; i++) {
             if (rec.height > columns[i]) {
                 return false;
@@ -124,10 +153,10 @@ public class XCoordinatePacker extends Packer {
             emptySpace[columnHeight] += columnHeight;
         }
 
-        for(CompareEntry entry: entries){
+        for (CompareEntry entry: entries) {
             Rectangle rect = entry.getRec();
             int areaToBeFilled = entry.area();
-            for (int k = rect.height; k < maxHeight; k++){
+            for (int k = rect.height; k < maxHeight; k++) {
                 while (emptySpace[k] > 0 && areaToBeFilled > 0) {
                     emptySpace[k]--;
                     areaToBeFilled--;
@@ -145,7 +174,7 @@ public class XCoordinatePacker extends Packer {
      * out invalid solutions.
      * Currently pruning happens based on:
      *   - Column height
-     *   - Wasted space
+     *   - Wasted space  (seems to be too slow)
      *
      * @param entries The entries that still have to be placed.
      * @param solution The current (partial) solution.
@@ -153,24 +182,27 @@ public class XCoordinatePacker extends Packer {
      * @param entry The entry that has to be placed.
      * @return A valid and complete solution, or null.
      */
-    private Dataset placeEntry(Stack<CompareEntry> entries, Dataset solution, int[] columns, CompareEntry entry) {
+    private Dataset placeEntry(Stack<CompareEntry> entries, Dataset solution, List<Integer> positions, int[] columns, CompareEntry entry) {
         int width = solution.getWidth();
         int height = solution.getHeight();
         Rectangle rec = entry.getRec();
 
         Dataset backtrackSolution = null;
 
-        for (int j = 0; backtrackSolution == null && j + rec.width <= width; j++) {
+        for (int j : positions) {
             entry.setLocation(j, 0);
             if (canPlaceRectangle(rec, columns)) {
                 placeRectangle(rec, columns);
-                if (pruneWastedSpace(entries, columns, height)) {
-                    backtrackSolution = backtrack(entries, solution, columns);
+
+                backtrackSolution = backtrack(entries, solution, positions, columns);
+                if (backtrackSolution != null) {
+                    return backtrackSolution;
                 }
+
                 removeRectangle(rec, columns);
             }
         }
-        return backtrackSolution;
+        return null;
     }
 
     /**
@@ -184,17 +216,17 @@ public class XCoordinatePacker extends Packer {
      * @param columns The empty space in each column.
      * @return A valid and complete solution, or null.
      */
-    private Dataset backtrack(Stack<CompareEntry> entries, Dataset solution, int[] columns) {
+    private Dataset backtrack(Stack<CompareEntry> entries, Dataset solution, List<Integer> positions, int[] columns) {
         recursions++;
         if (!entries.isEmpty()) {
             CompareEntry entry = entries.pop();
-            CompareEntry newEntry = solution.add(new Rectangle(entry.getNormalRec()));
+            CompareEntry newEntry = solution.add(new Rectangle(entry.getNormalRec()), entry.getId());
 
-            Dataset backtrackSolution = placeEntry(entries, solution, columns, newEntry);
+            Dataset backtrackSolution = placeEntry(entries, solution, positions, columns, newEntry);
 
             if (backtrackSolution == null && solution.allowRotation()) {
                 newEntry.rotate();
-                backtrackSolution = placeEntry(entries, solution, columns, newEntry);
+                backtrackSolution = placeEntry(entries, solution, positions, columns, newEntry);
             }
 
             if (backtrackSolution != null) {
@@ -207,7 +239,7 @@ public class XCoordinatePacker extends Packer {
         } else {
             long startTime = System.currentTimeMillis();
             solution = yPacker.pack(solution);
-            Logger.write("Runtime (Y-packer): " + (System.currentTimeMillis() - startTime) + " ms");
+//            Logger.write("Runtime (Y-packer): " + (System.currentTimeMillis() - startTime) + " ms");
             return solution;
         }
     }

@@ -259,7 +259,21 @@ public class Dataset
      * @return the new added entry.
      */
     public CompareEntry add(Rectangle rec) {
-        CompareEntry entry = new Dataset.Entry(rec, idCounter++);
+        return add(rec, idCounter++);
+    }
+
+    /**
+     * Adds an entry to the data set with a specific id.
+     *
+     * Only use this when reconstructing from an existing
+     * dataset!!
+     *
+     * @param rec the rectangle to be added.
+     * @param id the id of the new entry.
+     * @return the new added entry.
+     */
+    public CompareEntry add(Rectangle rec, int id) {
+        CompareEntry entry = new Dataset.Entry(rec, id);
         list.add(entry);
         return entry;
     }

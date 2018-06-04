@@ -132,5 +132,13 @@ public abstract class CompareEntry {
      */
     @Override
     public abstract CompareEntry clone();
-    
+
+    /**
+     * Returns the id of this entry.
+     *
+     * @return the id of the entry.
+     */
+    public int getId() {
+        return id;
+    }
 }
