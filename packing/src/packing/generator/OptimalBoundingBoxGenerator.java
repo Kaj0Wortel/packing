@@ -88,7 +88,7 @@ public class OptimalBoundingBoxGenerator extends Generator {
                 //if possible, than this is the optimal solution
                 if(packed != null){
                     best = packed;
-                } else {
+                } else if (!dataset.isFixedHeight()) {
                     // else increase height and put the new boundingBox in the heap
                     //System.out.println("Nope");
                     height++;
@@ -112,7 +112,7 @@ public class OptimalBoundingBoxGenerator extends Generator {
         int possibleHeight = 0;
         int minHeightHalfWidth = Integer.MAX_VALUE;
         
-        Logger.write(minArea);
+        //Logger.write(minArea);
         
         for(CompareEntry entry : dataset){
             Rectangle rect = entry.getRec();
@@ -152,7 +152,7 @@ public class OptimalBoundingBoxGenerator extends Generator {
             //round up
             minHeight = (int)Math.ceil((double)minArea/width);
         }       
-        Logger.write(width + " width and height " + minHeight);
+        //Logger.write(width + " width and height " + minHeight);
         
         return minHeight;        
     }
@@ -170,7 +170,7 @@ public class OptimalBoundingBoxGenerator extends Generator {
         // Loop over all possible widths
         for(int i = minWidth; i < maxWidth; i++){
             //System.out.println(i);
-            int height = determineHeight(dataset, i, minArea);
+            int height = dataset.isFixedHeight() ? dataset.getHeight() : determineHeight(dataset, i, minArea);
            // System.out.println(i + "Width and Height" + height);
             Rectangle rect = new Rectangle(i, height);
             initialHeap.insert(rect);

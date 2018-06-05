@@ -21,6 +21,15 @@ public class XCoordinatePacker extends Packer {
 
     public static int recursions = 0;
 
+    // Positions at which rectangles can be placed satisfying the bottom-left stability property.
+    private List<Integer> positions;
+    // The empty space in each column.
+    private int[] columns;
+    // Histogram of empty space, such that emptySpace[i] is the number of empty cells in empty columns of height i.
+    private int[] emptySpace;
+    // The sum of areas of rectangles, grouped by height.
+    private int[] rectangleAreaByHeight;
+
     public XCoordinatePacker(Packer packer) {
         this.yPacker = packer;
     }
@@ -41,7 +50,7 @@ public class XCoordinatePacker extends Packer {
 
         dataset.setOrdering(Collections.reverseOrder(CompareEntry.SORT_WIDTH));
 
-        List<Integer> positions = calculateSubsetSums(dataset);
+        positions = calculateSubsetSums(dataset);
 
         // All entries that have to be placed.
         Stack<CompareEntry> entries = new Stack<>();
@@ -54,17 +63,34 @@ public class XCoordinatePacker extends Packer {
         Dataset solution = Dataset.createEmptyDataset(dataset);
 
         // The empty space in each column, initialized to the height of the bounding box.
-        int[] columns = new int[dataset.getWidth()];
+        columns = new int[dataset.getWidth()];
         Arrays.fill(columns, dataset.getHeight());
 
-        solution = backtrack(entries, solution, positions, columns);
-        
+        // Histogram of number of empty cells in empty columns of height i.
+        emptySpace = new int[dataset.getHeight() + 1];
+        emptySpace[dataset.getHeight()] = dataset.getArea();
+
+        rectangleAreaByHeight = new int[dataset.getHeight() + 1];
+        for (CompareEntry entry : entries) {
+            Rectangle rec = entry.getRec();
+            rectangleAreaByHeight[rec.height] += rec.width * rec.height;
+        }
+
+        solution = backtrack(entries, solution);
+
         Logger.write(String.format("X-packer: %,d recursions", recursions));
         recursions = 0;
         return solution;
     }
 
-    public List<Integer> calculateSubsetSums(Dataset dataset) {
+    /**
+     * Calculate the subset sum of width (and heights, if rotations are allowed)
+     * of every entry in the dataset, up to the dataset's width.
+     *
+     * @param dataset The dataset for which to calculate the sum.
+     * @return Sorted list of integers in the subset sum.
+     */
+    private List<Integer> calculateSubsetSums(Dataset dataset) {
         Set<Integer> positionSet = new HashSet<>();
         positionSet.add(0);
         int maxWidth = dataset.getWidth();
@@ -92,10 +118,9 @@ public class XCoordinatePacker extends Packer {
      * each column has enough empty space left.
      *
      * @param rec The rectangle to be placed.
-     * @param columns The empty space in each column.
      * @return Whether the rectangle can be placed.
      */
-    private boolean canPlaceRectangle(Rectangle rec, int[] columns) {
+    private boolean canPlaceRectangle(Rectangle rec) {
         if (rec.x + rec.width > columns.length) {
             return false;
         }
@@ -113,11 +138,13 @@ public class XCoordinatePacker extends Packer {
      * space in {@code columns[rec.x:rec.x + rec.width]} by {@code rec.height}.
      *
      * @param rec The rectangle to be placed.
-     * @param columns The empty space in each column.
      */
-    private void placeRectangle(Rectangle rec, int[] columns) {
+    private void placeRectangle(Rectangle rec) {
+        rectangleAreaByHeight[rec.height] -= rec.width * rec.height;
         for (int i = rec.x; i < rec.x + rec.width; i++) {
+            emptySpace[columns[i]] -= columns[i];
             columns[i] -= rec.height;
+            emptySpace[columns[i]] += columns[i];
         }
     }
 
@@ -126,11 +153,13 @@ public class XCoordinatePacker extends Packer {
      * after it has been added with {@code placeRectangle()}.
      *
      * @param rec The rectangle to be removed.
-     * @param columns The empty space in each column.
      */
-    private void removeRectangle(Rectangle rec, int[] columns) {
+    private void removeRectangle(Rectangle rec) {
+        rectangleAreaByHeight[rec.height] += rec.width * rec.height;
         for (int i = rec.x; i < rec.x + rec.width; i++) {
+            emptySpace[columns[i]] -= columns[i];
             columns[i] += rec.height;
+            emptySpace[columns[i]] += columns[i];
         }
     }
 
@@ -140,29 +169,23 @@ public class XCoordinatePacker extends Packer {
      * at least {@code entry.height} unoccupied space. If that's not the case, we
      * cannot get a valid configuration and we can prune this branch.
      *
-     * @param entries The entries that still have to be placed
-     * @param columns The empty space in each column.
-     * @param maxHeight The maximum height of each column.
+     * @param solution The current (partial) solution.
      * @return Whether the current configuration can still provide a valid configuration
-     *         according to wasted-space pruning.
+     * according to wasted-space pruning.
      */
-    private boolean pruneWastedSpace(List<CompareEntry> entries, int[] columns, int maxHeight) {
-        int[] emptySpace = new int[maxHeight + 1];
-        for (int j = 0; j < columns.length; j++){
-            int columnHeight = columns[j];
-            emptySpace[columnHeight] += columnHeight;
+    private boolean pruneWastedSpace(Dataset solution) {
+        if (solution.allowRotation()) {
+            return true;
         }
 
-        for (CompareEntry entry: entries) {
-            Rectangle rect = entry.getRec();
-            int areaToBeFilled = entry.area();
-            for (int k = rect.height; k < maxHeight; k++) {
-                while (emptySpace[k] > 0 && areaToBeFilled > 0) {
-                    emptySpace[k]--;
-                    areaToBeFilled--;
-                }
-            }
-            if (areaToBeFilled > 0) {
+        int height = solution.getHeight();
+        int rectangles = 0;
+        int free = 0;
+
+        for (int i = height; i >= 0; i--) {
+            rectangles += rectangleAreaByHeight[i];
+            free += emptySpace[i];
+            if (rectangles > free) {
                 return false;
             }
         }
@@ -173,33 +196,32 @@ public class XCoordinatePacker extends Packer {
      * Place {@code entry} on every X-coordinate and apply pruning to filter
      * out invalid solutions.
      * Currently pruning happens based on:
-     *   - Column height
-     *   - Wasted space  (seems to be too slow)
+     * - Column height
+     * - Wasted space
      *
-     * @param entries The entries that still have to be placed.
+     * @param entries  The entries that still have to be placed.
      * @param solution The current (partial) solution.
-     * @param columns The empty space in each column.
-     * @param entry The entry that has to be placed.
+     * @param entry    The entry that has to be placed.
      * @return A valid and complete solution, or null.
      */
-    private Dataset placeEntry(Stack<CompareEntry> entries, Dataset solution, List<Integer> positions, int[] columns, CompareEntry entry) {
-        int width = solution.getWidth();
-        int height = solution.getHeight();
+    private Dataset placeEntry(Stack<CompareEntry> entries, Dataset solution, CompareEntry entry) {
         Rectangle rec = entry.getRec();
 
-        Dataset backtrackSolution = null;
+        Dataset backtrackSolution;
 
         for (int j : positions) {
             entry.setLocation(j, 0);
-            if (canPlaceRectangle(rec, columns)) {
-                placeRectangle(rec, columns);
+            if (canPlaceRectangle(rec)) {
+                placeRectangle(rec);
 
-                backtrackSolution = backtrack(entries, solution, positions, columns);
-                if (backtrackSolution != null) {
-                    return backtrackSolution;
+                if (pruneWastedSpace(solution)) {
+                    backtrackSolution = backtrack(entries, solution);
+                    if (backtrackSolution != null) {
+                        return backtrackSolution;
+                    }
                 }
 
-                removeRectangle(rec, columns);
+                removeRectangle(rec);
             }
         }
         return null;
@@ -211,22 +233,21 @@ public class XCoordinatePacker extends Packer {
      * also try to place the rotated rectangle. If no entries are left, call
      * {@code yPacker} to find the complete solution.
      *
-     * @param entries The entries that still have to be placed.
+     * @param entries  The entries that still have to be placed.
      * @param solution The current (partial) solution.
-     * @param columns The empty space in each column.
      * @return A valid and complete solution, or null.
      */
-    private Dataset backtrack(Stack<CompareEntry> entries, Dataset solution, List<Integer> positions, int[] columns) {
+    private Dataset backtrack(Stack<CompareEntry> entries, Dataset solution) {
         recursions++;
         if (!entries.isEmpty()) {
             CompareEntry entry = entries.pop();
             CompareEntry newEntry = solution.add(new Rectangle(entry.getNormalRec()), entry.getId());
 
-            Dataset backtrackSolution = placeEntry(entries, solution, positions, columns, newEntry);
+            Dataset backtrackSolution = placeEntry(entries, solution, newEntry);
 
             if (backtrackSolution == null && solution.allowRotation()) {
                 newEntry.rotate();
-                backtrackSolution = placeEntry(entries, solution, positions, columns, newEntry);
+                backtrackSolution = placeEntry(entries, solution, newEntry);
             }
 
             if (backtrackSolution != null) {
