@@ -31,35 +31,52 @@ public class MergedEntryDataset
          */
         protected MergedEntry(List<CompareEntry> entries, int id) {
             super(new Rectangle
-                (Integer.MAX_VALUE, Integer.MAX_VALUE, 0, 0), id);
+                (Integer.MIN_VALUE, Integer.MIN_VALUE, 0, 0),
+                    id);
             this.entries = entries;
             
             for (CompareEntry entry : entries) {
                 Rectangle main = entry.getRec();
-                entry.rotate();
-                Rectangle rotated = entry.getRec();
-                entry.rotate();
                 
-                rotated.x = main.y;
-                rotated.y = main.x;
+                if (useRotation) {
+                    entry.rotate();
+                    Rectangle rotated = entry.getRec();
+                    rotated.x = main.y;
+                    rotated.y = main.x;
+                    entry.rotate();
+                }
                 
                 // Update the current bounding rectangle.
-                if (main.x < rec.x) {
-                    rec.width += rec.x - main.x;
+                if (rec.x == Integer.MIN_VALUE) {
+                    // First rectangle.
                     rec.x = main.x;
-                }
-                
-                if (main.y < rec.y) {
-                    rec.height += rec.y - main.y;
                     rec.y = main.y;
+                    rec.width = main.width;
+                    rec.height = main.height;
+                    
+                } else {
+                    // Not first rectangle.
+                    if (main.x < rec.x) {
+                        rec.width += rec.x - main.x;
+                        rec.x = main.x;
+                    }
+                    
+                    if (main.y < rec.y) {
+                        rec.height += rec.y - main.y;
+                        rec.y = main.y;
+                    }
+                    
+                    if (main.x + main.width > rec.x + rec.width)
+                        rec.width = main.x + main.width - rec.x;
+                    if (main.y + main.height > rec.y + rec.height)
+                        rec.height = main.y + main.height - rec.y;
                 }
-                
-                if (main.x + main.width > rec.x + rec.width)
-                    rec.width = main.x + main.width - rec.x;
-                if (main.y + main.height > rec.y + rec.height)
-                    rec.height = main.y + main.height - rec.y;
             }
         }
+        
+        
+        
+        
         
         /**
          * Clone constructor.
@@ -148,10 +165,11 @@ public class MergedEntryDataset
      * Worstcase running time: O(n). Use {@link #mergeEntries(List)} to
      * get O(k) constant running time (with k the number of merged rectangles).
      */
-    public void mergeEntries(List<CompareEntry> entries) {
-        list.add(new MergedEntry(entries, idCounter++));
-        
+    public MergedEntry mergeEntries(List<CompareEntry> entries) {
+        MergedEntry me = new MergedEntry(entries, idCounter++);
+        list.add(me);
         list.removeAll(entries);
+        return me;
     }
     
     /**
@@ -163,7 +181,7 @@ public class MergedEntryDataset
      * 
      * @param entryIndices Nums the entries to be merged.
      */
-    public void mergeEntries(int... entryIndices) {
+    public MergedEntry MergedEntry(int... entryIndices) {
         List<CompareEntry> entries = new ArrayList<CompareEntry>();
         // Iterate entryIndices in reverse sorted order, so the indices
         // of the entries we still have to remove don't shift before
@@ -173,7 +191,46 @@ public class MergedEntryDataset
             entries.add(list.remove(entryIndices[i]));
         }
         
-        list.add(new MergedEntry(entries, idCounter++));
+        MergedEntry me = new MergedEntry(entries, idCounter++);
+        list.add(me);
+        return me;
+    }
+    
+    public MergedEntry merge(CompareEntry entry1, CompareEntry entry2) {
+        List<CompareEntry> merge = new ArrayList<CompareEntry>(2);
+        merge.add(entry1);
+        merge.add(entry2);
+        return mergeEntries(merge);
+    }
+    
+    
+    public static void main(String[] args) {
+        Dataset dataset = new Dataset(-1, false, 5);
+        /*
+        dataset.add(new Rectangle(1, 1));
+        dataset.add(new Rectangle(1, 1));
+        dataset.add(new Rectangle(1, 1));
+        dataset.add(new Rectangle(1, 1));
+        dataset.add(new Rectangle(1, 1));
+        */
+        //dataset.add(new Rectangle(1, 1));
+        //dataset.add(new Rectangle(1, 1));
+        //dataset.add(new Rectangle(1, 1));
+        CompareEntry me1 = dataset.add(new Rectangle(4, 5));
+        CompareEntry me2 = dataset.add(new Rectangle(2, 5));
+        CompareEntry me3 = dataset.add(new Rectangle(3, 5));
+        
+        MergedEntryDataset med = new MergedEntryDataset(dataset);
+        System.out.println("start merge!");
+        me2.getRec().setLocation(4, 0);
+        System.out.println(med);
+        MergedEntry me = med.merge(me1, me2);
+        me.getRec().setLocation(3, 1);
+        me3.setLocation(9, 1);
+        System.out.println(med);
+        med.merge(me, me3);
+        System.out.println(me);
+        System.out.println(med);
     }
     
 }
