@@ -228,13 +228,14 @@ public class OptimalBoundingBoxGenerator extends Generator {
         
         Generator generator = new OptimalBoundingBoxGenerator(new GreedyPackerFactory());
         Dataset result = generator.generate(data);
+        //time calculation
         long runtime = System.currentTimeMillis() - startTime;
         int mins = (int) runtime/60000;
         int remainder = (int)runtime-mins*60000;
         int secs = remainder/1000;
         int millsecs = remainder - secs*1000;
         System.out.println("Runtime: " + mins + "min " + secs + "s " + millsecs + "ms." );               
-        System.out.println("Runtime: " + (System.currentTimeMillis() - startTime) + " ms");
+        System.out.println("Runtime in milliseconds: " + (System.currentTimeMillis() - startTime) + " ms");
         MultiTool.sleepThread(200);
         System.err.println();
         System.err.println(result);
