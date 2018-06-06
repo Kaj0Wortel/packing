@@ -42,8 +42,8 @@ public class PackingSolver {
             //+ "05_02_hf_ry.txt";
             //+ "05_03_h25_rn.txt";
             //+ "05_04_hf_rn.txt";
-            + "10_01_h11_rn.txt";
-            //+ "10_02_h15_ry.txt";
+            //+ "10_01_h11_rn.txt";
+            + "10_02_h15_ry.txt";
             //+ "10_03_hf_ry.txt";
             //+ "10_04_hf_rn.txt";
             //+ "10000_01_h300_rn.txt";
@@ -123,25 +123,25 @@ public class PackingSolver {
             return;
         }
 
-        // Logger.setDefaultLogger(new StreamLogger(System.err));
+        Logger.setDefaultLogger(new StreamLogger(System.err));
         
         // Generate solution.
         //according to the chart(v2)
-        if (input.size() > 25) {
-            if (input.isFixedHeight()) {
-                gen = new FixedHeightGenerator(new GreedyPackerFactory());
-            } else {
-                gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
-            }
+        if (input.size() >= 0 && input.size() <= 25) {
+            // gen = new OptimalPointGenerator(new GreedyPackerFactory());
+            gen = new OptimalBoundingBoxGenerator(new OptimalPackerFactory());
         } else if (input.size() > 10 && input.size() <= 25) {
             if (input.isFixedHeight()) {
                 gen = new GeneticGenerator(new GreedyPackerFactory());
             } else {
                 gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
             }
-        } else if (input.size() >= 0 && input.size() <= 10) {
-            // gen = new OptimalPointGenerator(new GreedyPackerFactory());
-            gen = new OptimalBoundingBoxGenerator(new OptimalPackerFactory());
+        } else if (input.size() > 25) {
+            if (input.isFixedHeight()) {
+                gen = new FixedHeightGenerator(new GreedyPackerFactory());
+            } else {
+                gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
+            }
         }
         
         //previous version(v1)
@@ -191,7 +191,7 @@ public class PackingSolver {
         if (args != null) {
             if (args.length >= 1) in = args[0];
             if (args.length >= 2) out = args[1];
-            in = testFile;
+//            in = testFile;
         }
         
         new PackingSolver().run(in, out);

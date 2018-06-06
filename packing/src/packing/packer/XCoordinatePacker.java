@@ -30,6 +30,8 @@ public class XCoordinatePacker extends Packer {
     // The sum of areas of rectangles, grouped by height.
     private int[] rectangleAreaByHeight;
 
+    private Dataset dataset;
+
     public XCoordinatePacker(Packer packer) {
         this.yPacker = packer;
     }
@@ -47,6 +49,8 @@ public class XCoordinatePacker extends Packer {
         - Wasted space pruning
         - Empty-strip dominance
          */
+
+        this.dataset = dataset;
 
         dataset.setOrdering(Collections.reverseOrder(CompareEntry.SORT_WIDTH));
 
@@ -70,10 +74,12 @@ public class XCoordinatePacker extends Packer {
         emptySpace = new int[dataset.getHeight() + 1];
         emptySpace[dataset.getHeight()] = dataset.getArea();
 
-        rectangleAreaByHeight = new int[dataset.getHeight() + 1];
-        for (CompareEntry entry : entries) {
-            Rectangle rec = entry.getRec();
-            rectangleAreaByHeight[rec.height] += rec.width * rec.height;
+        if (!dataset.allowRotation()) {
+            rectangleAreaByHeight = new int[dataset.getHeight() + 1];
+            for (CompareEntry entry : entries) {
+                Rectangle rec = entry.getRec();
+                rectangleAreaByHeight[rec.height] += rec.width * rec.height;
+            }
         }
 
         solution = backtrack(entries, solution);
@@ -140,7 +146,7 @@ public class XCoordinatePacker extends Packer {
      * @param rec The rectangle to be placed.
      */
     private void placeRectangle(Rectangle rec) {
-        rectangleAreaByHeight[rec.height] -= rec.width * rec.height;
+        if (!dataset.allowRotation()) rectangleAreaByHeight[rec.height] -= rec.width * rec.height;
         for (int i = rec.x; i < rec.x + rec.width; i++) {
             emptySpace[columns[i]] -= columns[i];
             columns[i] -= rec.height;
@@ -155,7 +161,7 @@ public class XCoordinatePacker extends Packer {
      * @param rec The rectangle to be removed.
      */
     private void removeRectangle(Rectangle rec) {
-        rectangleAreaByHeight[rec.height] += rec.width * rec.height;
+        if (!dataset.allowRotation()) rectangleAreaByHeight[rec.height] += rec.width * rec.height;
         for (int i = rec.x; i < rec.x + rec.width; i++) {
             emptySpace[columns[i]] -= columns[i];
             columns[i] += rec.height;
@@ -241,11 +247,12 @@ public class XCoordinatePacker extends Packer {
         recursions++;
         if (!entries.isEmpty()) {
             CompareEntry entry = entries.pop();
-            CompareEntry newEntry = solution.add(new Rectangle(entry.getNormalRec()), entry.getId());
+            Rectangle rec = entry.getRec();
+            CompareEntry newEntry = solution.add(entry);
 
             Dataset backtrackSolution = placeEntry(entries, solution, newEntry);
 
-            if (backtrackSolution == null && solution.allowRotation()) {
+            if (backtrackSolution == null && solution.allowRotation() && rec.width != rec.height) {
                 newEntry.rotate();
                 backtrackSolution = placeEntry(entries, solution, newEntry);
             }
@@ -260,7 +267,7 @@ public class XCoordinatePacker extends Packer {
         } else {
             long startTime = System.currentTimeMillis();
             solution = yPacker.pack(solution);
-//            Logger.write("Runtime (Y-packer): " + (System.currentTimeMillis() - startTime) + " ms");
+            //Logger.write("Runtime (Y-packer): " + (System.currentTimeMillis() - startTime) + " ms");
             return solution;
         }
     }

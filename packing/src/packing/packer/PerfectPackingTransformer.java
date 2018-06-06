@@ -5,7 +5,10 @@ package packing.packer;
 // Packing imports
 import java.awt.Rectangle;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 import packing.data.*;
 
 
@@ -32,12 +35,12 @@ public class PerfectPackingTransformer extends Packer {
         
         // keep track of area per column of 1 width
         int[] columns = new int[dataset.getWidth()];
-        List<Rectangle> original = new ArrayList<Rectangle>();
+        Set<Integer> original = new HashSet<>();
         
         Dataset perfectDataSet = dataset.clone();
         for(CompareEntry entry: dataset){
+            original.add(entry.getId());
             Rectangle rec = entry.getRec();
-            original.add(rec);
             for(int i = rec.x; i <(rec.x + rec.width ); i++){
                 columns[i] += rec.height;
             }
@@ -68,15 +71,13 @@ public class PerfectPackingTransformer extends Packer {
         Dataset Solved = wrappedDataSet.clone();
         
         for(CompareEntry placed: wrappedDataSet){
-            Rectangle placedRec = placed.getRec();
-            Rectangle compareRec = new Rectangle(placedRec.x, 0, placedRec.width, placedRec.height);
-            if(!original.contains(compareRec)){
+            if(!original.contains(placed.getId())){
                 Solved.remove(placed);
             }
             // remove rec from original
             // this is to avoid cases in which the original has a 1x1 rec, and it adds all 1x1 recs
             // instead of only the ones in original
-            original.remove(compareRec);
+            original.remove(placed.getId());
         }
         
         return Solved;

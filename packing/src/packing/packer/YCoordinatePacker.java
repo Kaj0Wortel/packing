@@ -49,7 +49,7 @@ public class YCoordinatePacker extends Packer {
         boolean[][] cells = new boolean[dataset.getWidth()][dataset.getHeight()];
 
         solution =  backtrack(entryLists, solution, cells, corners);
-//        Logger.write(String.format("Y-packer: %,d recursions", recursions));
+        //Logger.write(String.format("Y-packer: %,d recursions", recursions));
         recursions = 0;
         return solution;
     }
@@ -87,8 +87,6 @@ public class YCoordinatePacker extends Packer {
      * @param p The location to place {@code rec}.
      */
     private void placeRectangle(boolean[][] cells, Rectangle rec, Point p) {
-        rec.y = p.y;
-
         for (int i = rec.x; i < (rec.x + rec.width ); i++) {
             for(int j = rec.y; j < (rec.y + rec.height ); j++){
                 cells[i][j] = true;
@@ -103,8 +101,6 @@ public class YCoordinatePacker extends Packer {
      * @param rec The rectangle to remove.
      */
     private void removeRectangle(boolean[][] cells, Rectangle rec) {
-        rec.y = 0;
-
         for (int i = rec.x; i < (rec.x + rec.width ); i++) {
             for(int j = rec.y; j < (rec.y + rec.height ); j++){
                 cells[i][j] = false;
@@ -188,18 +184,27 @@ public class YCoordinatePacker extends Packer {
 
         Point p = corners.removeFirst();
 
+        Set<Rectangle> seen = new HashSet<>();
+
         List<CompareEntry> entryList = entryLists.get(p.x);
         for (int k = 0; k < entryList.size(); k++) {
             CompareEntry entry = entryList.get(k);
             Rectangle rec = entry.getRec();
+
+            if (seen.contains(rec)) {
+                continue;
+            }
+
+            seen.add(new Rectangle(rec));
 
             if (canPlaceRectangle(solution, cells, rec, p)) {
                 List<Point> updatedCorners = getNewCorners(solution, cells, rec, p);
 
                 entryList.remove(k);
 
+                entry.setLocation(p.x, p.y);
                 placeRectangle(cells, rec, p);
-                CompareEntry addedEntry = solution.add(new Rectangle(rec), entry.getId());
+                CompareEntry addedEntry = solution.add(entry);
                 corners.addAll(updatedCorners);
 
                 Dataset possibleSolution = backtrack(entryLists, solution, cells, corners);
@@ -210,6 +215,7 @@ public class YCoordinatePacker extends Packer {
                 corners.removeAll(updatedCorners);
                 solution.remove(addedEntry);
                 removeRectangle(cells, rec);
+                entry.setLocation(p.x, 0);
 
                 entryList.add(k, entry);
             }

@@ -69,6 +69,7 @@ public class Dataset
         public Entry(Rectangle rec, int id) {
             super(id);
             this.rec = rec;
+            if (Dataset.this.allowRotation()) calcRotatedRec();
         }
         
         /**
@@ -152,7 +153,8 @@ public class Dataset
         @Override
         public void setLocation(int x, int y) {
             rec.setLocation(x, y);
-            if (rotatedRec != null) {
+            if (allowRotation()) {
+                calcRotatedRec();
                 rotatedRec.setLocation(x, y);
             }
         }
@@ -160,7 +162,8 @@ public class Dataset
         @Override
         public void setSize(int width, int height) {
             rec.setSize(width, height);
-            if (rotatedRec != null) {
+            if (allowRotation()) {
+                calcRotatedRec();
                 rotatedRec.setSize(height, width);
             }
         }
@@ -184,7 +187,7 @@ public class Dataset
         public String toString() {
             return "[rec: [x=" + rec.x + ", y=" + rec.y + ", width="
                     + rec.width + ", height=" + rec.height + "], "
-                    + "rotation: " + useRotation + "]";
+                    + "rotation: " + useRotation + ", id=" + id + "]";
         }
         
         @Override
@@ -201,9 +204,8 @@ public class Dataset
      */
     /**
      * @param rotation whether to allow rotation.
-     * @param the height restriction. Use -1 for no height restriction.
+     * @param height the height restriction. Use -1 for no height restriction.
      * @param numRect the total number of rectangles.
-     * @param gen the generator to be used on this dataset.
      */
     public Dataset(int height, boolean rotation, int numRect) {
         this.fixedHeight = height != -1;
@@ -259,7 +261,16 @@ public class Dataset
      * @return the new added entry.
      */
     public CompareEntry add(Rectangle rec) {
-        return add(rec, idCounter++);
+        CompareEntry entry = new Dataset.Entry(rec, idCounter++);
+        list.add(entry);
+        return entry;
+    }
+
+    public CompareEntry add(CompareEntry entry) {
+        idCounter = Math.max(idCounter, entry.getId() + 1);
+        CompareEntry newEntry = entry.clone();
+        list.add(newEntry);
+        return newEntry;
     }
 
     /**
@@ -273,6 +284,7 @@ public class Dataset
      * @return the new added entry.
      */
     public CompareEntry add(Rectangle rec, int id) {
+        idCounter = Math.max(idCounter, id + 1);
         CompareEntry entry = new Dataset.Entry(rec, id);
         list.add(entry);
         return entry;

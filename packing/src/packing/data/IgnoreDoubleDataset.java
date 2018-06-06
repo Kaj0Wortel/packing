@@ -565,7 +565,7 @@ public class IgnoreDoubleDataset
      * Adds the given entry to the mapping.
      * @param entry 
      */
-    public void add(CompareEntry entry) {
+    public CompareEntry add(CompareEntry entry) {
         Rectangle rec = entry.getRec();
         MultiEntryKey key = new MultiEntryKey(rec.width, rec.height);
         MultiEntry me = entryMap.get(key);
@@ -590,6 +590,7 @@ public class IgnoreDoubleDataset
                 me.add(entry);
             }
         }
+        return entry;
     }
     
     @Override

@@ -3,6 +3,7 @@ package packing.generator;
 
 
 // Packing imports
+
 import java.awt.Rectangle;
 
 import packing.data.*;
@@ -19,19 +20,19 @@ import packing.tools.StreamLogger;
  * the final solution is optimal.
  */
 public class OptimalBoundingBoxGenerator extends Generator {
-    
+
     public OptimalBoundingBoxGenerator(PackerFactory factory) {
         super(factory);
     }
-    
+
     @Override
     public void generateSolution(Dataset dataset) {
         best = null;
         /** Calculate the total area of the rectangles as a lower bound.
-            Try packing the rectangles into every possible bounding box of
-            that size, increasing the area if it doesn't fit. Return when a
-            solution is found.
-            See Algorithms Overview for ways to generate the bounding boxes. */
+         Try packing the rectangles into every possible bounding box of
+         that size, increasing the area if it doesn't fit. Return when a
+         solution is found.
+         See Algorithms Overview for ways to generate the bounding boxes. */
         int minArea = 0;
         int minWidth = 0;       // width of the widest rectanlge
         int minHeight = 0;
@@ -44,33 +45,37 @@ public class OptimalBoundingBoxGenerator extends Generator {
         int height = 0;
         int area = 0;
         RectangleMinHeap boundingBoxHeap = new RectangleMinHeap(); // heap to keep track of all the possible bounding boxes in order of non decreasing area
-        
+
         // Determine minArea, greedyWidth, greedyHeight, minWidth, minHeight.
-        for (CompareEntry entry : dataset){
+        for (CompareEntry entry : dataset) {
             Rectangle rect = entry.getRec();
             minArea += rect.width * rect.height;
             greedyWidth += rect.width;
             greedyHeight = Math.max(greedyHeight, rect.height);
             minWidth = Math.max(minWidth, rect.width);
-            minHeight = Math.max(minHeight, rect.height);            
+            minHeight = Math.max(minHeight, rect.height);
         }
-        
+
+        if (dataset.allowRotation()) {
+            minWidth = Math.min(minWidth, minHeight);
+        }
+
         // Determine maxArea and maxWidth.
         Packer greedyPacker = new GreedyPackerFactory().create(greedyWidth, greedyHeight);
         Dataset greedyPacked = greedyPacker.pack(dataset);
         maxArea = greedyPacked.getArea();
         maxWidth = greedyPacked.getWidth();
-        
+
         boundingBoxHeap = createInitialHeap(dataset, minWidth, maxWidth, minArea);
-        
+
         //REMOVE AFTER
         //Rectangle rectangle = new Rectangle(4,13);
         //boundingBoxHeap.insert(rectangle);
-        while(best == null){
+        while (best == null) {
             Rectangle rect = boundingBoxHeap.extractMin();// get minimum boundingbox
             Logger.write(rect + " BoundingBox");
-            
-            if((rect.width * rect.height) >= greedyPacked.getArea()){
+
+            if ((rect.width * rect.height) >= greedyPacked.getArea()) {
                 Logger.write("Using greedy solution...");
                 best = greedyPacked;
             } else {
@@ -84,9 +89,9 @@ public class OptimalBoundingBoxGenerator extends Generator {
                 Packer packer = packerFactory.create(width, height); //create packing instance for said box
                 //System.out.println("tst");
                 Dataset packed = packer.pack(dataset); // try to pack the box
-            
+
                 //if possible, than this is the optimal solution
-                if(packed != null){
+                if (packed != null) {
                     best = packed;
                 } else if (!dataset.isFixedHeight()) {
                     // else increase height and put the new boundingBox in the heap
@@ -98,92 +103,96 @@ public class OptimalBoundingBoxGenerator extends Generator {
             }
         }
     }
-    
+
     /**
      * Determine minHeight for current box.
-     * 
+     *
      * @param dataset input set
-     * @param width width of current boundingBox
+     * @param width   width of current boundingBox
      * @param minArea minimum needed area
      * @return minimum height required for this box
      */
     public int determineHeight(Dataset dataset, int width, int minArea) {
+        if (dataset.allowRotation()) {
+            return minArea / width;
+        }
+
         int minHeight = 0;
         int possibleHeight = 0;
         int minHeightHalfWidth = Integer.MAX_VALUE;
-        
+
         //Logger.write(minArea);
-        
-        for(CompareEntry entry : dataset){
+
+        for (CompareEntry entry : dataset) {
             Rectangle rect = entry.getRec();
-            if(rect.width == (width / 2)){
+            if (rect.width == (width / 2)) {
                 // rectangle of half width with smalles height
                 minHeightHalfWidth = Math.min(minHeightHalfWidth, rect.height);
             }
-            
-            if (rect.width > (width / 2)){
+
+            if (rect.width > (width / 2)) {
                 // all rectangles greater than half the width need to be stacked
                 possibleHeight += rect.height;
             }
-            
-            for(CompareEntry entry1 : dataset){
-                if(entry1 == entry){
+
+            for (CompareEntry entry1 : dataset) {
+                if (entry1 == entry) {
                     continue;
                 }
                 Rectangle rect1 = entry1.getRec();
                 // every pair greater than full width need to be stacked
-                if(rect.width + rect1.width > width){
+                if (rect.width + rect1.width > width) {
                     minHeight = Math.max(minHeight, rect.height + rect1.height);
-                }                    
+                }
             }
-            
-            if(minHeight < rect.height){
+
+            if (minHeight < rect.height) {
                 minHeight = rect.height;
             }
         }
-        
-        if(minHeightHalfWidth < Integer.MAX_VALUE){
+
+        if (minHeightHalfWidth < Integer.MAX_VALUE) {
             possibleHeight += minHeightHalfWidth;
             minHeight = Math.max(minHeight, possibleHeight);
-            }
-            // if current box is smaller than minimum box, increase height
-            // to be sufficient
-        if((minHeight * width) < minArea){
+        }
+        // if current box is smaller than minimum box, increase height
+        // to be sufficient
+        if ((minHeight * width) < minArea) {
             //round up
-            minHeight = (int)Math.ceil((double)minArea/width);
-        }       
+            minHeight = (int) Math.ceil((double) minArea / width);
+        }
         //Logger.write(width + " width and height " + minHeight);
-        
-        return minHeight;        
+
+        return minHeight;
     }
+
     /**
-     * 
-     * @param dataset input set
+     * @param dataset  input set
      * @param minWidth minimum width for boundingBox
      * @param maxWidth maximum width for boundingBox
-     * @param minArea minimum area for boundingBox
-     * @return a heap with the initial set of boxes, containing boxes 
+     * @param minArea  minimum area for boundingBox
+     * @return a heap with the initial set of boxes, containing boxes
      * of every width between minWidth and maxWidth, with an appropriate minHeight
      */
-    public RectangleMinHeap createInitialHeap(Dataset dataset, int minWidth, int maxWidth, int minArea){
+    public RectangleMinHeap createInitialHeap(Dataset dataset, int minWidth, int maxWidth, int minArea) {
         RectangleMinHeap initialHeap = new RectangleMinHeap();
         // Loop over all possible widths
-        for(int i = minWidth; i < maxWidth; i++){
+        for (int i = minWidth; i < maxWidth; i++) {
             //System.out.println(i);
             int height = dataset.isFixedHeight() ? dataset.getHeight() : determineHeight(dataset, i, minArea);
-           // System.out.println(i + "Width and Height" + height);
+            // System.out.println(i + "Width and Height" + height);
             Rectangle rect = new Rectangle(i, height);
             initialHeap.insert(rect);
             //System.out.println("added");
         }
-        
+
         return initialHeap;
     }
-    
-     // tmp
+
+    // tmp
     public static void main(String[] args) {
         // Logger setup (to disable logging, comment next line).
-        
+
         Dataset data = new Dataset(-1, false, 10);
         //Logger.setDefaultLogger(new StreamLogger(System.out));
         long startTime = System.currentTimeMillis();
@@ -194,7 +203,7 @@ public class OptimalBoundingBoxGenerator extends Generator {
         data.add(new Rectangle(3, 4));
         /**/
         data.add(new Rectangle(10, 10));
-        data.add(new Rectangle(10,10));
+        data.add(new Rectangle(10, 10));
         data.add(new Rectangle(1, 1));
         data.add(new Rectangle(2, 2));
         data.add(new Rectangle(3, 3));
@@ -219,15 +228,15 @@ public class OptimalBoundingBoxGenerator extends Generator {
         /**/
         //Dataset data = new Dataset(10, false, 1);
         //data.add(new Rectangle(10, 10));
-        
+
         Generator generator = new OptimalBoundingBoxGenerator(new OptimalPackerFactory());
         Dataset result = generator.generate(data);
         long runtime = System.currentTimeMillis() - startTime;
-        int mins = (int) runtime/60000;
-        int remainder = (int)runtime-mins*60000;
-        int secs = remainder/1000;
-        int millsecs = remainder - secs*1000;
-        System.out.println("Runtime: " + mins + "min " + secs + "s " + millsecs + "ms." );               
+        int mins = (int) runtime / 60000;
+        int remainder = (int) runtime - mins * 60000;
+        int secs = remainder / 1000;
+        int millsecs = remainder - secs * 1000;
+        System.out.println("Runtime: " + mins + "min " + secs + "s " + millsecs + "ms.");
         System.out.println("Runtime: " + (System.currentTimeMillis() - startTime) + " ms");
         MultiTool.sleepThread(200);
         System.err.println();
