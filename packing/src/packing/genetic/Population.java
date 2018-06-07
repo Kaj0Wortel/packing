@@ -51,7 +51,7 @@ public class Population {
             implements Comparable<Instance>, packing.tools.Cloneable {
         // The dataset this instance represents.
         private Dataset dataset;
-        // The fitness of the 
+        // The fitness of the dataset
         private Double fitness = Double.NaN;
         
         /**
