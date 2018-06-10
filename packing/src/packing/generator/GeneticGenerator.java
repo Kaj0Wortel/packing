@@ -5,7 +5,7 @@ package packing.generator;
 // Packing imports
 import packing.data.CompareEntry;
 import packing.data.Dataset;
-import packing.genetic.Population;
+import packing.genetic.RandomPopulation;
 import packing.packer.PackerFactory;
 
 
@@ -51,7 +51,8 @@ public class GeneticGenerator
         //System.err.printf("Found initial solution: [%d x %d] (%.5f%% wasted space)\n", best.getWidth(), best.getHeight(),
         //        100 * (best.getArea() - minArea) / (double) best.getArea());
         
-        Population population = new Population(best, packerFactory, dataset.getHeight());
+        RandomPopulation population = new RandomPopulation(
+                best, packerFactory, dataset.getHeight());
         
         Dataset current;
         

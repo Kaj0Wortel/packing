@@ -9,7 +9,11 @@ import packing.tools.MultiTool;
 //##########
 // Java imports
 import java.awt.Rectangle;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
 import java.util.function.Predicate;
 
 
@@ -43,14 +47,12 @@ public class Dataset
     protected List<CompareEntry> list = new ArrayList<>();
     
     
-    
     /**-------------------------------------------------------------------------
      * Entry class
      * -------------------------------------------------------------------------
      */
     public class Entry
-            extends CompareEntry
-            implements packing.tools.Cloneable {
+            extends CompareEntry {
         // The rectangle.
         final protected Rectangle rec;
         

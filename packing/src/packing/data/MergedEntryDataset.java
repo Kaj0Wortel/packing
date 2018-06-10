@@ -7,6 +7,8 @@ package packing.data;
 import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 
@@ -20,7 +22,8 @@ public class MergedEntryDataset
         implements packing.tools.Cloneable {
     
     public class MergedEntry
-            extends Dataset.Entry {
+            extends Dataset.Entry
+            implements Iterable<CompareEntry> {
         final List<CompareEntry> entries;
         
         /**
@@ -29,54 +32,16 @@ public class MergedEntryDataset
          * @param entries the entries to be merged.
          * @param id 
          */
-        protected MergedEntry(List<CompareEntry> entries, int id) {
+        protected MergedEntry(Iterable<CompareEntry> entries, int id) {
             super(new Rectangle
                 (Integer.MIN_VALUE, Integer.MIN_VALUE, 0, 0),
                     id);
-            this.entries = entries;
+            this.entries = new LinkedList<CompareEntry>();
             
             for (CompareEntry entry : entries) {
-                Rectangle main = entry.getRec();
-                
-                if (useRotation) {
-                    entry.rotate();
-                    Rectangle rotated = entry.getRec();
-                    rotated.x = main.y;
-                    rotated.y = main.x;
-                    entry.rotate();
-                }
-                
-                // Update the current bounding rectangle.
-                if (rec.x == Integer.MIN_VALUE) {
-                    // First rectangle.
-                    rec.x = main.x;
-                    rec.y = main.y;
-                    rec.width = main.width;
-                    rec.height = main.height;
-                    
-                } else {
-                    // Not first rectangle.
-                    if (main.x < rec.x) {
-                        rec.width += rec.x - main.x;
-                        rec.x = main.x;
-                    }
-                    
-                    if (main.y < rec.y) {
-                        rec.height += rec.y - main.y;
-                        rec.y = main.y;
-                    }
-                    
-                    if (main.x + main.width > rec.x + rec.width)
-                        rec.width = main.x + main.width - rec.x;
-                    if (main.y + main.height > rec.y + rec.height)
-                        rec.height = main.y + main.height - rec.y;
-                }
+                this.add(entry);
             }
         }
-        
-        
-        
-        
         
         /**
          * Clone constructor.
@@ -114,6 +79,25 @@ public class MergedEntryDataset
         }
         
         @Override
+        public void setLocation(int x, int y) {
+            int dx = x - rec.x;
+            int dy = y - rec.y;
+            for (CompareEntry entry : entries) {
+                Rectangle normal = entry.getNormalRec();
+                normal.x += dx;
+                normal.y += dy;
+                
+                if (allowRot) {
+                    Rectangle rotated = entry.getRotatedRec();
+                    rotated.x += dx;
+                    rotated.y += dy;
+                }
+            }
+            
+            super.setLocation(x, y);
+        }
+        
+        @Override
         public boolean equals(Object obj) {
             if (!(obj instanceof MergedEntry)) return false;
             MergedEntry entry = (MergedEntry) obj;
@@ -124,6 +108,50 @@ public class MergedEntryDataset
         @Override
         public MergedEntry clone() {
             return new MergedEntry(this);
+        }
+        
+        @Override
+        public Iterator<CompareEntry> iterator() {
+            return entries.iterator();
+        }
+        
+        public void add(CompareEntry entry) {
+            entries.add(entry);
+            
+            Rectangle main = entry.getRec();
+            if (useRotation) {
+                entry.rotate();
+                Rectangle rotated = entry.getRec();
+                rotated.x = main.y;
+                rotated.y = main.x;
+                entry.rotate();
+            }
+
+            // Update the current bounding rectangle.
+            if (rec.x == Integer.MIN_VALUE) {
+                // First rectangle.
+                rec.x = main.x;
+                rec.y = main.y;
+                rec.width = main.width;
+                rec.height = main.height;
+
+            } else {
+                // Not first rectangle.
+                if (main.x < rec.x) {
+                    rec.width += rec.x - main.x;
+                    rec.x = main.x;
+                }
+
+                if (main.y < rec.y) {
+                    rec.height += rec.y - main.y;
+                    rec.y = main.y;
+                }
+
+                if (main.x + main.width > rec.x + rec.width)
+                    rec.width = main.x + main.width - rec.x;
+                if (main.y + main.height > rec.y + rec.height)
+                    rec.height = main.y + main.height - rec.y;
+            }
         }
         
     }
@@ -196,11 +224,53 @@ public class MergedEntryDataset
         return me;
     }
     
+    /**
+     * Used to merge two entries. If possible, prefere using this method
+     * when joining a {@code MergedEntry} with another {@code MergedEntry}.
+     * 
+     * @param entry1 first entry to be merged.
+     * @param entry2 second entry to be merged.
+     * @return the merged entry of {@code entry1} and {@code entry2}.
+     */
     public MergedEntry merge(CompareEntry entry1, CompareEntry entry2) {
-        List<CompareEntry> merge = new ArrayList<CompareEntry>(2);
-        merge.add(entry1);
-        merge.add(entry2);
-        return mergeEntries(merge);
+        boolean isMe1 = entry1 instanceof MergedEntry;
+        boolean isMe2 = entry2 instanceof MergedEntry;
+        
+        if (isMe1) {
+            MergedEntry me1 = (MergedEntry) entry1;
+            if (isMe2) {
+                // Both are MergedEntries.
+                // Add all entries from entry 2 to entry1.
+                MergedEntry me2 = (MergedEntry) entry2;
+                for (CompareEntry entry : me2) {
+                    me1.add(entry);
+                }
+                list.remove(entry2);
+                
+            } else {
+                // Only entry1 is a MergedEntry.
+                me1.add(entry2);
+                list.remove(entry2);
+            }
+            
+            return me1;
+            
+        } else {
+            if (isMe2) {
+                // Only entry2 is a MergedEntry
+                MergedEntry me2 = (MergedEntry) entry2;
+                me2.add(entry1);
+                list.remove(entry1);
+                return me2;
+                
+            } else {
+                // None are mergedEntries
+                List<CompareEntry> merge = new ArrayList<CompareEntry>(2);
+                merge.add(entry1);
+                merge.add(entry2);
+                return mergeEntries(merge);
+            }
+        }
     }
     
     

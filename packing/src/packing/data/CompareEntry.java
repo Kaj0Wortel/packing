@@ -14,7 +14,8 @@ import java.util.function.Predicate;
 /**
  * Main entry class for entries in the dataset.
  */
-public abstract class CompareEntry {
+public abstract class CompareEntry
+        implements packing.tools.Cloneable {
     /**-------------------------------------------------------------------------
      * Variables.
      * -------------------------------------------------------------------------
