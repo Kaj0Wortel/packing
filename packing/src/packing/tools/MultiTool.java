@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Random;
 
 
@@ -1060,6 +1061,41 @@ public class MultiTool {
             
             return objArr;
         }
+    }
+    
+    
+    /**
+     * Class that iterates over multiple consecutive iterators.
+     * @param <V> class value of the iterators.
+     */
+    public static class MultiIterator<V>
+            implements Iterator<V> {
+        
+        // The iterators.
+        final private Iterator<? extends V>[] its;
+        // Iterator counter.
+        private int counter = 0;
+        
+        public MultiIterator(Iterator<? extends V>... its) {
+            if (its == null) throw new NullPointerException("Null iterator!");
+            this.its = its;
+        }
+        
+        @Override
+        public boolean hasNext() {
+            while (counter < its.length && !its[counter].hasNext()) {
+                counter++;
+            }
+            return its[counter].hasNext();
+        }
+        
+        @Override
+        public V next() {
+            if (!hasNext()) throw new NoSuchElementException(
+                    "No more elements!");
+            return its[counter].next();
+        }
+        
     }
     
 }

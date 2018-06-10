@@ -22,7 +22,7 @@ import java.util.Stack;
 
 
 /**
- *
+ * Packer that packs a polish notation dataset.
  */
 public class PolishPacker extends Packer {
     

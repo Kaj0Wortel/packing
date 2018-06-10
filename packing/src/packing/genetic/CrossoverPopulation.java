@@ -3,11 +3,18 @@ package packing.genetic;
 
 
 // Packing imports
-import java.util.ArrayList;
-import java.util.Arrays;
 import packing.data.Dataset;
 import packing.data.PolishDataset;
 import packing.data.PolishDataset.Operator;
+import packing.data.CompareEntry;
+import packing.packer.Packer;
+import packing.tools.MultiTool;
+import packing.tools.MultiTool.MultiIterator;
+
+
+//##########
+// Java imports
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -15,12 +22,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.Set;
-import packing.data.CompareEntry;
-import packing.packer.Packer;
-import packing.tools.MultiTool;
+
 
 
 /**
@@ -285,40 +289,6 @@ public class CrossoverPopulation
         @Override
         public CrossInstance clone() {
             return null;
-        }
-        
-    }
-    
-    
-    /**
-     * Class that iterates over multiple consecutive iterators.
-     * @param <V> class value of the iterators.
-     */
-    protected class MultiIterator<V>
-            implements Iterator<V> {
-        
-        // The iterators.
-        final private Iterator<? extends V>[] its;
-        // Iterator counter.
-        private int counter = 0;
-        
-        protected MultiIterator(Iterator<? extends V>... its) {
-            if (its == null) throw new NullPointerException("Null iterator!");
-            this.its = its;
-        }
-        
-        @Override
-        public boolean hasNext() {
-            while (counter < its.length && !its[counter].hasNext()) {
-                counter++;
-            }
-            return its[counter].hasNext();
-        }
-        
-        @Override
-        public V next() {
-            if (!hasNext()) throw new NoSuchElementException("No more elements!");
-            return its[counter].next();
         }
         
     }
