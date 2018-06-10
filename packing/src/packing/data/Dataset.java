@@ -248,7 +248,7 @@ public class Dataset
     }
     
     /**
-     * Adds an entry to the data set.
+     * Adds an entry to the dataset.
      *
      * @param rec the rectangle to be added.
      * @return the new added entry.
@@ -257,6 +257,17 @@ public class Dataset
         CompareEntry entry = new Dataset.Entry(rec, idCounter++);
         list.add(entry);
         return entry;
+    }
+    
+    /**
+     * Adds an entry to the dataset with the provide width and height.
+     * 
+     * @param width the width of the new entry.
+     * @param height the height of the new entry.
+     * @return the new added entry.
+     */
+    public CompareEntry add(int width, int height) {
+        return add(new Rectangle(width, height));
     }
     
     /**
@@ -354,7 +365,7 @@ public class Dataset
      * Sets the width and height of the dataset.
      * Does so without bound checking.
      * 
-     * @param width
+     * @param width 
      * @param height 
      */
     public void setSize(int width, int height) {
