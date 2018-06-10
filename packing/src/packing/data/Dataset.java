@@ -149,7 +149,7 @@ public class Dataset
         
         @Override
         public int area() {
-            return rec.x * rec.y;
+            return rec.width * rec.height;
         }
         
         @Override

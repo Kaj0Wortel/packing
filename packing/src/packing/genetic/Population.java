@@ -19,7 +19,7 @@ public abstract class Population {
          * 
          * @param other instance that is used in the crossover.
          */
-        public abstract void crossover(C other);
+        public abstract C crossover(C other);
         
         /**
          * Mutates the current instance.

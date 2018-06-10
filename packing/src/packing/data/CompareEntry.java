@@ -134,4 +134,11 @@ public abstract class CompareEntry
     @Override
     public abstract CompareEntry clone();
     
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof CompareEntry)) return false;
+        CompareEntry entry = (CompareEntry) obj;
+        return this.id == entry.id && this.id >= 0;
+    }
+    
 }

@@ -18,13 +18,13 @@ import java.util.Random;
 
 
 /**
- * Class description here.
+ * Population class supporting evaluation and mutations.
  */
 public class RandomPopulation
         extends Population {
     // The size of the population.
     final public static int POPULATION_SIZE = 200;
-
+    
     // The mutation rate for every mutation.
     final public static double MUTATION_RATE = 0.1;
     
@@ -84,7 +84,8 @@ public class RandomPopulation
         }
         
         @Override
-        public void crossover(RandomInstance other) {
+        public RandomInstance crossover(RandomInstance other) {
+            return null;
         }
         
         @Override
@@ -112,13 +113,15 @@ public class RandomPopulation
         public double getFitness() {
             return fitness;
         }
-
+        
+        @Override
         public String toString() {
             return String.format("<Instance %f, %s>", fitness, dataset);
         }
+        
     }
-
-
+    
+    
     /**
      * Craetes a new population with the given instances, packer factory and
      * height.
@@ -169,6 +172,7 @@ public class RandomPopulation
         instances.sort(Collections.reverseOrder());
         best = instances.get(0);
     }
+    
     /**
      * Select a parent from the previous generation, with probability
      * proportional to the inverse of its rank.
@@ -223,14 +227,14 @@ public class RandomPopulation
             instances.get(i).mutate();
         }
     }
-
+    
     /**
      * @return the maximum width used for the packer when packing an instance.
      */
     public int getMaxWidth() {
         return maxWidth;
     }
-
+    
     /**
      * Sets the maximum width of a solution. Permutations that don't fit within
      * this width get a fitness of 0 and are subsequently discarded.
@@ -247,4 +251,5 @@ public class RandomPopulation
     public Dataset getBest() {
         return best.dataset;
     }
+    
 }   

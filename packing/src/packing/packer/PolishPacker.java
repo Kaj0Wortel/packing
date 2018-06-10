@@ -35,18 +35,18 @@ public class PolishPacker extends Packer {
     @Override
     public PolishDataset pack(Dataset dataset) {
         PolishDataset pd;
+        MergedEntryDataset med;
         if (dataset instanceof PolishDataset) {
             pd = (PolishDataset) dataset;
+            med = new MergedEntryDataset(pd.getDataset());
             
         } else {
-            dataset.shuffle();
             pd = new PolishDataset(dataset);
             pd.init();
+            med = new MergedEntryDataset(dataset);
         }
         
-        MergedEntryDataset med = new MergedEntryDataset(dataset); // TODO
-        
-        Iterator<CompareEntry> it = pd.listIterator();
+        Iterator<CompareEntry> it = pd.fullListIterator();
         Stack<CompareEntry> entryStack = new Stack<>();
         while (it.hasNext()) {
             CompareEntry entry = it.next();
@@ -59,11 +59,9 @@ public class PolishPacker extends Packer {
                 Rectangle rec = e1.getRec();
                 if (op.getDirection() == Direction.UP) {
                     e2.setLocation(rec.x, rec.y + rec.height);
-                    System.err.println("UP");
                     
                 } else { // dir == Direction.RIGHT.
                     e2.setLocation(rec.x + rec.width, rec.y);
-                    System.err.println("RIGHT");
                 }
                 
                 // Merge the entries.
@@ -71,6 +69,10 @@ public class PolishPacker extends Packer {
                 
                 // Push the element on the stack.
                 entryStack.push(me);
+                
+                // Set the area and wasted area.
+                op.setArea(me.area());
+                op.setWastedArea(me.wastedArea());
                 
             } else {
                 // Push the element on the stack.
@@ -94,20 +96,20 @@ public class PolishPacker extends Packer {
         data.add(2, 2);
         data.add(3, 3);
         data.add(4, 4);
-        /*
-        PolishDataset test = new PolishDataset(data);
-        test.init();
-        test.setSize(5, 5);
-        new ShowDataset(test);
-        */
-        /**/
+        
         PolishDataset result = new PolishPacker().pack(data);
-        MultiTool.sleepThread(1000);
+        MultiTool.sleepThread(100);
         System.out.println(result.toShortString());
         System.out.println("width=" + result.getWidth());
         System.out.println("height=" + result.getHeight());
-        new ShowDataset(result);
-        /**/
+        Iterator<Operator> opIt = result.operatorIterator();
+        while (opIt.hasNext()) {
+            System.err.println("entry!");
+            CompareEntry[] entries = opIt.next().getEntries();
+            System.err.println(entries[0] + ", " + entries[1]);
+            MultiTool.sleepThread(100);
+        }
+        //new ShowDataset(result);
     }
     
     

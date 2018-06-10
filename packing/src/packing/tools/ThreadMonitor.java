@@ -67,7 +67,7 @@ public class ThreadMonitor {
      * When it is not nesseccary to directly kill a thread you should
      * use {@link interruptAllThreads()}.
      */
-    @SuppressWarnings("Deprecated")
+    @SuppressWarnings("deprecation")
     public static void killAll() {
         synchronized(threads) {
             stoppingThreads = true;

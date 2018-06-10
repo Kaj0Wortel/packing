@@ -100,4 +100,13 @@ public abstract class DatasetDecorator
         dataset.rotate(i);
     }
     
+    public Dataset getDataset() {
+        if (dataset instanceof DatasetDecorator) {
+            return ((DatasetDecorator) dataset).getDataset();
+            
+        } else {
+            return dataset;
+        }
+    }
+    
 }

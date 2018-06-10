@@ -24,7 +24,11 @@ public class MergedEntryDataset
     public class MergedEntry
             extends Dataset.Entry
             implements Iterable<CompareEntry> {
+        // List containing all entries of this merged entry.
         final List<CompareEntry> entries;
+        
+        // Cumulative area of all entries of this merged entry.
+        private int coveredArea = 0;
         
         /**
          * Default constructor.
@@ -78,6 +82,13 @@ public class MergedEntryDataset
             }
         }
         
+        /**
+         * @return the amount of wasted area in this merged entry.
+         */
+        public int wastedArea() {
+            return super.area() - coveredArea;
+        }
+        
         @Override
         public void setLocation(int x, int y) {
             int dx = x - rec.x;
@@ -122,6 +133,7 @@ public class MergedEntryDataset
          */
         public void add(CompareEntry entry) {
             entries.add(entry);
+            coveredArea += entry.area();
             
             Rectangle main = entry.getRec();
             if (useRotation) {
