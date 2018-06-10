@@ -50,7 +50,8 @@ public abstract class DatasetDecorator
     
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "[dataset=" + dataset.toString() + "]";
+        return getClass().getSimpleName() + "[dataset=" + dataset.toString()
+                + "]";
     }
     
     @Override
@@ -66,26 +67,6 @@ public abstract class DatasetDecorator
     @Override
     public int size() {
         return dataset.size();
-    }
-    
-    @Override
-    public int getWidth() {
-        return dataset.getWidth();
-    }
-    
-    @Override
-    public int getHeight() {
-        return dataset.getWidth();
-    }
-    
-    @Override
-    public int getArea() {
-        return dataset.getArea();
-    }
-    
-    @Override
-    public int getEffectiveWidth() {
-        return dataset.getEffectiveWidth();
     }
     
     @Override
