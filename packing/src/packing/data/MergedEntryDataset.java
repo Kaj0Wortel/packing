@@ -36,7 +36,7 @@ public class MergedEntryDataset
             super(new Rectangle
                 (Integer.MIN_VALUE, Integer.MIN_VALUE, 0, 0),
                     id);
-            this.entries = new LinkedList<CompareEntry>();
+            this.entries = new ArrayList<CompareEntry>();
             
             for (CompareEntry entry : entries) {
                 this.add(entry);
@@ -115,6 +115,11 @@ public class MergedEntryDataset
             return entries.iterator();
         }
         
+        /**
+         * Adds the provided entry.
+         * 
+         * @param entry the entry to be added.
+         */
         public void add(CompareEntry entry) {
             entries.add(entry);
             
@@ -126,7 +131,7 @@ public class MergedEntryDataset
                 rotated.y = main.x;
                 entry.rotate();
             }
-
+            
             // Update the current bounding rectangle.
             if (rec.x == Integer.MIN_VALUE) {
                 // First rectangle.
@@ -134,19 +139,19 @@ public class MergedEntryDataset
                 rec.y = main.y;
                 rec.width = main.width;
                 rec.height = main.height;
-
+                
             } else {
                 // Not first rectangle.
                 if (main.x < rec.x) {
                     rec.width += rec.x - main.x;
                     rec.x = main.x;
                 }
-
+                
                 if (main.y < rec.y) {
                     rec.height += rec.y - main.y;
                     rec.y = main.y;
                 }
-
+                
                 if (main.x + main.width > rec.x + rec.width)
                     rec.width = main.x + main.width - rec.x;
                 if (main.y + main.height > rec.y + rec.height)
@@ -162,16 +167,30 @@ public class MergedEntryDataset
      * -------------------------------------------------------------------------
      */
     /**
-     * @param dataset 
+     * Constructs a new dataset from the provided dataset.
+     * 
+     * @param dataset the input dataset.
      */
     public MergedEntryDataset(Dataset dataset) {
+        this(dataset, new LinkedList<CompareEntry>(dataset.list));
+    }
+    
+    /**
+     * Constructs a new dataset from the provided dataset using the additional
+     * list as entry set.
+     * 
+     * @param dataset the input dataset.
+     * @param newList the entries to use as ordering. These entries do not 
+     *     nessecarily need to contain all elements from {@code dataset} and
+     *     can contain additional not occuring in {@code dataset}.
+     * 
+     * Note thet the provide list is not cloned.
+     */
+    public MergedEntryDataset(Dataset dataset,
+            List<CompareEntry> list) {
         super(dataset.height, dataset.width, dataset.allowRot, dataset.numRect,
                 dataset.fixedHeight);
-        
-        for (CompareEntry entry : dataset) {
-            list.add(entry);
-        }
-        
+        this.list = list;
         idCounter = dataset.idCounter;
     }
     
