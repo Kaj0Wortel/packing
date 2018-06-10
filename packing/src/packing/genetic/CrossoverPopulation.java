@@ -16,10 +16,10 @@ import packing.packer.PackerFactory;
 public class CrossoverPopulation
         extends Population {
     // The size of the population.
-    public static final int POPULATION_SIZE = 200;
+    final public static int POPULATION_SIZE = 200;
     
     // The mutation rate for every mutation.
-    public static final double MUTATION_RATE = 0.1;
+    final public static double MUTATION_RATE = 0.1;
     
     protected List<CrossInstance> list = new LinkedList<>();
     
