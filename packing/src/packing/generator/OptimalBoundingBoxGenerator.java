@@ -26,6 +26,10 @@ import java.util.PriorityQueue;
  */
 public class OptimalBoundingBoxGenerator extends Generator {
 
+    static {
+        name = "optimal";
+    }
+
     public OptimalBoundingBoxGenerator(PackerFactory factory) {
         super(factory);
     }

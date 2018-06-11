@@ -12,8 +12,13 @@ import packing.packer.PackerFactory;
 /**
  * Class description here.
  */
-public class FixedHeightGenerator extends Generator {
-    public FixedHeightGenerator(PackerFactory factory) {
+public class GreedyGenerator extends Generator {
+
+    static {
+        name = "greedy";
+    }
+
+    public GreedyGenerator(PackerFactory factory) {
         super(factory);
     }
 

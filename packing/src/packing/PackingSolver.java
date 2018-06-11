@@ -76,11 +76,7 @@ public class PackingSolver {
 
         //according to the chart(v2)
         if (useGreedyPacker) {
-            if (input.isFixedHeight()) {
-                gen = new FixedHeightGenerator(new GreedyPackerFactory());
-            } else {
-                gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
-            }
+            gen = new GreedyGenerator(new GreedyPackerFactory());
         } else if (input.size() >= 0 && input.size() <= 10) {
             // gen = new OptimalPointGenerator(new GreedyPackerFactory());
             gen = new OptimalBoundingBoxGenerator(new OptimalPackerFactory());

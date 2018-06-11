@@ -19,6 +19,10 @@ import java.awt.Rectangle;
  */
 public class GeneticGenerator
         extends Generator {
+
+    static {
+        name = "genetic";
+    }
     
     public GeneticGenerator(PackerFactory factory) {
         super(factory);

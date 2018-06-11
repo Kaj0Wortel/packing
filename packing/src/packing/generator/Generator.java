@@ -25,12 +25,16 @@ public abstract class Generator {
     protected Dataset best = null;
     private volatile Thread genThread;
 
+    protected static String name;
+
     public Generator(PackerFactory factory) {
         this.packerFactory = factory;
     }
     
     public Dataset generate(Dataset dataset) {
         genThread = Thread.currentThread();
+
+        System.err.printf("Algorithm: %s\n", name);
         
         try {
             generateSolution(dataset);

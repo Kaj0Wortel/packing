@@ -14,6 +14,10 @@ import packing.packer.PackerFactory;
  * Class description here.
  */
 public class FixedHeightRandomSearchGenerator extends Generator {
+    static {
+        name = "fixed height random search";
+    }
+
     public FixedHeightRandomSearchGenerator(PackerFactory factory) {
         super(factory);
     }
