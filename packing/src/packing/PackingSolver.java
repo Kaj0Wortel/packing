@@ -20,6 +20,7 @@ import packing.tools.StreamLogger;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -68,6 +69,35 @@ public class PackingSolver {
     
     // The generator used for calculating the solution.
     private Generator gen;
+
+
+    private void createGenerator(Dataset input, boolean useGreedyPacker) {
+        if (gen != null) return;
+
+        //according to the chart(v2)
+        if (useGreedyPacker) {
+            if (input.isFixedHeight()) {
+                gen = new FixedHeightGenerator(new GreedyPackerFactory());
+            } else {
+                gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
+            }
+        } else if (input.size() >= 0 && input.size() <= 10) {
+            // gen = new OptimalPointGenerator(new GreedyPackerFactory());
+            gen = new OptimalBoundingBoxGenerator(new OptimalPackerFactory());
+        } else if (input.size() > 10 && input.size() <= 25) {
+            if (input.isFixedHeight()) {
+                gen = new GeneticGenerator(new GreedyPackerFactory());
+            } else {
+                gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
+            }
+        } else if (input.size() > 25) {
+            if (input.isFixedHeight()) {
+                gen = new FixedHeightRandomSearchGenerator(new GreedyPackerFactory());
+            } else {
+                gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
+            }
+        }
+    }
     
     
     /* 
@@ -75,7 +105,7 @@ public class PackingSolver {
      * 
      * @param fileName the used file name of the data file.
      */
-    public void run(String inputFile, String outputFile) {
+    public void run(String inputFile, String outputFile, boolean useGreedyPacker) {
         long startTime = System.currentTimeMillis();
         
         // Start the timer.
@@ -130,29 +160,11 @@ public class PackingSolver {
         Logger.setDefaultLogger(new StreamLogger(System.err));
         
         // Generate solution.
-        //according to the chart(v2)
-        if (input.size() >= 0 && input.size() <= 10) {
-            // gen = new OptimalPointGenerator(new GreedyPackerFactory());
-            gen = new OptimalBoundingBoxGenerator(new OptimalPackerFactory());
-        } else if (input.size() > 10 && input.size() <= 25) {
-            if (input.isFixedHeight()) {
-                gen = new GeneticGenerator(new GreedyPackerFactory());
-            } else {
-                gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
-            }
-        } else if (input.size() > 25) {
-            if (input.isFixedHeight()) {
-                gen = new FixedHeightGenerator(new GreedyPackerFactory());
-            } else {
-                gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
-            }
-        }
-        
         //previous version(v1)
         /*
         if (input.isFixedHeight()) {
             if (input.size() > 1000) {
-                gen = new FixedHeightGenerator(new GreedyPackerFactory());
+                gen = new FixedHeightRandomSearchGenerator(new GreedyPackerFactory());
             } else {
                 gen = new GeneticGenerator(new GreedyPackerFactory());
             }
@@ -161,7 +173,8 @@ public class PackingSolver {
             //gen = new WideToHighBoundingBoxGenerator(new SheetPackerFactory());
         }
         */
-        
+
+        createGenerator(input, useGreedyPacker);
         Dataset result = gen.generate(input);
         timer.cancel();
         
@@ -188,7 +201,7 @@ public class PackingSolver {
     public Generator getGenerator() {
         return gen;
     }
-    
+
     public static void main(String[] args) {
         String in = null;
         String out = null;
@@ -198,8 +211,16 @@ public class PackingSolver {
             if (args.length >= 2) out = args[1];
             //in = testFile;
         }*/
+
+        boolean useGreedyPacker = false;
+
+        if (args != null) {
+            if (Arrays.stream(args).anyMatch("--greedy"::equals)) {
+                useGreedyPacker = true;
+            }
+        }
         
-        new PackingSolver().run(in, out);
+        new PackingSolver().run(in, out, useGreedyPacker);
         /*
         for (File file : testFiles) {
             in = file.toString();
