@@ -5,6 +5,8 @@ package packing.generator;
 // Packing imports
 
 import java.awt.Rectangle;
+import java.util.Comparator;
+import java.util.PriorityQueue;
 
 import packing.data.*;
 import packing.packer.*;
@@ -44,7 +46,8 @@ public class OptimalBoundingBoxGenerator extends Generator {
         int width = 0;
         int height = 0;
         int area = 0;
-        RectangleMinHeap boundingBoxHeap = new RectangleMinHeap(); // heap to keep track of all the possible bounding boxes in order of non decreasing area
+
+        PriorityQueue<Rectangle> boundingBoxHeap;
 
         // Determine minArea, greedyWidth, greedyHeight, minWidth, minHeight.
         for (CompareEntry entry : dataset) {
@@ -72,7 +75,7 @@ public class OptimalBoundingBoxGenerator extends Generator {
         //Rectangle rectangle = new Rectangle(4,13);
         //boundingBoxHeap.insert(rectangle);
         while (best == null) {
-            Rectangle rect = boundingBoxHeap.extractMin();// get minimum boundingbox
+            Rectangle rect = boundingBoxHeap.poll();// get minimum boundingbox
             Logger.write(rect + " BoundingBox");
 
             if ((rect.width * rect.height) >= greedyPacked.getArea()) {
@@ -98,10 +101,11 @@ public class OptimalBoundingBoxGenerator extends Generator {
                     //System.out.println("Nope");
                     height++;
                     rect.setSize(width, height);
-                    boundingBoxHeap.insert(rect);
+                    boundingBoxHeap.add(rect);
                 }
             }
         }
+        Logger.write("Finished");
     }
 
     /**
@@ -174,15 +178,17 @@ public class OptimalBoundingBoxGenerator extends Generator {
      * @return a heap with the initial set of boxes, containing boxes
      * of every width between minWidth and maxWidth, with an appropriate minHeight
      */
-    public RectangleMinHeap createInitialHeap(Dataset dataset, int minWidth, int maxWidth, int minArea) {
-        RectangleMinHeap initialHeap = new RectangleMinHeap();
+    public PriorityQueue<Rectangle> createInitialHeap(Dataset dataset, int minWidth, int maxWidth, int minArea) {
+        PriorityQueue<Rectangle> initialHeap = new PriorityQueue<>(Comparator.comparingLong(
+                rec -> ((long) rec.width) * ((long) rec.height)
+        ));
         // Loop over all possible widths
         for (int i = minWidth; i < maxWidth; i++) {
             //System.out.println(i);
             int height = dataset.isFixedHeight() ? dataset.getHeight() : determineHeight(dataset, i, minArea);
             // System.out.println(i + "Width and Height" + height);
             Rectangle rect = new Rectangle(i, height);
-            initialHeap.insert(rect);
+            initialHeap.add(rect);
             //System.out.println("added");
         }
 
@@ -192,9 +198,10 @@ public class OptimalBoundingBoxGenerator extends Generator {
     // tmp
     public static void main(String[] args) {
         // Logger setup (to disable logging, comment next line).
+//        MultiTool.sleepThread(10000);
 
-        Dataset data = new Dataset(-1, false, 10);
-        //Logger.setDefaultLogger(new StreamLogger(System.out));
+        Dataset data = new Dataset(11, false, 15);
+        Logger.setDefaultLogger(new StreamLogger(System.out));
         long startTime = System.currentTimeMillis();
         data.add(new Rectangle(2, 6));
         data.add(new Rectangle(2, 6));

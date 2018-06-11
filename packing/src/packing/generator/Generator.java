@@ -73,8 +73,6 @@ public abstract class Generator {
             }
         }
 
-        Dataset upperBound = null;
-        
         for (Predicate<CompareEntry> predicate :
                 Arrays.asList(CompareEntry.NO_ROTATION,
                         CompareEntry.LONGEST_SIDE_VERTIAL)) {
@@ -90,15 +88,15 @@ public abstract class Generator {
                 Dataset packed = packer.pack(dataset);
                 
                 if (packed != null &&
-                        (upperBound == null ||
-                         packed.getArea() < upperBound.getArea())) {
-                    upperBound = packed;
+                        (best == null ||
+                         packed.getArea() < best.getArea())) {
+                    best = packed;
                     width = packed.getWidth();
                 }
             }
         }
         
-        return upperBound;
+        return best;
     }
     
     /**

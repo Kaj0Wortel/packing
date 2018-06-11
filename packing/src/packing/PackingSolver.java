@@ -127,7 +127,7 @@ public class PackingSolver {
         
         // Generate solution.
         //according to the chart(v2)
-        if (input.size() >= 0 && input.size() <= 25) {
+        if (input.size() >= 0 && input.size() <= 10) {
             // gen = new OptimalPointGenerator(new GreedyPackerFactory());
             gen = new OptimalBoundingBoxGenerator(new OptimalPackerFactory());
         } else if (input.size() > 10 && input.size() <= 25) {
@@ -173,7 +173,7 @@ public class PackingSolver {
 //        System.err.println(result);
         System.err.println("Total runtime: "
                 + (System.currentTimeMillis() - startTime) + " ms");
-        if (result != null) new ShowDataset(result);
+//        if (result != null) new ShowDataset(result);
         
     }
     

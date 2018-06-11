@@ -19,7 +19,8 @@ import java.awt.Rectangle;
  * Used in the absolute placement approach.
  */
 public class YCoordinatePacker extends Packer {
-    private static int recursions = 0;
+    public int recursions = 0;
+    public int numCalls = 0;
 
     @Override
     public Dataset pack(Dataset dataset) {
@@ -28,6 +29,7 @@ public class YCoordinatePacker extends Packer {
         and use a backtracking algorithm to fill rectangles with the correct
         X-coordinate.
          */
+        numCalls++;
         Deque<Point> corners = new ArrayDeque<>();
         corners.add(new Point(0,0));
 
@@ -50,7 +52,6 @@ public class YCoordinatePacker extends Packer {
 
         solution =  backtrack(entryLists, solution, cells, corners);
         //Logger.write(String.format("Y-packer: %,d recursions", recursions));
-        recursions = 0;
         return solution;
     }
 

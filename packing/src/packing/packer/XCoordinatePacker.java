@@ -19,7 +19,11 @@ import packing.tools.Logger;
 public class XCoordinatePacker extends Packer {
     private Packer yPacker;
 
-    public static int recursions = 0;
+    public int recursions = 0;
+    public int places = 0;
+    public int pruned = 0;
+    public int yNumCalls = 0;
+    public long yTime = 0;
 
     // Positions at which rectangles can be placed satisfying the bottom-left stability property.
     private List<Integer> positions;
@@ -30,7 +34,7 @@ public class XCoordinatePacker extends Packer {
     // The sum of areas of rectangles, grouped by height.
     private int[] rectangleAreaByHeight;
 
-    private Dataset dataset;
+    private boolean allowRotation;
 
     public XCoordinatePacker(Packer packer) {
         this.yPacker = packer;
@@ -50,11 +54,11 @@ public class XCoordinatePacker extends Packer {
         - Empty-strip dominance
          */
 
-        this.dataset = dataset;
+        allowRotation = dataset.allowRotation();
 
         dataset.setOrdering(Collections.reverseOrder(CompareEntry.SORT_WIDTH));
 
-        positions = calculateSubsetSums(dataset);
+        positions = calculateSubsetSums(dataset, Arrays.asList(0));
 
         // All entries that have to be placed.
         Stack<CompareEntry> entries = new Stack<>();
@@ -74,18 +78,17 @@ public class XCoordinatePacker extends Packer {
         emptySpace = new int[dataset.getHeight() + 1];
         emptySpace[dataset.getHeight()] = dataset.getArea();
 
-        if (!dataset.allowRotation()) {
-            rectangleAreaByHeight = new int[dataset.getHeight() + 1];
-            for (CompareEntry entry : entries) {
-                Rectangle rec = entry.getRec();
-                rectangleAreaByHeight[rec.height] += rec.width * rec.height;
-            }
+        rectangleAreaByHeight = new int[dataset.getHeight() + 1];
+        for (CompareEntry entry : entries) {
+            Rectangle rec = entry.getRec();
+            int side = allowRotation ? Math.min(rec.width, rec.height) : rec.height;
+            rectangleAreaByHeight[side] += rec.width * rec.height;
         }
 
         solution = backtrack(entries, solution);
 
-        Logger.write(String.format("X-packer: %,d recursions", recursions));
-        recursions = 0;
+        Logger.write(String.format("X-packer: %,d recursions, %,d branches pruned, %,d places", recursions, pruned, places));
+        Logger.write(String.format("Y-packer: %,d calls, %,d ms", yNumCalls, yTime));
         return solution;
     }
 
@@ -96,9 +99,8 @@ public class XCoordinatePacker extends Packer {
      * @param dataset The dataset for which to calculate the sum.
      * @return Sorted list of integers in the subset sum.
      */
-    private List<Integer> calculateSubsetSums(Dataset dataset) {
-        Set<Integer> positionSet = new HashSet<>();
-        positionSet.add(0);
+    public List<Integer> calculateSubsetSums(Dataset dataset, List<Integer> initial) {
+        Set<Integer> positionSet = new HashSet<>(initial);
         int maxWidth = dataset.getWidth();
 
         for (CompareEntry entry : dataset) {
@@ -126,17 +128,17 @@ public class XCoordinatePacker extends Packer {
      * @param rec The rectangle to be placed.
      * @return Whether the rectangle can be placed.
      */
-    private boolean canPlaceRectangle(Rectangle rec) {
-        if (rec.x + rec.width > columns.length) {
-            return false;
+    private int canPlaceRectangle(Rectangle rec, int x) {
+        if (x + rec.width > columns.length) {
+            return rec.width + columns.length;
         }
 
-        for (int i = rec.x; i < rec.x + rec.width; i++) {
+        for (int i = x; i < x + rec.width; i++) {
             if (rec.height > columns[i]) {
-                return false;
+                return i;
             }
         }
-        return true;
+        return -1;
     }
 
     /**
@@ -146,7 +148,9 @@ public class XCoordinatePacker extends Packer {
      * @param rec The rectangle to be placed.
      */
     private void placeRectangle(Rectangle rec) {
-        if (!dataset.allowRotation()) rectangleAreaByHeight[rec.height] -= rec.width * rec.height;
+        int side = allowRotation ? Math.min(rec.width, rec.height) : rec.height;
+        rectangleAreaByHeight[side] -= rec.width * rec.height;
+
         for (int i = rec.x; i < rec.x + rec.width; i++) {
             emptySpace[columns[i]] -= columns[i];
             columns[i] -= rec.height;
@@ -161,7 +165,9 @@ public class XCoordinatePacker extends Packer {
      * @param rec The rectangle to be removed.
      */
     private void removeRectangle(Rectangle rec) {
-        if (!dataset.allowRotation()) rectangleAreaByHeight[rec.height] += rec.width * rec.height;
+        int side = allowRotation ? Math.min(rec.width, rec.height) : rec.height;
+        rectangleAreaByHeight[side] += rec.width * rec.height;
+
         for (int i = rec.x; i < rec.x + rec.width; i++) {
             emptySpace[columns[i]] -= columns[i];
             columns[i] += rec.height;
@@ -180,10 +186,6 @@ public class XCoordinatePacker extends Packer {
      * according to wasted-space pruning.
      */
     private boolean pruneWastedSpace(Dataset solution) {
-        if (solution.allowRotation()) {
-            return true;
-        }
-
         int height = solution.getHeight();
         int rectangles = 0;
         int free = 0;
@@ -192,6 +194,7 @@ public class XCoordinatePacker extends Packer {
             rectangles += rectangleAreaByHeight[i];
             free += emptySpace[i];
             if (rectangles > free) {
+                pruned++;
                 return false;
             }
         }
@@ -215,9 +218,12 @@ public class XCoordinatePacker extends Packer {
 
         Dataset backtrackSolution;
 
+        int min = -1;
         for (int j : positions) {
-            entry.setLocation(j, 0);
-            if (canPlaceRectangle(rec)) {
+            if (j <= min) continue;
+            places++;
+            if ((min = canPlaceRectangle(rec, j)) == -1) {
+                entry.setLocation(j, 0);
                 placeRectangle(rec);
 
                 if (pruneWastedSpace(solution)) {
@@ -248,7 +254,7 @@ public class XCoordinatePacker extends Packer {
         if (!entries.isEmpty()) {
             CompareEntry entry = entries.pop();
             Rectangle rec = entry.getRec();
-            CompareEntry newEntry = solution.add(entry);
+            CompareEntry newEntry = solution.push(entry);
 
             Dataset backtrackSolution = placeEntry(entries, solution, newEntry);
 
@@ -261,13 +267,14 @@ public class XCoordinatePacker extends Packer {
                 return backtrackSolution;
             }
 
-            solution.remove(newEntry);
+            solution.pop(newEntry);
             entries.push(entry);
             return null;
         } else {
             long startTime = System.currentTimeMillis();
+            yNumCalls++;
             solution = yPacker.pack(solution);
-            //Logger.write("Runtime (Y-packer): " + (System.currentTimeMillis() - startTime) + " ms");
+            yTime += System.currentTimeMillis() - startTime;
             return solution;
         }
     }

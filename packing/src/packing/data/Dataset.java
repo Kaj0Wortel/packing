@@ -39,9 +39,9 @@ public class Dataset
     protected int height;
     
     // The list of entries
-    protected List<CompareEntry> list = new ArrayList<>();
+    protected Stack<CompareEntry> list = new Stack<>();
     
-    
+
     
     /**-------------------------------------------------------------------------
      * Entry class
@@ -288,6 +288,18 @@ public class Dataset
         CompareEntry entry = new Dataset.Entry(rec, id);
         list.add(entry);
         return entry;
+    }
+
+    public CompareEntry push(CompareEntry entry) {
+        idCounter = Math.max(idCounter, entry.getId() + 1);
+        CompareEntry newEntry = entry.clone();
+        list.push(newEntry);
+        return newEntry;
+    }
+
+    public CompareEntry pop(CompareEntry entry) {
+        if (idCounter == entry.getId() + 1) idCounter--;
+        return list.pop();
     }
     
     /**
