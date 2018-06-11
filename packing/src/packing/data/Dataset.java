@@ -215,6 +215,7 @@ public class Dataset
         this.numRect = numRect;
         
         if (fixedHeight) this.height = height;
+        initList();
     }
     
     /**
@@ -244,6 +245,7 @@ public class Dataset
         this.allowRot = allowRot;
         this.numRect = numRect;
         this.fixedHeight = fixedHeight;
+        initList();
     }
     
     /**

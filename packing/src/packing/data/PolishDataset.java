@@ -466,6 +466,7 @@ public class PolishDataset
      * Swaps two random entries. An entry might be an operator.
      * In that case, the entire part will be swapped.
      */
+    @SuppressWarnings("null")
     public void swapRandomEntries() {
         boolean success = false;
         while (!success) {
@@ -510,9 +511,15 @@ public class PolishDataset
                 set.addAll(entries1);
                 // Then check if the set contains any entries of
                 // {@code entries2}. If so, redo the proccess.
+                boolean skip = false;
                 for (CompareEntry entry : entries2) {
-                    if (set.contains(entry)) continue;
+                    if (set.contains(entry)) {
+                        skip = true;
+                        break;
+                    }
                 }
+                
+                if (skip) continue;
                 
             } else if (ce1IsOp && !ce2IsOp) {
                 Operator op1 = (Operator) ce1;
