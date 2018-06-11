@@ -5,11 +5,19 @@ package packing.packer;
 // Packing imports
 import packing.data.CompareEntry;
 import packing.data.Dataset;
+import packing.tools.Logger;
 
 
 //##########
 // Java imports
 import java.awt.Rectangle;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.Stack;
 
 
 /**
@@ -20,6 +28,23 @@ import java.awt.Rectangle;
  */
 public class XCoordinatePacker extends Packer {
     private Packer yPacker;
+
+    public int recursions = 0;
+    public int places = 0;
+    public int pruned = 0;
+    public int yNumCalls = 0;
+    public long yTime = 0;
+
+    // Positions at which rectangles can be placed satisfying the bottom-left stability property.
+    private List<Integer> positions;
+    // The empty space in each column.
+    private int[] columns;
+    // Histogram of empty space, such that emptySpace[i] is the number of empty cells in empty columns of height i.
+    private int[] emptySpace;
+    // The sum of areas of rectangles, grouped by height.
+    private int[] rectangleAreaByHeight;
+
+    private boolean allowRotation;
 
     public XCoordinatePacker(Packer packer) {
         this.yPacker = packer;
@@ -34,142 +59,233 @@ public class XCoordinatePacker extends Packer {
 
         Use a backtracking algorithm to try every possible placement. To optimize, we can
         use the following pruning techniques as described in Algorithms Overview:
+        - Column height
         - Wasted space pruning
         - Empty-strip dominance
          */
+
+        allowRotation = dataset.allowRotation();
+
+        dataset.setOrdering(Collections.reverseOrder(CompareEntry.SORT_WIDTH));
+
+        positions = calculateSubsetSums(dataset, Arrays.asList(0));
+
+        // All entries that have to be placed.
+        Stack<CompareEntry> entries = new Stack<>();
+
+        for (CompareEntry entry : dataset) {
+            entries.push(entry.clone());
+        }
         
-        // create solution as an empty boundingBox with the same values as the input
+        // Create solution as an empty boundingBox with the same values as the input.
         Dataset solution = Dataset.createEmptyDataset(dataset);
-        
-        solution = backtracker(dataset.clone(), solution, 0);
-        //System.out.println("Backtrack finished");
+
+        // The empty space in each column, initialized to the height of the bounding box.
+        columns = new int[dataset.getWidth()];
+        Arrays.fill(columns, dataset.getHeight());
+
+        // Histogram of number of empty cells in empty columns of height i.
+        emptySpace = new int[dataset.getHeight() + 1];
+        emptySpace[dataset.getHeight()] = dataset.getArea();
+
+        rectangleAreaByHeight = new int[dataset.getHeight() + 1];
+        for (CompareEntry entry : entries) {
+            Rectangle rec = entry.getRec();
+            int side = allowRotation ? Math.min(rec.width, rec.height) : rec.height;
+            rectangleAreaByHeight[side] += rec.width * rec.height;
+        }
+
+        solution = backtrack(entries, solution);
+
+        Logger.write(String.format("X-packer: %,d recursions, %,d branches pruned, %,d places", recursions, pruned, places));
+        Logger.write(String.format("Y-packer: %,d calls, %,d ms", yNumCalls, yTime));
         return solution;
     }
+
     /**
-     * 
-     * @param input the input dataset
-     * @param solution the current solution dataset, added to allow for pruning
-     * since otherwise we will start with a dataset of all rectangles placed 
-     * at (0,0) which is most likely immediately invalid. 
-     * @param current index of rectangle currently being placed
-     * @return 
+     * Calculate the subset sum of width (and heights, if rotations are allowed)
+     * of every entry in the dataset, up to the dataset's width.
+     *
+     * @param dataset The dataset for which to calculate the sum.
+     * @return Sorted list of integers in the subset sum.
      */
-    public Dataset backtracker(Dataset input, Dataset solution, int current) {
-        int width = input.getWidth();
-        
-        
-           // System.out.println("started");
-        if (solution.size() < input.size()) {
-            CompareEntry entry = input.get(current);
-            for (int j = 0; j < width; j++) {
-                Rectangle rec = entry.getRec();
-                if (j + rec.width > solution.getWidth()) {
-                    continue;
+    public List<Integer> calculateSubsetSums(Dataset dataset, List<Integer> initial) {
+        Set<Integer> positionSet = new HashSet<>(initial);
+        int maxWidth = dataset.getWidth();
+
+        for (CompareEntry entry : dataset) {
+            Rectangle rec = entry.getNormalRec();
+            Set<Integer> newPositions = new HashSet<>();
+            for (int position : positionSet) {
+                if (position + rec.width < maxWidth) {
+                    newPositions.add(position + rec.width);
                 }
-                rec.setLocation(j, 0);
-                CompareEntry addedEntry = solution.add(new Rectangle(rec));
-                if (heightPruning(input, solution)) { // if solution is still viable continue backtracking
-                    current++;
-                    //System.out.println("Backtracking");
-                    Dataset backtrackSolution = backtracker(input, solution, current);
-                    if (backtrackSolution != null) {
-                        return backtrackSolution;
-                    }
-                    current--;
-                    
+                if (dataset.allowRotation() && position + rec.height < maxWidth) {
+                    newPositions.add(position + rec.height);
                 }
-                solution.remove(addedEntry);
-                
-            } 
-        } else {
-            //System.out.println("Making perfect packing");
-            /*for(CompareEntry rectEntry: solution){
-                Rectangle rects = rectEntry.getRec();
-                System.out.println(rects);
-            }*/
-            return yPacker.pack(solution);
-        }        
-        return null;
+            }
+            positionSet.addAll(newPositions);
+        }
+        List<Integer> positions = new ArrayList<>(positionSet);
+        positions.sort(Integer::compare);
+        return positions;
     }
-    
+
     /**
-     * 
-     * @param dataset current configuration
-     * @return false if current configuration does not fit
+     * Check if {@code rec} can be placed in its current X-position, i.e.
+     * each column has enough empty space left.
+     *
+     * @param rec The rectangle to be placed.
+     * @return Whether the rectangle can be placed.
      */
-    public boolean heightPruning(Dataset input, Dataset solution) {
-        // height of every column of width 1
-        // e.g height[0] is the height of the column with x-coordinate 0 to x =1
-        int[] height = new int[solution.getWidth()]; 
-        
-        // clone of input
-        Dataset toBePlaced = input.clone(); 
-        
-        for (CompareEntry entry : solution) {
-            Rectangle rec = entry.getRec();
-            // clone entry to remove it from the toBePlaced dataset
-            CompareEntry cloneEntry = entry.clone();
-            // set location of cloneEntry to that of its duplicate in the original dataset
-            cloneEntry.setLocation(0, 0);
-            toBePlaced.remove(cloneEntry);
-            //System.out.println("next rect");
-            //System.out.println(rec.width);
-            for (int i = rec.x; i < (rec.x + rec.width); i++) {
-              //  System.out.println(solution.getWidth() + " last index of array and " + i);
-                height[i] += rec.height;
-                //System.out.println("height: " + height[i] + " at " + i);
-                // height of all rectangles in the column x=i is more than the height of the bounding box
-                if (height[i] > input.getHeight()) {
-                    //System.out.println("return");
-                    return false;
-                }
+    private int canPlaceRectangle(Rectangle rec, int x) {
+        if (x + rec.width > columns.length) {
+            return rec.width + columns.length;
+        }
+
+        for (int i = x; i < x + rec.width; i++) {
+            if (rec.height > columns[i]) {
+                return i;
             }
         }
-        
-        /* create an array with the following info:
-         for every column of height i, indicate how many empty cells there are
-        e.g {3,0,9} means there are 3 empty cells in columns of height 1,
-        0 in columns of height 2 and 9 in clumns of height 9
-        */
-        int[] emptySpace = new int[solution.getHeight()];
-        for(int j = 0; j < solution.getWidth(); j++){
-            // height of the empty column
-            int columnHeight = solution.getHeight() - height[j];
-            
-            /*
-            amount of empty cells in column of height columnHeight
-            increases by columnHeight
-            */
-            if(columnHeight > 0){
-                emptySpace[columnHeight-1] += columnHeight;
-            }         
+        return -1;
+    }
+
+    /**
+     * Add {@code rec} to its current X-position, decrease the empty
+     * space in {@code columns[rec.x:rec.x + rec.width]} by {@code rec.height}.
+     *
+     * @param rec The rectangle to be placed.
+     */
+    private void placeRectangle(Rectangle rec) {
+        int side = allowRotation ? Math.min(rec.width, rec.height) : rec.height;
+        rectangleAreaByHeight[side] -= rec.width * rec.height;
+
+        for (int i = rec.x; i < rec.x + rec.width; i++) {
+            emptySpace[columns[i]] -= columns[i];
+            columns[i] -= rec.height;
+            emptySpace[columns[i]] += columns[i];
         }
-        
-        /*
-        Wasted space pruning
-        if there are not enough cells of height > rect.height for 
-        every rectangle still to be placed. Not all the rectangles 
-        can be placed, thus we prune
-        */
-        for(CompareEntry entry1: toBePlaced){
-            Rectangle rect = entry1.getRec();
-            int areaToBeFilled = entry1.area();
-            boolean rectFits = false;
-            for(int k = rect.height-1; k < solution.getHeight(); k++){
-                if(areaToBeFilled > 0){
-                    while(emptySpace[k] > 0 && areaToBeFilled > 0)
-                    emptySpace[k] --;
-                    areaToBeFilled --;                            
-                } else {
-                    rectFits = true;
-                    break;
-                }
-            }
-            // if there is a rect that does not fit, we prune
-            if(!rectFits){
+    }
+
+    /**
+     * Remove {@code rec} from the occupied space in {@code columns}
+     * after it has been added with {@code placeRectangle()}.
+     *
+     * @param rec The rectangle to be removed.
+     */
+    private void removeRectangle(Rectangle rec) {
+        int side = allowRotation ? Math.min(rec.width, rec.height) : rec.height;
+        rectangleAreaByHeight[side] += rec.width * rec.height;
+
+        for (int i = rec.x; i < rec.x + rec.width; i++) {
+            emptySpace[columns[i]] -= columns[i];
+            columns[i] += rec.height;
+            emptySpace[columns[i]] += columns[i];
+        }
+    }
+
+    /**
+     * Prune based on wasted space. For every entry that still has to be placed,
+     * there has to be at least {@code entry.area} space left in columns that have
+     * at least {@code entry.height} unoccupied space. If that's not the case, we
+     * cannot get a valid configuration and we can prune this branch.
+     *
+     * @param solution The current (partial) solution.
+     * @return Whether the current configuration can still provide a valid configuration
+     * according to wasted-space pruning.
+     */
+    private boolean pruneWastedSpace(Dataset solution) {
+        int height = solution.getHeight();
+        int rectangles = 0;
+        int free = 0;
+
+        for (int i = height; i >= 0; i--) {
+            rectangles += rectangleAreaByHeight[i];
+            free += emptySpace[i];
+            if (rectangles > free) {
+                pruned++;
                 return false;
             }
         }
         return true;
+    }
+
+    /**
+     * Place {@code entry} on every X-coordinate and apply pruning to filter
+     * out invalid solutions.
+     * Currently pruning happens based on:
+     * - Column height
+     * - Wasted space
+     *
+     * @param entries  The entries that still have to be placed.
+     * @param solution The current (partial) solution.
+     * @param entry    The entry that has to be placed.
+     * @return A valid and complete solution, or null.
+     */
+    private Dataset placeEntry(Stack<CompareEntry> entries, Dataset solution, CompareEntry entry) {
+        Rectangle rec = entry.getRec();
+
+        Dataset backtrackSolution;
+
+        int min = -1;
+        for (int j : positions) {
+            if (j <= min) continue;
+            places++;
+            if ((min = canPlaceRectangle(rec, j)) == -1) {
+                entry.setLocation(j, 0);
+                placeRectangle(rec);
+
+                if (pruneWastedSpace(solution)) {
+                    backtrackSolution = backtrack(entries, solution);
+                    if (backtrackSolution != null) {
+                        return backtrackSolution;
+                    }
+                }
+
+                removeRectangle(rec);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Place entries using backtracking. If there are entries left, pop the
+     * first one and try to place it in the solution. If rotations are allowed,
+     * also try to place the rotated rectangle. If no entries are left, call
+     * {@code yPacker} to find the complete solution.
+     *
+     * @param entries  The entries that still have to be placed.
+     * @param solution The current (partial) solution.
+     * @return A valid and complete solution, or null.
+     */
+    private Dataset backtrack(Stack<CompareEntry> entries, Dataset solution) {
+        recursions++;
+        if (!entries.isEmpty()) {
+            CompareEntry entry = entries.pop();
+            Rectangle rec = entry.getRec();
+            CompareEntry newEntry = solution.push(entry);
+
+            Dataset backtrackSolution = placeEntry(entries, solution, newEntry);
+
+            if (backtrackSolution == null && solution.allowRotation() && rec.width != rec.height) {
+                newEntry.rotate();
+                backtrackSolution = placeEntry(entries, solution, newEntry);
+            }
+
+            if (backtrackSolution != null) {
+                return backtrackSolution;
+            }
+
+            solution.pop(newEntry);
+            entries.push(entry);
+            return null;
+        } else {
+            long startTime = System.currentTimeMillis();
+            yNumCalls++;
+            solution = yPacker.pack(solution);
+            yTime += System.currentTimeMillis() - startTime;
+            return solution;
+        }
     }
 }

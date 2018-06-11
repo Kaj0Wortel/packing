@@ -10,7 +10,6 @@ import packing.data.MergedEntryDataset.MergedEntry;
 import packing.data.PolishDataset;
 import packing.data.PolishDataset.Direction;
 import packing.data.PolishDataset.Operator;
-import packing.gui.ShowDataset;
 import packing.tools.MultiTool;
 
 

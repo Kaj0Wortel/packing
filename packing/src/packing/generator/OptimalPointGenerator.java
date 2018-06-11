@@ -25,6 +25,11 @@ import java.util.Stack;
  * Keeps track of all points of the possible locations of the rectangles.
  */
 public class OptimalPointGenerator extends Generator {
+
+    static {
+        name = "optimal point";
+    }
+
     // Stack for keeping track of the linked list manipulations
     // over the iterations.
     final private Stack<LinkAction> nodeActions = new Stack<LinkAction>();

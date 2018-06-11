@@ -8,13 +8,19 @@ import packing.data.Dataset;
 import packing.packer.Packer;
 import packing.packer.PackerFactory;
 
+
 //##########
+
 
 /**
  * Class description here.
  */
-public class FixedHeightGenerator extends Generator {
-    public FixedHeightGenerator(PackerFactory factory) {
+public class FixedHeightRandomSearchGenerator extends Generator {
+    static {
+        name = "fixed height random search";
+    }
+
+    public FixedHeightRandomSearchGenerator(PackerFactory factory) {
         super(factory);
     }
     

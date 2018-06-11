@@ -2,6 +2,10 @@
 package packing.data;
 
 
+// Packing imports
+import packing.tools.MultiTool;
+
+
 //##########
 // Java imports
 import java.awt.Rectangle;
@@ -17,7 +21,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.Set;
-import packing.tools.MultiTool;
 
 
 /**
@@ -348,7 +351,7 @@ public class PolishDataset
      * 
      * Note that the list is not cloned.
      */
-    public PolishDataset(Dataset dataset, LinkedList<CompareEntry> list) {
+    public PolishDataset(Dataset dataset, List<CompareEntry> list) {
         super(dataset);
         this.list = list;
     }
@@ -659,6 +662,11 @@ public class PolishDataset
         return getClass().getSimpleName() + "[" + "width=" + width
                 + ", height=" + height + ", elems:[" + String.join("", strs)
                 + "]]";
+    }
+    
+    @Override
+    public void initList() {
+        list = new LinkedList<CompareEntry>();
     }
     
     

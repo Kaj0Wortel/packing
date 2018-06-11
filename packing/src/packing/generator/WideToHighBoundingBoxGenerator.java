@@ -23,6 +23,10 @@ import java.util.Comparator;
  * or when an interrupt is received.
  */
 public class WideToHighBoundingBoxGenerator extends Generator {
+
+    static {
+        name = "greedy wide-to-high";
+    }
     
     public WideToHighBoundingBoxGenerator(PackerFactory factory) {
         super(factory);
