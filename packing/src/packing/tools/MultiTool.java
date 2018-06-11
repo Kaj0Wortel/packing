@@ -335,6 +335,32 @@ public class MultiTool {
     }
     
     /**
+     * Appends all values of the iterable to the provided list.
+     * 
+     * @param <A> the type of the resulting list.
+     * @param <B> the input type.
+     * @param <C> the list type.
+     * @param iterable the iterable to be converted.
+     * @param classValue the class of the array to be created.
+     * @param size the size of the array to be created.
+     * @param list the list used for appending values.
+     *     Default is a new {@code ArrayList}.
+     * @return {@code list} with the appended values from {@code iterable}
+     */
+    @SuppressWarnings("unchecked")
+    public static <A, B extends A, C extends List<A>> C iterableToList(
+            Iterable<B> iterable, int size, C list) {
+        if (list == null) return null;
+        
+        Iterator<B> it = iterable.iterator();
+        while (it.hasNext()) {
+            list.add(it.next());
+        }
+        
+        return list;
+    }
+    
+    /**
      * Converts an iterable to an array.
      * 
      * @param <A> class representing the output array class.

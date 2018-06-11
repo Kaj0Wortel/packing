@@ -81,6 +81,13 @@ public abstract class CompareEntry
      * -------------------------------------------------------------------------
      */
     /**
+     * @return the id of the entry.
+     */
+    public int getId() {
+        return id;
+    }
+    
+    /**
      * @return the rectangle depending on the default rotation.
      */
     public abstract Rectangle getRec();

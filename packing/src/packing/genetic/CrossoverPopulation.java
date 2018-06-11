@@ -3,20 +3,22 @@ package packing.genetic;
 
 
 // Packing imports
+import java.util.ArrayList;
 import packing.data.Dataset;
 import packing.data.PolishDataset;
 import packing.data.PolishDataset.Operator;
 import packing.data.CompareEntry;
 import packing.packer.Packer;
 import packing.tools.MultiTool;
-import packing.tools.MultiTool.MultiIterator;
 
 
 //##########
 // Java imports
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -43,6 +45,8 @@ public class CrossoverPopulation
     final public static double MAX_REL_SIZE = 0.5;
     // The crossover rate for every crossover.
     final public static double CROSSOVER_RATE = 0.2;
+    // Mutation rate of the amount of swaps performed
+    final public static double MUTATE_SWAP_ENTRY_RATE = 0.1;
     
     // Random variable for calculating chances.
     final public static Random random = new Random();
@@ -88,17 +92,129 @@ public class CrossoverPopulation
             this.opMap = new HashMap<>();
         }
         
+        private class EntryValue {
+            final private CompareEntry entry;
+            final private List<Map<Operator, Double>> mapList;
+            final private List<Operator> opList;
+            
+            /**
+             * Creates a new EntryValue that stores all multiple entries.
+             * 
+             * @param entry the entry that is involved in the operation.
+             * @param map the map that contains the score of {@code op}.
+             * @param op the operator that is involved for this entry.
+             */
+            private EntryValue(CompareEntry entry, Map<Operator, Double> map,
+                    Operator op) {
+                this.mapList = new ArrayList<Map<Operator, Double>>();
+                this.opList = new ArrayList<Operator>();
+                this.entry = entry;
+                this.mapList.add(map);
+                this.opList.add(op);
+            }
+            
+            /**
+             * Adds an entry.
+             * 
+             * @param map
+             * @param op 
+             */
+            protected void addEntry(Map<Operator, Double> map, Operator op) {
+                mapList.add(map);
+                opList.add(op);
+            }
+            
+            @Override
+            public boolean equals(Object obj) {
+                if (!(obj instanceof EntryValue)) return false;
+                EntryValue val = (EntryValue) obj;
+                return entry.getId() == val.entry.getId();
+            }
+            
+            @Override
+            public int hashCode() {
+                return MultiTool.calcHashCode(entry.getId());
+            }
+            
+            /**
+             * Removes all operators from the maps except for one.
+             */
+            public void removeAllExceptOne() {
+                int best = 0;
+                double bestVal = 0;
+                for (int i = 0; i < mapList.size(); i++) {
+                    Double score = mapList.get(i).get(opList.get(i));
+                    if (score == null) score = -1.0;
+                    double val = score * random.nextDouble();
+                    if (val > bestVal) {
+                        bestVal = val;
+                        best = i;
+                    }
+                }
+                
+                for (int i = 0; i < opList.size(); i++) {
+                    if (i == best) continue;
+                    mapList.get(i).remove(opList.get(i));
+                    opList.remove(i);
+                }
+            }
+            
+        }
+        
         @Override
         public CrossInstance crossover(CrossInstance other) {
+            // Obtain all double instances from both sets.
+            Set<EntryValue> doubleSet = new HashSet<>();
+            Map<Integer, EntryValue> entryMap = new HashMap<>();
+            
+            Map<Operator, Double>[] opMaps = new Map[] {
+                new HashMap<>(opMap),
+                new HashMap<>(other.opMap)
+            };
+            
+            for (int i = 0; i < 2; i++) {
+                Iterator<Operator> it = opMaps[i].keySet().iterator();
+                while (it.hasNext()) {
+                    Operator op = it.next();
+                    List<CompareEntry> entries = op.listAllEntries();
+                    for (CompareEntry entry : entries) {
+                        EntryValue ev = entryMap.get(entry.getId());
+                        if (ev != null) {
+                            ev.addEntry(opMaps[i], op);
+                            doubleSet.add(ev);
+                            
+                        } else {
+                            entryMap.put(entry.getId(),
+                                    new EntryValue(entry, opMaps[i], op));
+                        }
+                    }
+                }
+            }
+            
+            // Reduce all double instances such that there is at most one
+            // instance left for each.
+            for (EntryValue value : doubleSet) {
+                value.removeAllExceptOne();
+            }
+            
             // Merge the two available crossover maps into an array.
+            List<Operator> opOrder = new LinkedList<Operator>();
+            generateOpOrder(opOrder, opMaps[0]);
+            generateOpOrder(opOrder, opMaps[1]);
+            
+            
+            
+            
+            /*
             Set<Operator> thisKeySet = opMap.keySet();
             Set<Operator> otherKeySet = other.opMap.keySet();
             Operator[] opOrder = MultiTool.iteratorToArray(
                     new MultiIterator(thisKeySet.iterator(),
                             otherKeySet.iterator()), Operator.class,
                             thisKeySet.size() + otherKeySet.size());
-            
+            */
             // The comparator used to compare keys based on their scores.
+            /*
             final Comparator<Operator> SCORE_COMP
                     = Comparator.comparingDouble(op -> {
                 if (opMap.containsKey(op)) {
@@ -115,12 +231,30 @@ public class CrossoverPopulation
             
             // Sort the array
             Arrays.sort(opOrder, SCORE_COMP);
+            *//*
+            // Create comparator to sort the entries based on the scores.
+            final Comparator<Operator> SCORE_COMP
+                    = Comparator.comparingDouble(op -> {
+                if (opMap.containsKey(op)) {
+                    return opMap.get(op);
+                
+                } else if (other.opMap.containsKey(op)) {
+                    return other.opMap.get(op);
+                    
+                } else {
+                    throw new IllegalStateException(
+                            "The element has no origin!");
+                }
+            });
             
+            // Sort the list based on scores.
+            Collections.sort(opOrder, SCORE_COMP);
+            *//*
             // Select which genes should be used in the crossover.
             // Note: here is choosen for a {@code LinkedList} since this
             // type of list doesn't produce fail-safe iterators.
             LinkedList<Operator> opList = new LinkedList<>();
-            for (int i = 0; i < opOrder.length; i++) {
+            for (int i = 0; i < opOrder.size(); i++) {
                 double score = (opMap.containsKey(opOrder[i])
                         ? opMap.get(opOrder[i])
                         : other.opMap.get(opOrder[i]));
@@ -129,49 +263,51 @@ public class CrossoverPopulation
                     opList.add(opOrder[i]);
                 }
             }
-            
+            */
             // Remove double occurances for the allowed solutions.
             // (semi-random removal for duplicate entries based on score)
-            filterDoubles(opMap, other.opMap, opList);
+            //filterDoubles(opMap, other.opMap, opList);
             
             // Add all remaining parts as format hints.
-            List<CompareEntry>[] hints = new List[opList.size()];
+            List<CompareEntry>[] hints = new List[opOrder.size()];
             int i = 0;
-            for (Operator op : opList) {
-                List<CompareEntry> hint = op.listAllEntries();
+            for (Operator op : opOrder) {
+                List<CompareEntry> hint = op.listAllInvolved();
                 hint.add(op);
                 hints[i++] = hint;
             }
             
             // Create a new instance using the format hints.
-            CrossInstance ci = new CrossInstance(dataset);
-            ci.pd.init(hints);
+            CrossInstance ci = new CrossInstance(pd.clone());
+            ci.pd.regenerate(hints);
             
             return ci;
         }
         
-        /**TMP
+        /**
          * @return a sorted list based on the scores in {@link #opMap}.
          */
-        public Operator[] generateOpOrder() {
-            Set<Operator> keySet = opMap.keySet();
-            Operator[] opArray = MultiTool.iterableToArray(
-                    keySet, Operator.class, keySet.size());
+        public List<Operator> generateOpOrder(List<Operator> opList,
+                Map<Operator, Double> map) {
+            Set<Operator> keySet = map.keySet();
+            List<Operator> result = MultiTool.iterableToList(
+                    keySet, keySet.size(), opList);
             
-            Arrays.sort(opArray,
+            Collections.sort(opList,
                     Comparator.comparingDouble(op -> {
-                        return opMap.get(op);
+                        return map.get(op);
                     })
             );
             
-            return opArray;
+            return result;
         }
         
         /**
-         * Filters out all doubles
+         * Filters out all doubles.
+         * 
          * @param opMap map containing all scores for the operators.
          * @param opList list containing all operators to use.
-         */// TMP
+         *//*// TMP
         public void filterDoubles(Map<Operator, Double> opMap1,
                 Map<Operator, Double> opMap2, LinkedList<Operator> opList) {
             // For all operators...
@@ -207,8 +343,8 @@ public class CrossoverPopulation
                         if (calcRemove(opScore, cmpScore)) {
                             // Remove op.
                             opIt.remove();
-                            // Revert one element back since the list size is
-                            // reduced.
+                            // Revert one element back since the list size has
+                            // been reduced.
                             i--;
                             j--;
                             break;
@@ -216,8 +352,8 @@ public class CrossoverPopulation
                         } else {
                             // Remove cmp.
                             cmpIt.remove();
-                            // Revert one element back since the list size is
-                            // reduced.
+                            // Revert one element back since the list size has
+                            // been reduced.
                             j--;
                         }
                     }
@@ -227,7 +363,7 @@ public class CrossoverPopulation
             }
             
         }
-        
+        */
         
         /**
          * Compares the two scores and decides whether the first or
@@ -237,16 +373,18 @@ public class CrossoverPopulation
          * @param cmpVal2 second value to be compared.
          * @return true iff the first score should be removed.
          *     false iff the second score should be removed.
-         */
+         *//*
         public boolean calcRemove(double cmpScore1, double cmpScore2) {
             double diff = (cmpScore2 - cmpScore1 + 1)*0.5;
             // 0 <= diff <= 1
             return random.nextDouble() < diff;
         }
-        
+        */
         @Override
         public void mutate() {
-            // TODO
+            for (int i = 0; i < pd.size() * MUTATE_SWAP_ENTRY_RATE; i++) {
+                pd.swapRandomEntries();
+            }
         }
         
         @Override
@@ -359,7 +497,7 @@ public class CrossoverPopulation
             System.err.println(op.listAllEntries());
         }
         MultiTool.sleepThread(10);
-        crossInv.filterDoubles(map, map, opList);
+        //crossInv.filterDoubles(map, map, opList);
         MultiTool.sleepThread(10);
         /*
         System.out.println(MultiTool.disjoint(

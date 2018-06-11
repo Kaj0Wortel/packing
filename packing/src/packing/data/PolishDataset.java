@@ -6,12 +6,17 @@ package packing.data;
 // Java imports
 import java.awt.Rectangle;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Random;
+import java.util.Set;
 import packing.tools.MultiTool;
 
 
@@ -28,7 +33,7 @@ public class PolishDataset
     
     /**
      * Direction class for denoting the operator direction.
-     * Let A and B be rectangles, then:
+     * Let A and B be (configurations of) rectangles, then:
      * A-B-UP means that B is above A, and 
      * A-B-RIGHT means that B on the right of A.
      */
@@ -53,8 +58,9 @@ public class PolishDataset
         private int area = 0;
         
         // The involved entries.
-        private CompareEntry[] entries = null;
-        private List<CompareEntry> allEntries = null;
+        private CompareEntry[] entries = null; // Two direct involved entries.
+        private List<CompareEntry> allEntries = null; // All involved entries.
+        List<CompareEntry> allInvolved = null; // All involved entries and operators.
         
         // The total number of involved entries, excluding operators.
         private int size = -1;
@@ -223,6 +229,29 @@ public class PolishDataset
         }
         
         /**
+         * @return a list containing all involved entries and operators.
+         */
+        public List<CompareEntry> listAllInvolved() {
+            if (allInvolved != null) return allInvolved;
+            getEntries();
+            System.err.println("inv 0: " + entries[0]);
+            System.err.println("inv 1: " + entries[1]);
+            allInvolved = new ArrayList<>();
+            
+            for (int i = 0; i < 2; i++) {
+                if (entries[i] instanceof Operator) {
+                    allInvolved.addAll(((Operator) entries[i]).listAllEntries());
+                    allInvolved.add(entries[i]);
+                    
+                } else {
+                    allInvolved.add(entries[i]);
+                }
+            }
+            
+            return allInvolved;
+        }
+        
+        /**
          * @return the total number of involved entries. Excludes operators.
          */
         public int size() {
@@ -324,10 +353,222 @@ public class PolishDataset
         this.list = list;
     }
     
-    
+    /**
+     * Clones the current entry. Note that {@link #dataset} must containg
+     * at least all entries in {@link #list}.
+     * 
+     * @return a clone of this entry.
+     */
     @Override
     public PolishDataset clone() {
-        return new PolishDataset(dataset.clone(), new LinkedList<>(list));
+        // Clone the main dataset.
+        Dataset cloneData = dataset.clone();
+        // Create a new instance using the cloned dataset.
+        PolishDataset pd = new PolishDataset(cloneData, new LinkedList<>());
+        
+        // Map all entries of the cloned dataset with respect to their ID's.
+        Map<Integer, CompareEntry> map = new HashMap<>();
+        for (CompareEntry entry : cloneData) {
+            map.put(entry.id, entry);
+        }
+        
+        // Copy all values based on their ID.
+        // Create new entries for {@code Operator}s.
+        Iterator<CompareEntry> it = list.iterator();
+        while (it.hasNext()) {
+            CompareEntry entry1 = it.next();
+            if (entry1 instanceof Operator) {
+                Operator op = (Operator) entry1;
+                pd.list.add(new Operator(op.dir));
+                
+            } else {
+                CompareEntry entry2 = it.next();
+                pd.list.add(map.get(entry2.id));
+            }
+        }
+        
+        return pd;
+    }
+    
+    /**
+     * Regenerates the solution, but then using the provided hints.
+     * 
+     * @param hints used to generate a solution. If no hints are given,
+     *     then no changes will occur.
+     * 
+     * Notes:
+     * - It is not allowed to have multiple equal elements in the hints.
+     *   There is no checking performed on this property.
+     * - The items in the list will be processed from low to high index.
+     * - It is assumed that all hints are correctly formatted
+     *   (e.g. all use reverse polish notation).
+     */
+    public void regenerate(List<CompareEntry>... hints) {
+        if (hints == null || hints.length == 0) return;
+        
+        // Merge all entries into one list.
+        List<CompareEntry> entries = new LinkedList<CompareEntry>();
+        for (List<CompareEntry> hint : hints) {
+            entries.addAll(hint);
+        }
+        
+        // Safely remove the entries to be replaced and
+        // savely add entries at their new locations.
+        ListIterator<CompareEntry> listIt = list.listIterator(0);
+        int hintCounter = 0;
+        int loc = 0;
+        while (listIt.hasNext()) {
+            CompareEntry entry = listIt.next();
+            // An operator is certainly not in the list.
+            if (entry instanceof Operator) continue;
+            
+            if (entries.contains(entry)) {
+                // Remove all matching entries from the entry list.
+                while (entries.remove(entry)) {}
+                // Remove the entry from the list.
+                listIt.remove();
+                
+                // Check if there are any hints left to add.
+                if (hintCounter < hints.length) {
+                    // If there are, use the next hint to replace the removed
+                    // element.
+                    List<CompareEntry> hint = hints[hintCounter++];
+                    list.addAll(loc, hint);
+                    
+                } else {
+                    // If not, remove the corresponding operator.
+                    ListIterator<CompareEntry> it = list.listIterator(loc);
+                    int entryCounter = 0;
+                    while (it.hasNext()) {
+                        CompareEntry entry2 = it.next();
+                        if (entry2 instanceof Operator) {
+                            if (--entryCounter <= 0) {
+                                it.remove();
+                                break;
+                            }
+                        } else {
+                            entryCounter++;
+                        }
+                    }
+                    
+                }
+                
+            }
+            
+            loc++;
+        }
+    }
+    
+    /**
+     * Swaps two random entries. An entry might be an operator.
+     * In that case, the entire part will be swapped.
+     */
+    public void swapRandomEntries() {
+        boolean success = false;
+        while (!success) {
+            MultiTool.sleepThread(100);
+            // Generate two positions to be swapped.
+            int pos1 = random.nextInt(list.size());
+            int pos2 = random.nextInt(list.size());
+            CompareEntry ce1 = list.get(pos1);
+            CompareEntry ce2 = list.get(pos2);
+            
+            // Swapping the same element is trivial.
+            if (pos1 == pos2) return;
+            
+            boolean ce1IsOp = ce1 instanceof Operator;
+            boolean ce2IsOp = ce2 instanceof Operator;
+            
+            System.err.println("ce1: " + (ce1IsOp ? ce1 : "[" + ce1.getId() + "]"));
+            System.err.println("ce2: " + (ce2IsOp ? ce2 : "[" + ce2.getId() + "]"));
+            
+            if (!ce1IsOp && !ce2IsOp) {
+                // Neither are operators, so simply swap them.
+                Collections.swap(list, pos1, pos2);
+                return;
+            }
+            
+            List<CompareEntry> entries1 = null;
+            List<CompareEntry> entries2 = null;
+            
+            if (ce1IsOp && ce2IsOp) {
+                // Both are operators.
+                Operator op1 = (Operator) ce1;
+                Operator op2 = (Operator) ce2;
+                entries1 = op1.listAllInvolved();
+                entries2 = op2.listAllInvolved();
+                entries1.add(op1);
+                entries2.add(op2);
+                System.err.println("Involved [1]: " + entries1);
+                System.err.println("Involved [2]: " + entries2);
+                
+                // First add all entries from 1 to a set for easy lookup.
+                Set<CompareEntry> set = new HashSet<>();
+                set.addAll(entries1);
+                // Then check if the set contains any entries of
+                // {@code entries2}. If so, redo the proccess.
+                for (CompareEntry entry : entries2) {
+                    if (set.contains(entry)) continue;
+                }
+                
+            } else if (ce1IsOp && !ce2IsOp) {
+                Operator op1 = (Operator) ce1;
+                entries1 = op1.listAllInvolved();
+                entries1.add(op1);
+                System.err.println("Involved [1]: " + entries1);
+                // If the {@code ce2} is involved in the operator {@code ce1},
+                // redo the process.
+                if (entries1.contains(ce2)) continue;
+                entries2 = new ArrayList<CompareEntry>();
+                entries2.add(ce2);
+                
+            } else if (!ce1IsOp && ce2IsOp) {
+                Operator op2 = (Operator) ce2;
+                entries2 = op2.listAllInvolved();
+                entries2.add(op2);
+                System.err.println("Involved [2]: " + entries2);
+                // If the {@code ce1} is involved in the operator {@code ce2},
+                // redo the process.
+                if (entries2.contains(ce1)) continue;
+                entries1 = new ArrayList<CompareEntry>();
+                entries1.add(ce1);
+            }
+            
+            // Determine which list is the first and the last one.
+            List<CompareEntry> first;
+            List<CompareEntry> last;
+            int firstPos;
+            int lastPos;
+            
+            // Determine which list is the first and the last one.
+            if (pos1 < pos2) {
+                first = entries1;
+                firstPos = pos1;
+                last = entries2;
+                lastPos = pos2;
+                
+            } else {
+                last = entries1;
+                lastPos = pos1;
+                first = entries2;
+                firstPos = pos2;
+            }
+            
+            // Remove {@code last.size()} entries at the latter
+            // position.
+            for (int i = 0; i < last.size(); i++) {
+                list.remove(lastPos - i);
+            }
+            list.addAll(lastPos, first);
+            
+            // Remove {@code first.size()} entries at the former
+            // position.
+            for (int i = 0; i < first.size(); i++) {
+                list.remove(firstPos - i);
+            }
+            list.addAll(firstPos, last);
+            success = true;
+        }
     }
     
     /**
@@ -335,7 +576,7 @@ public class PolishDataset
      * Note that the elements still occur in the same order as in
      * the provided dataset.
      */
-    public void init(List<CompareEntry>... hints) {
+    public void init() {
         list.clear();
         int numOp = 0;
         int numElem = 0;
@@ -420,7 +661,26 @@ public class PolishDataset
                 + "]]";
     }
     
+    
     public static void main(String[] args) {
+        Dataset dataset = new Dataset(-1, true, 3);
+        dataset.add(new Rectangle(1, 1));
+        dataset.add(new Rectangle(2, 2));
+        dataset.add(new Rectangle(3, 3));
+        dataset.add(new Rectangle(4, 4));
+        dataset.add(new Rectangle(5, 5));
+        dataset.add(new Rectangle(6, 6));
+        dataset.add(new Rectangle(7, 7));
+        dataset.add(new Rectangle(8, 8));
+        
+        PolishDataset pd = new PolishDataset(dataset);
+        System.out.println(pd.toShortString());
+        pd.init();
+        System.out.println(pd.toShortString());
+        pd.swapRandomEntries();
+        System.out.println(pd.toShortString());
+                
+        /*
         Dataset dataset = new Dataset(-1, true, 8);
         dataset.add(new Rectangle(1, 1));
         dataset.add(new Rectangle(2, 2));
@@ -434,6 +694,7 @@ public class PolishDataset
         PolishDataset pd = new PolishDataset(dataset);
         pd.init();
         System.out.println(pd.toString());
+*/
     }
     
 }
