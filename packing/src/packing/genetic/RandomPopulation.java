@@ -163,6 +163,7 @@ public class RandomPopulation
      * height and maximum width.
      * If the instance if the best one seen so far, update best.
      */
+    @Override
     public void calculateFitness() {
         for (RandomInstance instance : instances) {
             Packer packer = packerFactory.create(maxWidth, height);
@@ -198,6 +199,7 @@ public class RandomPopulation
      * randomly select parents from the previous generation with probability
      * proportional to the inverse of its rank.
      */
+    @Override
     public void performSelection() {
         List<RandomInstance> newInstances = new ArrayList<>(POPULATION_SIZE);
         
@@ -221,6 +223,7 @@ public class RandomPopulation
     /**
      * Performs a mutation for all instances.
      */
+    @Override
     public void performMutation() {
         // Mutate all instances except the first/best
         for (int i = 1; i < instances.size(); i++) {

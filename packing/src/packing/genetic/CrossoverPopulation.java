@@ -3,17 +3,18 @@ package packing.genetic;
 
 
 // Packing imports
-import java.util.ArrayList;
 import packing.data.Dataset;
 import packing.data.PolishDataset;
 import packing.data.PolishDataset.Operator;
 import packing.data.CompareEntry;
 import packing.packer.Packer;
+import packing.packer.PolishPacker;
 import packing.tools.MultiTool;
 
 
 //##########
 // Java imports
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -22,11 +23,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-
 
 
 /**
@@ -38,15 +37,32 @@ public class CrossoverPopulation
     // The size of the population.
     final public static int POPULATION_SIZE = 200;
     
-    // The mutation rate for every mutation.
-    final public static double MUTATION_RATE = 0.1;
-    
     // The maximum relative size for operators that might be crossed over.
     final public static double MAX_REL_SIZE = 0.5;
     // The crossover rate for every crossover.
     final public static double CROSSOVER_RATE = 0.2;
+    
     // Mutation rate of the amount of swaps performed
     final public static double MUTATE_SWAP_ENTRY_RATE = 0.1;
+    // Mutation rate of the number of new randomly generated operators.
+    final public static double MUTATE_CHANGE_OPERATOR_RATE = 0.1;
+    // Mutation rate of the number of randomly rotated entries.
+    final public static double MUTATE_ROTATION_RATE = 0.1;
+    
+    // Learning rate for fixing the number of discarded solutions with
+    // respect to {@link #POPULATION_SIZE}.
+    final public static double DISCARD_LEARNING_RATE = 0.25;
+    // The increase in population such that the average number of
+    // individuals that are not discarded will still match
+    // {@link #POPULATION_SIZE}.
+    private int repairDiscard = 0;
+    
+    // The propapility that the fist element is choosen as parent.
+    final public static double SELECT_FIRST_CHANCE = 0.1;
+    // The power of the exponent to determine the parent.
+    private double alpha;
+    
+    
     
     // Random variable for calculating chances.
     final public static Random random = new Random();
@@ -61,7 +77,6 @@ public class CrossoverPopulation
     final public Dataset dataset;
     // The height of the dataset. Integer.MAX_VALUE if no height limit.
     final public int height;
-    
     
     /**
      * Class representing an instance of the population.
@@ -382,8 +397,19 @@ public class CrossoverPopulation
         */
         @Override
         public void mutate() {
+            // Swap entries + operators.
             for (int i = 0; i < pd.size() * MUTATE_SWAP_ENTRY_RATE; i++) {
                 pd.swapRandomEntries();
+            }
+            
+            // Mutate operators.
+            for (int i = 0; i < pd.size() * MUTATE_CHANGE_OPERATOR_RATE; i++) {
+                pd.changeOperator();
+            }
+            
+            // Rotate entries.
+            for (int i = 0; i < pd.size() * MUTATE_ROTATION_RATE; i++) {
+                pd.randomRotate();
             }
         }
         
@@ -397,8 +423,8 @@ public class CrossoverPopulation
                 // Get the next operator.
                 Operator op = it.next();
                 
-                // Ignore operators that contain more then 50% of the
-                // entire sheet.
+                // Ignore operators that contain more then {@link #MAX_REL_SIZE}
+                // of the entire sheet.
                 double sizeRatio = ((double) op.size()) / pd.size();
                 if (sizeRatio > MAX_REL_SIZE) continue;
                 
@@ -414,9 +440,6 @@ public class CrossoverPopulation
                 
                 opMap.put(op, score);
             }
-            if (best == null || pd.getArea() < best.getArea()) {
-                best = pd.getDataset().clone();
-            }
         }
         
         @Override
@@ -431,17 +454,156 @@ public class CrossoverPopulation
         
     }
     
+    public CrossoverPopulation(Dataset dataset, int height) {
+        this.dataset = dataset;
+        this.list = new LinkedList<>();
+        if (height <= 0) this.height = Integer.MAX_VALUE;
+        else this.height = height;
+        
+        init();
+    }
+    
+    /**
+     * Initializes the population.
+     */
+    private void init() {
+        while (list.size() < POPULATION_SIZE + repairDiscard) {
+            Dataset clone = dataset.clone();
+            clone.shuffle();
+            list.add(new CrossInstance(clone));
+        }
+    }
+    
+    
+    @Override
+    public void calculateFitness() {
+        int discarded = 0;
+        Iterator<CrossInstance> it = list.iterator();
+        while (it.hasNext()) {
+            CrossInstance inst = it.next();
+            inst.calculateFitness(new PolishPacker());
+            
+            // If there is a fixed height, check if the solution is allowed.
+            // If not, delete the solution.
+            if (inst.pd.isFixedHeight() &&
+                    inst.pd.getHeight() > inst.pd.getEffectiveHeight()) {
+                it.remove();
+                discarded++;
+            }
+            
+            // Update {@link #best} when a better solution has been found.
+            if (best == null || inst.pd.getArea() < best.getArea()) {
+                best = inst.pd.clone();
+            }
+            
+            // Update the value for taking the number of discarded
+            // instances in account.
+            repairDiscard += Math.ceil(
+                    (discarded - repairDiscard) * DISCARD_LEARNING_RATE);
+        }
+    }
+    
+    @Override
+    public void performSelection() {
+        if (list.size() <= 1) {
+            if (best != null) list.add(new CrossInstance(best));
+            init();
+            return;
+        }
+        
+        List<CrossInstance> newPopulation = new LinkedList<>();
+        
+        // Sort all entries based on area.
+        Collections.sort(list, Comparator.comparingInt(cd -> {
+            return -cd.pd.getArea();
+        }));
+        
+        // Add the best instance by default.
+        if (best != null) list.add(new CrossInstance(best));
+        
+        // Calculate the alpha value to use in the formula for determining
+        // the parents.
+        calcAlpha(list.size());
+        
+        // Create the new population.
+        while (newPopulation.size() < POPULATION_SIZE + repairDiscard) {
+            CrossInstance parent1 = selectParent(null);
+            CrossInstance parent2 = selectParent(parent1);
+            newPopulation.add(parent1.crossover(parent2));
+        }
+        
+        // Update the population.
+        list = newPopulation;
+    }
+    
+    /**
+     * Generates the alpha value for choosing parents.
+     * 
+     * @param n the number of entries to choose from.
+     * 
+     * Note: it is assumed that the list is sorted in decreasing(!) order
+     *     for the area.
+     * 
+     * Calculation:
+     * We approach the generating using the following formula:
+     * {@code n = N * x^alpha}
+     * where:
+     * - N = total number of entries.
+     * - n = choosen index of the list.
+     * - x = random generated value s.t. {@code 0 <= x <= 1}.
+     * Now we want {@code SELECT_FIRST_CHANCE} as chance for the first entry.
+     * Therefore must hold:
+     * {@code n * (1 - SELECT_FIRST_CHANCE)^alpha = n - 1}
+     * {@code ==> (1 - SELECT_FIRST_CHANCE)^alpha = (n - 1) / n}
+     * {@code ==> alpha = log_{1 - SELECT_FIRST_CHANCE} ((n-1)/n)}
+     * 
+     * Note that {@code n >= 1} must hold.
+     */
+    private void calcAlpha(int n) {
+        alpha = Math.log((n - 1) / n) / Math.log(1 - SELECT_FIRST_CHANCE);
+    }
+    
+    /**
+     * Select a parent used for the crossover operation.
+     * Assumes that {@link #list} is sorted based on increasing area.
+     * 
+     * @param ignore if this entry is selected, try again.
+     * @return a parent that can be used in the crossover operation
+     * 
+     * Note that {@code n >= 2} must hold.
+     */
+    private CrossInstance selectParent(CrossInstance ignore) {
+        CrossInstance ci = null;
+        do {
+            int index = (int) (list.size()
+                    * Math.pow(random.nextDouble(), alpha));
+            ci = list.get(index);
+            
+        } while (ci != ignore);
+        
+        return ci;
+    }
+    
+    @Override
+    public void performMutation() {
+        for (CrossInstance instance : list) {
+            instance.mutate();
+        }
+    }
+    
+    @Override
+    public Dataset getBest() {
+        return best;
+    }
+    
+    
+    
+    
     // TMP
     public CrossInstance create(Dataset ds) {
         return new CrossInstance(ds);
     }
     
-    
-    public CrossoverPopulation(Dataset dataset, int height) {
-        this.dataset = dataset;
-        if (height <= 0) this.height = Integer.MAX_VALUE;
-        else this.height = height;
-    }
     
     // tmp
     public static void main(String[] args) {
@@ -467,7 +629,7 @@ public class CrossoverPopulation
         
         
         // Create instance.
-        CrossInstance crossInv = new CrossoverPopulation(ds, -1).create(pd);
+        //CrossInstance crossInv = new CrossoverPopulation(ds, -1).create(pd);
         
         
         // Generate order + lists.
