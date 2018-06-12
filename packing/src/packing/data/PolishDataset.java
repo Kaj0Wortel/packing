@@ -62,8 +62,6 @@ public class PolishDataset
         
         // The involved entries.
         private CompareEntry[] entries = null; // Two direct involved entries.
-        private List<CompareEntry> allEntries = null; // All involved entries.
-        List<CompareEntry> allInvolved = null; // All involved entries and operators.
         
         // The total number of involved entries, excluding operators.
         private int size = -1;
@@ -108,7 +106,7 @@ public class PolishDataset
         
         @Override
         public boolean equals(Object obj) {
-            if (obj instanceof Operator) return false;
+            if (!(obj instanceof Operator)) return false;
             Operator op = (Operator) obj;
             return op.dir == this.dir && op.id == this.id;
         }
@@ -215,9 +213,8 @@ public class PolishDataset
          * @return a list containing all involved entries.
          */
         public List<CompareEntry> listAllEntries() {
-            if (allEntries != null) return allEntries;
-            getEntries();
-            allEntries = new ArrayList<>();
+            calcEntries();
+            List<CompareEntry> allEntries = new ArrayList<>();
             
             for (int i = 0; i < 2; i++) {
                 if (entries[i] instanceof Operator) {
@@ -235,21 +232,20 @@ public class PolishDataset
          * @return a list containing all involved entries and operators.
          */
         public List<CompareEntry> listAllInvolved() {
-            if (allInvolved != null) return allInvolved;
-            getEntries();
-            System.err.println("inv 0: " + entries[0]);
-            System.err.println("inv 1: " + entries[1]);
-            allInvolved = new ArrayList<>();
+            calcEntries();
+            List<CompareEntry> allInvolved = new ArrayList<>();
             
             for (int i = 0; i < 2; i++) {
                 if (entries[i] instanceof Operator) {
-                    allInvolved.addAll(((Operator) entries[i]).listAllEntries());
-                    allInvolved.add(entries[i]);
+                    Operator op = (Operator) entries[i];
+                    allInvolved.addAll(op.listAllInvolved());
                     
                 } else {
                     allInvolved.add(entries[i]);
                 }
             }
+            
+            allInvolved.add(this);
             
             return allInvolved;
         }
@@ -468,8 +464,7 @@ public class PolishDataset
      */
     @SuppressWarnings("null")
     public void swapRandomEntries() {
-        boolean success = false;
-        while (!success) {
+        while (true) {
             MultiTool.sleepThread(100);
             // Generate two positions to be swapped.
             int pos1 = random.nextInt(list.size());
@@ -483,8 +478,8 @@ public class PolishDataset
             boolean ce1IsOp = ce1 instanceof Operator;
             boolean ce2IsOp = ce2 instanceof Operator;
             
-            System.err.println("ce1: " + (ce1IsOp ? ce1 : "[" + ce1.getId() + "]"));
-            System.err.println("ce2: " + (ce2IsOp ? ce2 : "[" + ce2.getId() + "]"));
+            //System.err.println("ce1: " + (ce1IsOp ? ce1 : "[" + ce1.getId() + "]"));
+            //System.err.println("ce2: " + (ce2IsOp ? ce2 : "[" + ce2.getId() + "]"));
             
             if (!ce1IsOp && !ce2IsOp) {
                 // Neither are operators, so simply swap them.
@@ -524,7 +519,6 @@ public class PolishDataset
             } else if (ce1IsOp && !ce2IsOp) {
                 Operator op1 = (Operator) ce1;
                 entries1 = op1.listAllInvolved();
-                entries1.add(op1);
                 System.err.println("Involved [1]: " + entries1);
                 // If the {@code ce2} is involved in the operator {@code ce1},
                 // redo the process.
@@ -535,7 +529,6 @@ public class PolishDataset
             } else if (!ce1IsOp && ce2IsOp) {
                 Operator op2 = (Operator) ce2;
                 entries2 = op2.listAllInvolved();
-                entries2.add(op2);
                 System.err.println("Involved [2]: " + entries2);
                 // If the {@code ce1} is involved in the operator {@code ce2},
                 // redo the process.
@@ -564,20 +557,56 @@ public class PolishDataset
                 firstPos = pos2;
             }
             
-            // Remove {@code last.size()} entries at the latter
-            // position.
+            // Remove {@code last.size()} entries at the latter position.
+            /*
             for (int i = 0; i < last.size(); i++) {
                 list.remove(lastPos - i);
             }
-            list.addAll(lastPos, first);
+            */
+            list.removeAll(first);
+            list.removeAll(last);
+            list.addAll(lastPos - first.size() - last.size() + 1, first);
+            list.addAll(firstPos - first.size() + 1, last);
             
-            // Remove {@code first.size()} entries at the former
-            // position.
+            // Remove {@code first.size()} entries at the former position.
+            /*
             for (int i = 0; i < first.size(); i++) {
                 list.remove(firstPos - i);
             }
-            list.addAll(firstPos, last);
-            success = true;
+            */
+            return;
+        }
+    }
+    
+    /**
+     * Randomly re-chooses an operator from the list.
+     */
+    public void changeOperator() {
+        if (list.size() < 3) return;
+        
+        boolean found = false;
+        while (!found) {
+            int loc = random.nextInt(list.size());
+            CompareEntry entry = list.get(loc);
+            if (entry instanceof Operator) {
+                found = true;
+                list.set(loc, new Operator(random.nextBoolean()));
+            }
+        }
+    }
+    
+    /**
+     * Randomly rotates an entry from the list..
+     */
+    public void randomRotate() {
+        boolean found = false;
+        while (!found) {
+            int loc = random.nextInt(list.size());
+            CompareEntry entry = list.get(loc);
+            if (!(entry instanceof Operator)) {
+                found = true;
+                entry.setRotation(random.nextBoolean());
+            }
         }
     }
     
@@ -688,13 +717,20 @@ public class PolishDataset
         dataset.add(new Rectangle(7, 7));
         dataset.add(new Rectangle(8, 8));
         
+        /*
         PolishDataset pd = new PolishDataset(dataset);
         System.out.println(pd.toShortString());
         pd.init();
         System.out.println(pd.toShortString());
+        MultiTool.sleepThread(100);
         pd.swapRandomEntries();
+        MultiTool.sleepThread(100);
         System.out.println(pd.toShortString());
-                
+        MultiTool.sleepThread(100);
+        pd.swapRandomEntries();
+        MultiTool.sleepThread(100);
+        System.out.println(pd.toShortString());
+        /**/
         /*
         Dataset dataset = new Dataset(-1, true, 8);
         dataset.add(new Rectangle(1, 1));
@@ -709,7 +745,7 @@ public class PolishDataset
         PolishDataset pd = new PolishDataset(dataset);
         pd.init();
         System.out.println(pd.toString());
-*/
+        /**/
     }
     
 }
