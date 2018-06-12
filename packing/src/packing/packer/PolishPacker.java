@@ -23,7 +23,8 @@ import java.util.Stack;
 /**
  * Packer that packs a polish notation dataset.
  */
-public class PolishPacker extends Packer {
+public class PolishPacker
+        extends Packer {
     
     
     public PolishPacker() {
@@ -83,7 +84,7 @@ public class PolishPacker extends Packer {
         // Note that at this point the merged entry dataset has exactly one
         // entry containing all entries of the dataset.
         Rectangle meRec = med.iterator().next().getRec();
-        pd.setSize(meRec.width, meRec.height);
+        pd.calcEffectiveSize();
         
         return pd;
     }
