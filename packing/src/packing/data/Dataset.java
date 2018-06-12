@@ -403,9 +403,9 @@ public class Dataset
     public int getArea() {
         return width * height;
     }
-
+    
     /**
-     * @return the actual area used by the entries in this dataset.
+     * @return the actual width used by the entries in this dataset.
      */
     public int getEffectiveWidth() {
         int max = 0;
@@ -413,6 +413,31 @@ public class Dataset
             max = Math.max(max, entry.getRec().x + entry.getRec().width);
         }
         return max;
+    }
+    
+    /**
+     * @return the actual height used by the entries in this dataset.
+     */
+    public int getEffectiveHeight() {
+        int max = 0;
+        for (CompareEntry entry : this) {
+            max = Math.max(max, entry.getRec().x + entry.getRec().height);
+        }
+        return max;
+    }
+    
+    /**
+     * Calculates and sets the effective width and height as width and height
+     * of the dataset.
+     * If the dataset has a fixed height, only the width will be updated.
+     */
+    public void calcEffectiveSize() {
+        if (fixedHeight) {
+            setWidth(getEffectiveWidth());
+            
+        } else {
+            setSize(getEffectiveWidth(), getEffectiveHeight());
+        }
     }
     
     /**
