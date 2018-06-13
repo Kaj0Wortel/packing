@@ -29,6 +29,12 @@ public class YCoordinatePacker extends Packer {
     public int recursions = 0;
     public int numCalls = 0;
 
+    private Deque<Point> corners;
+    private int[] emptySquares;
+    private int[] lastEmptySquare;
+    private boolean[][] cells;
+    private NavigableSet<Integer> positions;
+
     @Override
     public Dataset pack(Dataset dataset) {
         /*
@@ -37,8 +43,15 @@ public class YCoordinatePacker extends Packer {
         X-coordinate.
          */
         numCalls++;
-        Deque<Point> corners = new ArrayDeque<>();
+        corners = new ArrayDeque<>();
         corners.add(new Point(0,0));
+
+        emptySquares = new int[dataset.getWidth()];
+        Arrays.fill(emptySquares, dataset.getHeight());
+
+        lastEmptySquare = new int[dataset.getWidth()];
+
+        positions = calculateSubsetSums(dataset);
 
         Dataset solution = Dataset.createEmptyDataset(dataset);
 
@@ -50,16 +63,44 @@ public class YCoordinatePacker extends Packer {
         }
 
         for (CompareEntry entry : dataset) {
-            List<CompareEntry> entryList = entryLists.get(entry.getRec().x);
+            Rectangle rec = entry.getRec();
+            List<CompareEntry> entryList = entryLists.get(rec.x);
             entryList.add(entry);
+            for (int i = rec.x; i < rec.x + rec.width; i++) {
+                emptySquares[i] -= rec.height;
+            }
         }
 
         // cells[x][y] is true if (x, y) is filled by some rectangle
-        boolean[][] cells = new boolean[dataset.getWidth()][dataset.getHeight()];
+        cells = new boolean[dataset.getWidth()][dataset.getHeight()];
 
-        solution =  backtrack(entryLists, solution, cells, corners);
+        solution =  backtrack(entryLists, solution);
         //Logger.write(String.format("Y-packer: %,d recursions", recursions));
         return solution;
+    }
+
+    /**
+     * Calculate the subset sum of heights of every entry in the dataset.
+     *
+     * @param dataset The dataset for which to calculate the sum.
+     * @return Sorted list of integers in the subset sum.
+     */
+    public NavigableSet<Integer> calculateSubsetSums(Dataset dataset) {
+        Set<Integer> positionSet = new HashSet<>();
+        positionSet.add(0);
+        int maxHeight = dataset.getHeight();
+
+        for (CompareEntry entry : dataset) {
+            Rectangle rec = entry.getRec();
+            Set<Integer> newPositions = new HashSet<>();
+            for (int position : positionSet) {
+                if (position + rec.height < maxHeight) {
+                    newPositions.add(position + rec.height);
+                }
+            }
+            positionSet.addAll(newPositions);
+        }
+        return new TreeSet<>(positionSet);
     }
 
     /**
@@ -181,7 +222,7 @@ public class YCoordinatePacker extends Packer {
      * @param corners Empty lower-left corners where a rectangle can be placed.
      * @return A valid and complete solution, or null.
      */
-    private Dataset backtrack(List<List<CompareEntry>> entryLists, Dataset solution, boolean[][] cells, Deque<Point> corners){
+    private Dataset backtrack(List<List<CompareEntry>> entryLists, Dataset solution){
         recursions++;
         if (corners.isEmpty()) {
             if (entryLists.stream().allMatch(List::isEmpty)) {
@@ -215,7 +256,7 @@ public class YCoordinatePacker extends Packer {
                 CompareEntry addedEntry = solution.add(entry);
                 corners.addAll(updatedCorners);
 
-                Dataset possibleSolution = backtrack(entryLists, solution, cells, corners);
+                Dataset possibleSolution = backtrack(entryLists, solution);
                 if (possibleSolution != null) {
                     return possibleSolution;
                 }
@@ -226,6 +267,31 @@ public class YCoordinatePacker extends Packer {
                 entry.setLocation(p.x, 0);
 
                 entryList.add(k, entry);
+            }
+        }
+
+        if (lastEmptySquare[p.x] != p.y) {
+            for (int i : positions.tailSet(p.y + 1)) {
+                Rectangle rec = new Rectangle(p.x, p.y, 1, i - p.y);
+                List<Point> updatedCorners = getNewCorners(solution, cells, rec, p);
+
+                emptySquares[p.x] -= i;
+                placeRectangle(cells, rec, p);
+                corners.addAll(updatedCorners);
+
+                int last = lastEmptySquare[p.x];
+                lastEmptySquare[p.x] = p.y + i;
+
+                Dataset possibleSolution = backtrack(entryLists, solution);
+                if (possibleSolution != null) {
+                    return possibleSolution;
+                }
+
+                lastEmptySquare[p.x] = last;
+
+                corners.removeAll(updatedCorners);
+                removeRectangle(cells, rec);
+                emptySquares[p.x] += i;
             }
         }
 

@@ -3,6 +3,7 @@ package packing.generator;
 
 
 // Packing imports
+
 import packing.data.CompareEntry;
 import packing.data.Dataset;
 import packing.gui.ShowDataset;
@@ -15,8 +16,7 @@ import packing.tools.StreamLogger;
 //##########
 // Java imports
 import java.awt.Rectangle;
-import java.util.Comparator;
-import java.util.PriorityQueue;
+import java.util.*;
 
 
 /**
@@ -76,7 +76,10 @@ public class OptimalBoundingBoxGenerator extends Generator {
         maxArea = greedyPacked.getArea();
         maxWidth = greedyPacked.getWidth();
 
-        boundingBoxHeap = createInitialHeap(dataset, minWidth, maxWidth, minArea);
+        NavigableSet<Integer> widths = calculateSubsetSums(dataset, true);
+        NavigableSet<Integer> heights = calculateSubsetSums(dataset, false);
+
+        boundingBoxHeap = createInitialHeap(dataset, widths, heights, minArea);
 
         //REMOVE AFTER
         //Rectangle rectangle = new Rectangle(4,13);
@@ -106,13 +109,44 @@ public class OptimalBoundingBoxGenerator extends Generator {
                 } else if (!dataset.isFixedHeight()) {
                     // else increase height and put the new boundingBox in the heap
                     //System.out.println("Nope");
-                    height++;
-                    rect.setSize(width, height);
-                    boundingBoxHeap.add(rect);
+                    Integer h = heights.higher(height);
+                    if (h != null) {
+                        rect.setSize(width, h);
+                        boundingBoxHeap.add(rect);
+                    }
                 }
             }
         }
         Logger.write("Finished");
+    }
+
+    /**
+     * Calculate the subset sum of width (and heights, if rotations are allowed)
+     * of every entry in the dataset, up to the dataset's width.
+     *
+     * @param dataset The dataset for which to calculate the sum.
+     * @return Sorted list of integers in the subset sum.
+     */
+    public NavigableSet<Integer> calculateSubsetSums(Dataset dataset, boolean horizontal) {
+        Set<Integer> positionSet = new HashSet<>();
+        positionSet.add(0);
+
+        for (CompareEntry entry : dataset) {
+            Rectangle rec = entry.getNormalRec();
+            Set<Integer> newPositions = new HashSet<>();
+            for (int position : positionSet) {
+                if (dataset.allowRotation()) {
+                    newPositions.add(position + rec.width);
+                    newPositions.add(position + rec.height);
+                } else if (horizontal) {
+                    newPositions.add(position + rec.width);
+                } else {
+                    newPositions.add(position + rec.height);
+                }
+            }
+            positionSet.addAll(newPositions);
+        }
+        return new TreeSet<>(positionSet);
     }
 
     /**
@@ -185,14 +219,23 @@ public class OptimalBoundingBoxGenerator extends Generator {
      * @return a heap with the initial set of boxes, containing boxes
      * of every width between minWidth and maxWidth, with an appropriate minHeight
      */
-    public PriorityQueue<Rectangle> createInitialHeap(Dataset dataset, int minWidth, int maxWidth, int minArea) {
+    public PriorityQueue<Rectangle> createInitialHeap(Dataset dataset, NavigableSet<Integer> widths,
+                                                      NavigableSet<Integer> heights, int minArea) {
         PriorityQueue<Rectangle> initialHeap = new PriorityQueue<>(Comparator.comparingLong(
                 rec -> ((long) rec.width) * ((long) rec.height)
         ));
         // Loop over all possible widths
-        for (int i = minWidth; i < maxWidth; i++) {
+        for (int i : widths) {
             //System.out.println(i);
-            int height = dataset.isFixedHeight() ? dataset.getHeight() : determineHeight(dataset, i, minArea);
+            int height;
+
+            if (dataset.isFixedHeight()) {
+                height = dataset.getHeight();
+            } else {
+                Integer h = heights.ceiling(determineHeight(dataset, i, minArea));
+                if (h == null) continue;
+                height = h;
+            }
             // System.out.println(i + "Width and Height" + height);
             Rectangle rect = new Rectangle(i, height);
             initialHeap.add(rect);
@@ -247,11 +290,11 @@ public class OptimalBoundingBoxGenerator extends Generator {
         Dataset result = generator.generate(data);
         //time calculation
         long runtime = System.currentTimeMillis() - startTime;
-        int mins = (int) runtime/60000;
-        int remainder = (int)runtime-mins*60000;
-        int secs = remainder/1000;
-        int millsecs = remainder - secs*1000;
-        System.out.println("Runtime: " + mins + "min " + secs + "s " + millsecs + "ms." );               
+        int mins = (int) runtime / 60000;
+        int remainder = (int) runtime - mins * 60000;
+        int secs = remainder / 1000;
+        int millsecs = remainder - secs * 1000;
+        System.out.println("Runtime: " + mins + "min " + secs + "s " + millsecs + "ms.");
         System.out.println("Runtime in milliseconds: " + (System.currentTimeMillis() - startTime) + " ms");
         MultiTool.sleepThread(200);
         System.err.println();
