@@ -229,6 +229,11 @@ public class OptimalBoundingBoxGenerator extends Generator {
         ));
         // Loop over all possible widths
         for (int i : widths) {
+            if (i <= 0) {
+                System.out.println(i);
+                continue;
+            }
+            
             //System.out.println(i);
             int height;
 
