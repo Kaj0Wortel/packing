@@ -205,6 +205,23 @@ public class YCoordinatePacker extends Packer {
 
         return updatedCorners;
     }
+    
+    public boolean exterminator(Dataset solution){
+        boolean[][] testGrid = new boolean[solution.getWidth()][solution.getHeight()];
+        
+        for(CompareEntry entry: solution){
+            Rectangle rec = entry.getRec();
+            for (int i = rec.x; i < rec.x + rec.width; i++) {
+                for (int j = rec.y; j < rec.y + rec.height; j++) {
+                    if (testGrid[i][j]) {
+                        return true;
+                    }
+                }
+            }
+            
+        }        
+        return false;
+    }
 
     /**
      * Place entries using backtracking. Get the first empty corner, and try
@@ -221,6 +238,9 @@ public class YCoordinatePacker extends Packer {
         recursions++;
         if (corners.isEmpty()) {
             if (entryLists.stream().allMatch(List::isEmpty)) {
+                if(exterminator(solution)){
+                    return null;
+                }
                 return solution;
             }
             return null;

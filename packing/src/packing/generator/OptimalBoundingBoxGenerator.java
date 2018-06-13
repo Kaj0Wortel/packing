@@ -254,7 +254,7 @@ public class OptimalBoundingBoxGenerator extends Generator {
         // Logger setup (to disable logging, comment next line).
 //        MultiTool.sleepThread(10000);
 
-        Dataset data = new Dataset(11, false, 15);
+        Dataset data = new Dataset(-1, false, 15);
         Logger.setDefaultLogger(new StreamLogger(System.out));
         long startTime = System.currentTimeMillis();
         data.add(new Rectangle(2, 6));
@@ -268,12 +268,12 @@ public class OptimalBoundingBoxGenerator extends Generator {
         data.add(new Rectangle(1, 1));
         data.add(new Rectangle(2, 2));
         data.add(new Rectangle(3, 3));
-        /**
+        
         data.add(new Rectangle(4, 4));
         data.add(new Rectangle(5, 5));
         data.add(new Rectangle(6, 6));
         data.add(new Rectangle(2, 6));
-        data.add(new Rectangle(6, 2));
+        data.add(new Rectangle(2, 2));
         /**
         data.add(new Rectangle(2, 6));
         data.add(new Rectangle(6, 2));
