@@ -229,7 +229,10 @@ public class OptimalBoundingBoxGenerator extends Generator {
         ));
         // Loop over all possible widths
         for (int i : widths) {
-            //System.out.println(i);
+            if (i <= 0) {
+                System.out.println(i);
+                continue;
+            }
             int height;
 
             if (dataset.isFixedHeight()) {
