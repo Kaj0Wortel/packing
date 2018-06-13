@@ -15,7 +15,6 @@ import packing.tools.MultiTool;
 //##########
 // Java imports
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -26,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import packing.gui.ShowDataset;
 
 
 /**
@@ -178,6 +178,7 @@ public class CrossoverPopulation
         
         @Override
         public CrossInstance crossover(CrossInstance other) {
+            System.out.println("crossover");
             // Obtain all double instances from both sets.
             Set<EntryValue> doubleSet = new HashSet<>();
             Map<Integer, EntryValue> entryMap = new HashMap<>();
@@ -214,74 +215,8 @@ public class CrossoverPopulation
             
             // Merge the two available crossover maps into an array.
             List<Operator> opOrder = new LinkedList<Operator>();
-            generateOpOrder(opOrder, opMaps[0]);
-            generateOpOrder(opOrder, opMaps[1]);
-            
-            
-            
-            
-            /*
-            Set<Operator> thisKeySet = opMap.keySet();
-            Set<Operator> otherKeySet = other.opMap.keySet();
-            Operator[] opOrder = MultiTool.iteratorToArray(
-                    new MultiIterator(thisKeySet.iterator(),
-                            otherKeySet.iterator()), Operator.class,
-                            thisKeySet.size() + otherKeySet.size());
-            */
-            // The comparator used to compare keys based on their scores.
-            /*
-            final Comparator<Operator> SCORE_COMP
-                    = Comparator.comparingDouble(op -> {
-                if (opMap.containsKey(op)) {
-                    return opMap.get(op);
-                
-                } else if (other.opMap.containsKey(op)) {
-                    return other.opMap.get(op);
-                    
-                } else {
-                    throw new IllegalStateException(
-                            "The element has no origin!");
-                }
-            });
-            
-            // Sort the array
-            Arrays.sort(opOrder, SCORE_COMP);
-            *//*
-            // Create comparator to sort the entries based on the scores.
-            final Comparator<Operator> SCORE_COMP
-                    = Comparator.comparingDouble(op -> {
-                if (opMap.containsKey(op)) {
-                    return opMap.get(op);
-                
-                } else if (other.opMap.containsKey(op)) {
-                    return other.opMap.get(op);
-                    
-                } else {
-                    throw new IllegalStateException(
-                            "The element has no origin!");
-                }
-            });
-            
-            // Sort the list based on scores.
-            Collections.sort(opOrder, SCORE_COMP);
-            *//*
-            // Select which genes should be used in the crossover.
-            // Note: here is choosen for a {@code LinkedList} since this
-            // type of list doesn't produce fail-safe iterators.
-            LinkedList<Operator> opList = new LinkedList<>();
-            for (int i = 0; i < opOrder.size(); i++) {
-                double score = (opMap.containsKey(opOrder[i])
-                        ? opMap.get(opOrder[i])
-                        : other.opMap.get(opOrder[i]));
-                
-                if (random.nextDouble() < CROSSOVER_RATE * score) {
-                    opList.add(opOrder[i]);
-                }
-            }
-            */
-            // Remove double occurances for the allowed solutions.
-            // (semi-random removal for duplicate entries based on score)
-            //filterDoubles(opMap, other.opMap, opList);
+            opOrder.addAll(generateOpOrder(opMaps[0]));
+            opOrder.addAll(generateOpOrder(opMaps[1]));
             
             // Add all remaining parts as format hints.
             List<CompareEntry>[] hints = new List[opOrder.size()];
@@ -302,13 +237,12 @@ public class CrossoverPopulation
         /**
          * @return a sorted list based on the scores in {@link #opMap}.
          */
-        public List<Operator> generateOpOrder(List<Operator> opList,
-                Map<Operator, Double> map) {
+        public List<Operator> generateOpOrder(Map<Operator, Double> map) {
             Set<Operator> keySet = map.keySet();
             List<Operator> result = MultiTool.iterableToList(
-                    keySet, keySet.size(), opList);
+                    keySet, keySet.size(), new LinkedList<Operator>());
             
-            Collections.sort(opList,
+            Collections.sort(result,
                     Comparator.comparingDouble(op -> {
                         return map.get(op);
                     })
@@ -317,84 +251,6 @@ public class CrossoverPopulation
             return result;
         }
         
-        /**
-         * Filters out all doubles.
-         * 
-         * @param opMap map containing all scores for the operators.
-         * @param opList list containing all operators to use.
-         *//*// TMP
-        public void filterDoubles(Map<Operator, Double> opMap1,
-                Map<Operator, Double> opMap2, LinkedList<Operator> opList) {
-            // For all operators...
-            ListIterator<Operator> opIt = opList.listIterator(0);
-            if (!opIt.hasNext()) return;
-            for (int i = 0; i < opList.size() - 1 && opIt.hasNext(); i++) {
-                Operator op = opIt.next();
-                System.out.println("i: " + i);
-                
-                // ...check if there aren't any other operators that have
-                // the same involved entries.
-                ListIterator<Operator> cmpIt = opList.listIterator(i + 1);
-                if (!cmpIt.hasNext()) continue;
-                for (int j = i + 1; j < opList.size() && cmpIt.hasNext(); j++) {
-                    Operator cmp = cmpIt.next();
-                    System.out.println("j: " + j);
-                    
-                    // If tow operators found that aren't disjoint,
-                    // remove either of them (since either of them should
-                    // be contained in the other).
-                    if (!MultiTool.disjoint(op.listAllEntries(),
-                            cmp.listAllEntries(), CompareEntry.SORT_ID)) {
-                        System.err.println("DOUBLES <-------------------");
-                        // If so, remove either of them.
-                        // Note that the indices remain ok since these are
-                        // linked lists.
-                        double opScore = (opMap1.containsKey(op)
-                                ? opMap1.get(op)
-                                : opMap2.get(op));
-                        double cmpScore = (opMap1.containsKey(cmp)
-                                ? opMap1.get(cmp)
-                                : opMap2.get(cmp));
-                        if (calcRemove(opScore, cmpScore)) {
-                            // Remove op.
-                            opIt.remove();
-                            // Revert one element back since the list size has
-                            // been reduced.
-                            i--;
-                            j--;
-                            break;
-                            
-                        } else {
-                            // Remove cmp.
-                            cmpIt.remove();
-                            // Revert one element back since the list size has
-                            // been reduced.
-                            j--;
-                        }
-                    }
-                    
-                }
-                
-            }
-            
-        }
-        */
-        
-        /**
-         * Compares the two scores and decides whether the first or
-         * the second score should be removed.
-         * 
-         * @param cmpVal1 first value to be compared.
-         * @param cmpVal2 second value to be compared.
-         * @return true iff the first score should be removed.
-         *     false iff the second score should be removed.
-         *//*
-        public boolean calcRemove(double cmpScore1, double cmpScore2) {
-            double diff = (cmpScore2 - cmpScore1 + 1)*0.5;
-            // 0 <= diff <= 1
-            return random.nextDouble() < diff;
-        }
-        */
         @Override
         public void mutate() {
             // Swap entries + operators.
@@ -470,7 +326,10 @@ public class CrossoverPopulation
         while (list.size() < POPULATION_SIZE + repairDiscard) {
             Dataset clone = dataset.clone();
             clone.shuffle();
-            list.add(new CrossInstance(clone));
+            CrossInstance ci = new CrossInstance(clone);
+            ci.pd.init();
+            list.add(ci);
+            
         }
     }
     
@@ -479,6 +338,7 @@ public class CrossoverPopulation
     public void calculateFitness() {
         int discarded = 0;
         Iterator<CrossInstance> it = list.iterator();
+        boolean newBest = false;
         while (it.hasNext()) {
             CrossInstance inst = it.next();
             inst.calculateFitness(new PolishPacker());
@@ -493,13 +353,18 @@ public class CrossoverPopulation
             
             // Update {@link #best} when a better solution has been found.
             if (best == null || inst.pd.getArea() < best.getArea()) {
-                best = inst.pd.clone();
+                newBest = true;
+                best = inst.pd;
             }
             
             // Update the value for taking the number of discarded
             // instances in account.
             repairDiscard += Math.ceil(
                     (discarded - repairDiscard) * DISCARD_LEARNING_RATE);
+        }
+        
+        if (newBest) {
+            best = best.clone();
         }
     }
     
@@ -513,10 +378,12 @@ public class CrossoverPopulation
         
         List<CrossInstance> newPopulation = new LinkedList<>();
         
-        // Sort all entries based on area.
+        System.out.println("sorting");
+        // Sort all entries from big to small area.
         Collections.sort(list, Comparator.comparingInt(cd -> {
-            return -cd.pd.getArea();
+            return cd.pd.getArea();
         }));
+        System.out.println("sorting done");
         
         // Add the best instance by default.
         if (best != null) list.add(new CrossInstance(best));
@@ -524,11 +391,15 @@ public class CrossoverPopulation
         // Calculate the alpha value to use in the formula for determining
         // the parents.
         calcAlpha(list.size());
+        System.out.println("alpha calced");
         
         // Create the new population.
         while (newPopulation.size() < POPULATION_SIZE + repairDiscard) {
+            System.out.println("adding entry");
             CrossInstance parent1 = selectParent(null);
+            System.out.println("selected parent 1");
             CrossInstance parent2 = selectParent(parent1);
+            System.out.println("selected parent 2");
             newPopulation.add(parent1.crossover(parent2));
         }
         
@@ -546,21 +417,23 @@ public class CrossoverPopulation
      * 
      * Calculation:
      * We approach the generating using the following formula:
-     * {@code n = N * x^alpha}
+     * {@code (n+1) = N * x^alpha}
      * where:
      * - N = total number of entries.
      * - n = choosen index of the list.
      * - x = random generated value s.t. {@code 0 <= x <= 1}.
      * Now we want {@code SELECT_FIRST_CHANCE} as chance for the first entry.
      * Therefore must hold:
-     * {@code n * (1 - SELECT_FIRST_CHANCE)^alpha = n - 1}
-     * {@code ==> (1 - SELECT_FIRST_CHANCE)^alpha = (n - 1) / n}
-     * {@code ==> alpha = log_{1 - SELECT_FIRST_CHANCE} ((n-1)/n)}
+     * {@code (n+1) * (1 - SELECT_FIRST_CHANCE)^alpha = n}
+     * {@code ==> (1 - SELECT_FIRST_CHANCE)^alpha = n / (n + 1)}
+     * {@code ==> alpha = log_{1 - SELECT_FIRST_CHANCE} (n/(n+1))}
      * 
      * Note that {@code n >= 1} must hold.
      */
     private void calcAlpha(int n) {
-        alpha = Math.log((n - 1) / n) / Math.log(1 - SELECT_FIRST_CHANCE);
+        alpha = Math.log(n / (n + 1.0)) / Math.log(1.0 - SELECT_FIRST_CHANCE);
+        System.out.println("up=" + Math.log(n / (n + 1.0)));
+        System.out.println("log=" + Math.log(1 - SELECT_FIRST_CHANCE));
     }
     
     /**
@@ -575,11 +448,13 @@ public class CrossoverPopulation
     private CrossInstance selectParent(CrossInstance ignore) {
         CrossInstance ci = null;
         do {
-            int index = (int) (list.size()
+            int index = (int) Math.floor(list.size()
                     * Math.pow(random.nextDouble(), alpha));
+            if (index >= list.size()) {
+                index = list.size() - 1;
+            }
             ci = list.get(index);
-            
-        } while (ci != ignore);
+        } while (ci == ignore);
         
         return ci;
     }
@@ -604,8 +479,28 @@ public class CrossoverPopulation
         return new CrossInstance(ds);
     }
     
+    // tmp
+    public static void main(String[] args) {
+        Dataset ds = new Dataset(-1, false, 4);
+        ds.add(1, 1);
+        ds.add(2, 2);
+        ds.add(3, 3);
+        ds.add(4, 4);
+        
+        CrossoverPopulation cp = new CrossoverPopulation(ds, -1);
+        for (int i = 0; i < 4; i++) {
+            System.out.println("fitness " + i);
+            cp.calculateFitness();
+            System.out.println("selection " + i);
+            cp.performSelection();
+            System.out.println("mutation " + i);
+            cp.performMutation();
+        }
+        new ShowDataset(cp.getBest());
+    }
     
     // tmp
+    /*
     public static void main(String[] args) {
         // Create dataset.
         Dataset ds = new Dataset(-1, false, 4);
@@ -665,8 +560,8 @@ public class CrossoverPopulation
         System.out.println(MultiTool.disjoint(
                 opList.get(0).listAllEntries(),
                 opList.get(1).listAllEntries(), CompareEntry.SORT_ID));
-        */
+        *//*
         System.out.println("new opList: " + opList);
     }
-    
+    /**/
 }

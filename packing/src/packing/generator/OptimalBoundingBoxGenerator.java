@@ -161,6 +161,10 @@ public class OptimalBoundingBoxGenerator extends Generator {
      * @return minimum height required for this box
      */
     public int determineHeight(Dataset dataset, int width, int minArea) {
+        if (width == 0) {
+            //System.err.println("width: " + width);
+            return Integer.MAX_VALUE;
+        }
         if (dataset.allowRotation()) {
             return minArea / width;
         }
@@ -229,7 +233,10 @@ public class OptimalBoundingBoxGenerator extends Generator {
         ));
         // Loop over all possible widths
         for (int i : widths) {
-            //System.out.println(i);
+            if (i <= 0) {
+                //System.out.println("width: " + i);
+                continue;
+            }
             int height;
 
             if (dataset.isFixedHeight()) {
