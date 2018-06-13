@@ -71,7 +71,10 @@ public class OptimalBoundingBoxGenerator extends Generator {
         }
 
         // Determine maxArea and maxWidth.
-        Packer greedyPacker = new GreedyPackerFactory().create(greedyWidth, greedyHeight);
+        Packer greedyPacker = new GreedyPackerFactory().create(
+                greedyWidth,
+                dataset.isFixedHeight() ? dataset.getHeight() : greedyHeight
+        );
         Dataset greedyPacked = greedyPacker.pack(dataset);
         maxArea = greedyPacked.getArea();
         maxWidth = greedyPacked.getWidth();
@@ -89,7 +92,7 @@ public class OptimalBoundingBoxGenerator extends Generator {
             Logger.write(rect + " BoundingBox");
 
             if ((rect.width * rect.height) >= greedyPacked.getArea()) {
-                Logger.write("Using greedy solution...");
+                Logger.write(String.format("Using greedy solution... [%dx%d]", greedyPacked.getWidth(), greedyPacked.getHeight()));
                 best = greedyPacked;
             } else {
                 //System.out.println(rect.width + "width");
