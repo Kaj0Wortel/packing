@@ -8,7 +8,9 @@ import packing.tools.MultiTool;
 
 //##########
 // Java imports
-import java.awt.Rectangle;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -184,6 +186,10 @@ public class PolishDataset
             
             // Search the current entry in the list and set the endpoint.
             // Safe call due to inverse polish notation.
+            MultiTool.sleepThread(10);
+            if (!list.contains(this)) {
+                System.err.println(this + " ----- " + toShortString());
+            }
             while (it.previous() != this) { }
             
             // Safe call due to inverse polish notation.
@@ -256,7 +262,7 @@ public class PolishDataset
         public int size() {
             if (size != -1) return size;
             
-            getEntries();
+            calcEntries();
             size = 0;
             
             for (CompareEntry entry : entries) {
@@ -381,6 +387,9 @@ public class PolishDataset
                 pd.list.add(new Operator(op.dir));
                 
             } else {
+                if (!it.hasNext()) {
+                    System.err.println(toShortString());
+                }
                 CompareEntry entry2 = it.next();
                 pd.list.add(map.get(entry2.id));
             }
@@ -406,10 +415,12 @@ public class PolishDataset
         if (hints == null || hints.length == 0) return;
         
         // Merge all entries into one list.
-        List<CompareEntry> entries = new LinkedList<CompareEntry>();
+        Set<CompareEntry> entries = new HashSet<CompareEntry>();
         for (List<CompareEntry> hint : hints) {
             entries.addAll(hint);
         }
+        
+        List<CompareEntry> newList = new LinkedList<CompareEntry>();
         
         // Safely remove the entries to be replaced and
         // savely add entries at their new locations.
@@ -419,20 +430,20 @@ public class PolishDataset
         while (listIt.hasNext()) {
             CompareEntry entry = listIt.next();
             // An operator is certainly not in the list.
-            if (entry instanceof Operator) continue;
+            if (entry instanceof Operator) {
+                newList.add(entry);
+                continue;
+            }
             
             if (entries.contains(entry)) {
-                // Remove all matching entries from the entry list.
-                while (entries.remove(entry)) {}
-                // Remove the entry from the list.
-                listIt.remove();
+                // Remove the entries from the entry list.
+                entries.remove(entry);
                 
                 // Check if there are any hints left to add.
                 if (hintCounter < hints.length) {
                     // If there are, use the next hint to replace the removed
                     // element.
-                    List<CompareEntry> hint = hints[hintCounter++];
-                    list.addAll(loc, hint);
+                    newList.addAll(hints[hintCounter++]);
                     
                 } else {
                     // If not, remove the corresponding operator.
@@ -444,6 +455,7 @@ public class PolishDataset
                             if (--entryCounter <= 0) {
                                 it.remove();
                                 break;
+                                
                             }
                         } else {
                             entryCounter++;
@@ -456,6 +468,8 @@ public class PolishDataset
             
             loc++;
         }
+        
+        list = newList;
     }
     
     /**
@@ -465,7 +479,6 @@ public class PolishDataset
     @SuppressWarnings("null")
     public void swapRandomEntries() {
         while (true) {
-            MultiTool.sleepThread(100);
             // Generate two positions to be swapped.
             int pos1 = random.nextInt(list.size());
             int pos2 = random.nextInt(list.size());
@@ -498,8 +511,8 @@ public class PolishDataset
                 entries2 = op2.listAllInvolved();
                 entries1.add(op1);
                 entries2.add(op2);
-                System.err.println("Involved [1]: " + entries1);
-                System.err.println("Involved [2]: " + entries2);
+                //System.err.println("Involved [1]: " + entries1);
+                //System.err.println("Involved [2]: " + entries2);
                 
                 // First add all entries from 1 to a set for easy lookup.
                 Set<CompareEntry> set = new HashSet<>();
@@ -519,7 +532,7 @@ public class PolishDataset
             } else if (ce1IsOp && !ce2IsOp) {
                 Operator op1 = (Operator) ce1;
                 entries1 = op1.listAllInvolved();
-                System.err.println("Involved [1]: " + entries1);
+                //System.err.println("Involved [1]: " + entries1);
                 // If the {@code ce2} is involved in the operator {@code ce1},
                 // redo the process.
                 if (entries1.contains(ce2)) continue;
@@ -529,7 +542,7 @@ public class PolishDataset
             } else if (!ce1IsOp && ce2IsOp) {
                 Operator op2 = (Operator) ce2;
                 entries2 = op2.listAllInvolved();
-                System.err.println("Involved [2]: " + entries2);
+                //System.err.println("Involved [2]: " + entries2);
                 // If the {@code ce1} is involved in the operator {@code ce2},
                 // redo the process.
                 if (entries2.contains(ce1)) continue;
@@ -601,13 +614,16 @@ public class PolishDataset
     public void randomRotate() {
         boolean found = false;
         while (!found) {
+            //MultiTool.sleepThread(10);
             int loc = random.nextInt(list.size());
             CompareEntry entry = list.get(loc);
+            //System.err.println(entry + "----------------------");
             if (!(entry instanceof Operator)) {
                 found = true;
                 entry.setRotation(random.nextBoolean());
             }
         }
+            //MultiTool.sleepThread(10);
     }
     
     /**
@@ -705,7 +721,7 @@ public class PolishDataset
         list = new LinkedList<CompareEntry>();
     }
     
-    
+    /*
     public static void main(String[] args) {
         Dataset dataset = new Dataset(-1, true, 3);
         dataset.add(new Rectangle(1, 1));
@@ -745,7 +761,9 @@ public class PolishDataset
         PolishDataset pd = new PolishDataset(dataset);
         pd.init();
         System.out.println(pd.toString());
-        /**/
+        /*
     }
+    */
+    
     
 }
