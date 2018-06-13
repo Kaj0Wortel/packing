@@ -205,23 +205,6 @@ public class YCoordinatePacker extends Packer {
 
         return updatedCorners;
     }
-    
-    public boolean exterminator(Dataset solution){
-        boolean[][] testGrid = new boolean[solution.getWidth()][solution.getHeight()];
-        
-        for(CompareEntry entry: solution){
-            Rectangle rec = entry.getRec();
-            for (int i = rec.x; i < rec.x + rec.width; i++) {
-                for (int j = rec.y; j < rec.y + rec.height; j++) {
-                    if (testGrid[i][j]) {
-                        return true;
-                    }
-                }
-            }
-            
-        }        
-        return false;
-    }
 
     /**
      * Place entries using backtracking. Get the first empty corner, and try
@@ -230,17 +213,12 @@ public class YCoordinatePacker extends Packer {
      *
      * @param entryLists Entries to be placed.
      * @param solution The current (partial) solution.
-     * @param cells Cells in the bounding box and whether they've been filled.
-     * @param corners Empty lower-left corners where a rectangle can be placed.
      * @return A valid and complete solution, or null.
      */
     private Dataset backtrack(List<List<CompareEntry>> entryLists, Dataset solution){
         recursions++;
         if (corners.isEmpty()) {
             if (entryLists.stream().allMatch(List::isEmpty)) {
-                if(exterminator(solution)){
-                    return null;
-                }
                 return solution;
             }
             return null;
@@ -286,16 +264,18 @@ public class YCoordinatePacker extends Packer {
         }
 
         if (lastEmptySquare[p.x] != p.y) {
-            for (int i : positions.tailSet(p.y + 1)) {
-                Rectangle rec = new Rectangle(p.x, p.y, 1, i - p.y);
+            for (int i : positions.tailSet(p.y, false)) {
+                int height = i - p.y;
+                if (height > emptySquares[p.x]) break;
+                Rectangle rec = new Rectangle(p.x, p.y, 1, height);
                 List<Point> updatedCorners = getNewCorners(solution, cells, rec, p);
 
-                emptySquares[p.x] -= i;
+                emptySquares[p.x] -= height;
                 placeRectangle(cells, rec, p);
                 corners.addAll(updatedCorners);
 
                 int last = lastEmptySquare[p.x];
-                lastEmptySquare[p.x] = p.y + i;
+                lastEmptySquare[p.x] = i;
 
                 Dataset possibleSolution = backtrack(entryLists, solution);
                 if (possibleSolution != null) {
@@ -306,7 +286,7 @@ public class YCoordinatePacker extends Packer {
 
                 corners.removeAll(updatedCorners);
                 removeRectangle(cells, rec);
-                emptySquares[p.x] += i;
+                emptySquares[p.x] += height;
             }
         }
 
