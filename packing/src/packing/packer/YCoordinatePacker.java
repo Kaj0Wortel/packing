@@ -11,12 +11,7 @@ import packing.data.Dataset;
 // Java imports
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 
 /**
