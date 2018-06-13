@@ -233,6 +233,7 @@ public class OptimalBoundingBoxGenerator extends Generator {
             int height;
 
             if (dataset.isFixedHeight()) {
+                if (determineHeight(dataset, i, minArea) > dataset.getHeight()) continue;
                 height = dataset.getHeight();
             } else {
                 Integer h = heights.ceiling(determineHeight(dataset, i, minArea));
