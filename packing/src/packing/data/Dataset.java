@@ -82,10 +82,13 @@ public class Dataset
         public Entry(Entry clone) {
             super(clone.id);
             this.useRotation = clone.useRotation;
-            this.rec = (Rectangle) clone.getNormalRec().clone();
-            if (clone.rotatedRec != null) this.rotatedRec
-                    = (Rectangle) clone.rotatedRec.clone();
             
+            if (clone.rec != null)
+                this.rec = new Rectangle(clone.rec);
+            else this.rec = null;
+            
+            if (clone.rotatedRec != null) 
+                this.rotatedRec = new Rectangle(clone.rotatedRec);
         }
         
         
@@ -175,7 +178,9 @@ public class Dataset
             if (!(obj instanceof Dataset.Entry)) return false;
             Entry entry = (Entry) obj;
             
-            return rec.equals(entry.rec) &&
+            return ((rec == null && entry.rec == null) ||
+                       (rec != null && entry.rec != null &&
+                        rec.equals(entry.rec))) &&
                     useRotation == entry.useRotation &&
                     id == entry.id;
         }
