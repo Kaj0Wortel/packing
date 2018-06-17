@@ -416,7 +416,7 @@ public class CrossoverPopulation
             // If there is a fixed height, check if the solution is allowed.
             // If not, delete the solution.
             if (inst.pd.isFixedHeight() &&
-                    inst.pd.getHeight() > inst.pd.getEffectiveHeight()) {
+                    inst.pd.getEffectiveHeight() > inst.pd.getHeight()) {
                 it.remove();
                 discarded++;
                 continue;
@@ -597,6 +597,7 @@ public class CrossoverPopulation
         System.err.println(cp.getBest());
         System.err.println("-----------------------");
         new ShowDataset(cp.getBest());
+        System.err.println(cp.getBest().getEffectiveHeight());
     }
     
     // tmp
