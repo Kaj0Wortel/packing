@@ -7,14 +7,18 @@ import packing.data.Dataset;
 import packing.data.PolishDataset;
 import packing.data.PolishDataset.Operator;
 import packing.data.CompareEntry;
+import packing.gui.ShowDataset;
 import packing.packer.Packer;
 import packing.packer.PolishPacker;
 import packing.tools.MultiTool;
+import packing.tools.Logger;
+import packing.tools.StreamLogger;
 
 
 //##########
 // Java imports
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -25,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import packing.gui.ShowDataset;
 
 
 /**
@@ -35,19 +38,19 @@ import packing.gui.ShowDataset;
 public class CrossoverPopulation
         extends Population {
     // The size of the population.
-    final public static int POPULATION_SIZE = 200;
+    final public static int POPULATION_SIZE = 300;
     
     // The maximum relative size for operators that might be crossed over.
-    final public static double MAX_REL_SIZE = 0.5;
-    // The crossover rate for every crossover.
-    final public static double CROSSOVER_RATE = 0.2;
+    final public static double MAX_REL_SIZE = 0.75;
+    // The minimal score to allow operators to be crossed over.
+    final public static double CROSSOVER_SCORE_LIMIT = 0.5;
     
     // Mutation rate of the amount of swaps performed
-    final public static double MUTATE_SWAP_ENTRY_RATE = 0.1;
+    final public static double MUTATE_SWAP_ENTRY_RATE = 0.4;
     // Mutation rate of the number of new randomly generated operators.
-    final public static double MUTATE_CHANGE_OPERATOR_RATE = 0.1;
+    final public static double MUTATE_CHANGE_OPERATOR_RATE = 0.4;
     // Mutation rate of the number of randomly rotated entries.
-    final public static double MUTATE_ROTATION_RATE = 0.1;
+    final public static double MUTATE_ROTATION_RATE = 0.4;
     
     // Learning rate for fixing the number of discarded solutions with
     // respect to {@link #POPULATION_SIZE}.
@@ -71,7 +74,7 @@ public class CrossoverPopulation
     protected List<CrossInstance> list = new LinkedList<>();
     
     // The best solution so far.
-    public Dataset best = null;
+    public PolishDataset best = null;
     
     // The current dataset.
     final public Dataset dataset;
@@ -107,8 +110,13 @@ public class CrossoverPopulation
             this.opMap = new HashMap<>();
         }
         
+        
+        /**
+         * Entry value class for keeping track of cross refferences in the
+         * possible hints.
+         */
         private class EntryValue {
-            final private CompareEntry entry;
+            final private int id;
             final private List<Map<Operator, Double>> mapList;
             final private List<Operator> opList;
             
@@ -123,7 +131,7 @@ public class CrossoverPopulation
                     Operator op) {
                 this.mapList = new ArrayList<Map<Operator, Double>>();
                 this.opList = new ArrayList<Operator>();
-                this.entry = entry;
+                this.id = entry.getId();
                 this.mapList.add(map);
                 this.opList.add(op);
             }
@@ -143,51 +151,62 @@ public class CrossoverPopulation
             public boolean equals(Object obj) {
                 if (!(obj instanceof EntryValue)) return false;
                 EntryValue val = (EntryValue) obj;
-                return entry.getId() == val.entry.getId();
+                return id == val.id;
             }
             
             @Override
             public int hashCode() {
-                return MultiTool.calcHashCode(entry.getId());
+                return MultiTool.calcHashCode(id);
             }
             
             /**
              * Removes all operators from the maps except for one.
+             * Uses randomness and the available score for each entry.
              */
             public void removeAllExceptOne() {
-                int best = 0;
-                double bestVal = 0;
+                if (opList.size() <= 1) return;
+                
+                Operator best = null;
+                double bestVal = -1.0;
                 for (int i = 0; i < mapList.size(); i++) {
                     Double score = mapList.get(i).get(opList.get(i));
                     if (score == null) score = -1.0;
                     double val = score * random.nextDouble();
                     if (val > bestVal) {
                         bestVal = val;
-                        best = i;
+                        best = opList.get(i);
                     }
                 }
                 
+                // Remove the not chosen ones from the hash-table
                 for (int i = 0; i < opList.size(); i++) {
-                    if (i == best) continue;
+                    if (opList.get(i) == best) continue;
                     mapList.get(i).remove(opList.get(i));
-                    opList.remove(i);
                 }
+                
+                // Remove the not chosen ones from the opList.
+                opList.clear();
+                opList.add(best);
             }
             
         }
         
+        
         @Override
         public CrossInstance crossover(CrossInstance other) {
-            System.out.println("crossover");
-            // Obtain all double instances from both sets.
-            Set<EntryValue> doubleSet = new HashSet<>();
-            Map<Integer, EntryValue> entryMap = new HashMap<>();
+            //System.out.println("crossover");
             
+            // Create a clone of the operator maps.
             Map<Operator, Double>[] opMaps = new Map[] {
                 new HashMap<>(opMap),
                 new HashMap<>(other.opMap)
             };
             
+            // Map conaining all bundled entry mappings hashed via ID.
+            Map<Integer, EntryValue> entryMap = new HashMap<>();
+            
+            // Add all entries involved by each operator to a map, and keep
+            // track of multiple occurances of entries.
             for (int i = 0; i < 2; i++) {
                 Iterator<Operator> it = opMaps[i].keySet().iterator();
                 while (it.hasNext()) {
@@ -197,7 +216,6 @@ public class CrossoverPopulation
                         EntryValue ev = entryMap.get(entry.getId());
                         if (ev != null) {
                             ev.addEntry(opMaps[i], op);
-                            doubleSet.add(ev);
                             
                         } else {
                             entryMap.put(entry.getId(),
@@ -209,63 +227,111 @@ public class CrossoverPopulation
             
             // Reduce all double instances such that there is at most one
             // instance left for each.
-            for (EntryValue value : doubleSet) {
-                value.removeAllExceptOne();
+            Set<Map.Entry<Integer, EntryValue>> entrySet = entryMap.entrySet();
+            for (Map.Entry<Integer, EntryValue> entry : entrySet) {
+                EntryValue val = entry.getValue();
+                val.removeAllExceptOne();
+                Logger.write(val.id + ": entry value: " + val.opList);
             }
             
-            // Merge the two available crossover maps into an array.
-            List<Operator> opOrder = new LinkedList<Operator>();
-            opOrder.addAll(generateOpOrder(opMaps[0]));
-            opOrder.addAll(generateOpOrder(opMaps[1]));
+            // Create keyset from the crossover score maps.
+            Set<Operator>[] keySet = new Set[] {
+                opMaps[0].keySet(),
+                opMaps[1].keySet()
+            };
             
-            // Add all remaining parts as format hints.
+            // List all operators that are still allowed.
+            List<Operator> opOrder = MultiTool.iterableToList(
+                    keySet[0], keySet[0].size(), new LinkedList<Operator>());
+            opOrder.addAll(MultiTool.iterableToList(
+                    keySet[1], keySet[1].size(), new LinkedList<Operator>()));
+            
+            // Convert the choosen operators to format hints.
             List<CompareEntry>[] hints = new List[opOrder.size()];
             int i = 0;
             for (Operator op : opOrder) {
                 List<CompareEntry> hint = op.listAllInvolved();
-                hint.add(op);
                 hints[i++] = hint;
             }
+            Logger.write("hints: " + Arrays.toString(hints));
             
             // Create a new instance using the format hints.
-            CrossInstance ci = new CrossInstance(pd.clone());
+            printTMP(0);
+            PolishDataset clone = pd.clone();
+            Logger.write("crossover-clone: " + clone.toShortString());
+            if (hints.length > 0) Logger.write(hints[0].toString());
+            CrossInstance ci = new CrossInstance(clone);
+            Logger.write("number of hints: " + hints.length);
             ci.pd.regenerate(hints);
+            Logger.write("crossover-regenerated:" + ci.pd.toShortString());
+            printTMP(1);
+            containsDoubles(ci.pd);
             
             return ci;
         }
         
         /**
-         * @return a sorted list based on the scores in {@link #opMap}.
+         * TMP print statement.
+         * @param i 
          */
-        public List<Operator> generateOpOrder(Map<Operator, Double> map) {
-            Set<Operator> keySet = map.keySet();
-            List<Operator> result = MultiTool.iterableToList(
-                    keySet, keySet.size(), new LinkedList<Operator>());
+        private void printTMP(int i) {
+            //MultiTool.sleepThread(10);
+            Logger.write("pd [" + i + "]: " + pd.toShortString());
+            //MultiTool.sleepThread(10);
+        }
+        
+        /**
+         * TMP check whether the given polish dataset contains doubles.
+         */
+        private void containsDoubles(PolishDataset pd) {
+            Set<Integer> elemSet = new HashSet<>();
+            Set<Integer> opSet = new HashSet<>();
             
-            Collections.sort(result,
-                    Comparator.comparingDouble(op -> {
-                        return map.get(op);
-                    })
-            );
-            
-            return result;
+            Iterator<CompareEntry> it = pd.fullListIterator();
+            while (it.hasNext()) {
+                CompareEntry entry = it.next();
+                Set<Integer> checkSet;
+                int id = entry.getId();
+                
+                if (entry instanceof Operator) {
+                    checkSet = opSet;
+                } else {
+                    checkSet = elemSet;
+                }
+                
+                if (checkSet.contains(id)) {
+                    Logger.write("ERROR DATASET [short]: " + pd.toShortString());
+                    Logger.write("ERROR DATASET [long ]: " + pd);
+                    throw new RuntimeException("num: " + id);
+                }
+                
+                checkSet.add(id);
+            }
         }
         
         @Override
         public void mutate() {
             // Swap entries + operators.
             for (int i = 0; i < pd.size() * MUTATE_SWAP_ENTRY_RATE; i++) {
+                printTMP(2);
                 pd.swapRandomEntries();
+                printTMP(3);
             }
             
             // Mutate operators.
             for (int i = 0; i < pd.size() * MUTATE_CHANGE_OPERATOR_RATE; i++) {
+                printTMP(4);
                 pd.changeOperator();
+                printTMP(5);
             }
             
-            // Rotate entries.
-            for (int i = 0; i < pd.size() * MUTATE_ROTATION_RATE; i++) {
-                pd.randomRotate();
+            // Rotate entries if allowed.
+            if (dataset.allowRotation()) {
+                for (CompareEntry entry : pd) {
+                    if (random.nextDouble() < MUTATE_ROTATION_RATE) {
+                        entry.rotate();
+                    }
+                }
             }
         }
         
@@ -294,8 +360,12 @@ public class CrossoverPopulation
                 score += 0.5;
                 // 0 < score <= 1
                 
-                opMap.put(op, score);
+                // Only high enough scores should be considered.
+                if (score > CROSSOVER_SCORE_LIMIT) {
+                    opMap.put(op, score);
+                }
             }
+            pd.calcEffectiveSize();
         }
         
         @Override
@@ -310,11 +380,11 @@ public class CrossoverPopulation
         
     }
     
-    public CrossoverPopulation(Dataset dataset, int height) {
+    public CrossoverPopulation(Dataset dataset) {
         this.dataset = dataset;
         this.list = new LinkedList<>();
-        if (height <= 0) this.height = Integer.MAX_VALUE;
-        else this.height = height;
+        if (dataset.isFixedHeight()) this.height = Integer.MAX_VALUE;
+        else this.height = dataset.getHeight();
         
         init();
     }
@@ -349,62 +419,80 @@ public class CrossoverPopulation
                     inst.pd.getHeight() > inst.pd.getEffectiveHeight()) {
                 it.remove();
                 discarded++;
+                continue;
             }
             
             // Update {@link #best} when a better solution has been found.
             if (best == null || inst.pd.getArea() < best.getArea()) {
                 newBest = true;
                 best = inst.pd;
+                Logger.write("new best: " + best.toShortString());
             }
-            
-            // Update the value for taking the number of discarded
-            // instances in account.
-            repairDiscard += Math.ceil(
-                    (discarded - repairDiscard) * DISCARD_LEARNING_RATE);
         }
+        
+        // Update the value for taking the number of discarded
+        // instances in account.
+        repairDiscard += Math.ceil(
+                (discarded - repairDiscard) * DISCARD_LEARNING_RATE);
         
         if (newBest) {
             best = best.clone();
+            
+            Logger.write("[1] best: " + best.toShortString());
         }
     }
     
     @Override
     public void performSelection() {
         if (list.size() <= 1) {
-            if (best != null) list.add(new CrossInstance(best));
+            if (best != null && list.isEmpty())
+                list.add(new CrossInstance(best));
             init();
             return;
         }
         
         List<CrossInstance> newPopulation = new LinkedList<>();
         
-        System.out.println("sorting");
+        //System.out.println("sorting");
+        
+        // Add the best instance by default.
+        if (best != null) list.add(new CrossInstance(best));
+        Logger.write("selection best: " + best.toShortString());
+        
         // Sort all entries from big to small area.
         Collections.sort(list, Comparator.comparingInt(cd -> {
             return cd.pd.getArea();
         }));
-        System.out.println("sorting done");
-        
-        // Add the best instance by default.
-        if (best != null) list.add(new CrossInstance(best));
+        //System.out.println("sorting done");
         
         // Calculate the alpha value to use in the formula for determining
         // the parents.
         calcAlpha(list.size());
-        System.out.println("alpha calced");
+        //System.out.println("alpha calced");
         
+        //MultiTool.sleepThread(10);
+        // tmp
+        for (CrossInstance inst : list) {
+            Logger.write("old: " + inst.pd.toShortString());
+        }
+        //MultiTool.sleepThread(10);
         // Create the new population.
         while (newPopulation.size() < POPULATION_SIZE + repairDiscard) {
-            System.out.println("adding entry");
+            //System.out.println("adding entry");
             CrossInstance parent1 = selectParent(null);
-            System.out.println("selected parent 1");
+            //System.out.println("selected parent 1");
             CrossInstance parent2 = selectParent(parent1);
-            System.out.println("selected parent 2");
+            //System.out.println("selected parent 2");
             newPopulation.add(parent1.crossover(parent2));
         }
         
+        //MultiTool.sleepThread(10);
         // Update the population.
         list = newPopulation;
+        // tmp
+        for (CrossInstance inst : list) {
+            Logger.write("new: " + inst.pd.toShortString());
+        }
     }
     
     /**
@@ -432,8 +520,8 @@ public class CrossoverPopulation
      */
     private void calcAlpha(int n) {
         alpha = Math.log(n / (n + 1.0)) / Math.log(1.0 - SELECT_FIRST_CHANCE);
-        System.out.println("up=" + Math.log(n / (n + 1.0)));
-        System.out.println("log=" + Math.log(1 - SELECT_FIRST_CHANCE));
+        //System.out.println("up=" + Math.log(n / (n + 1.0)));
+        //System.out.println("log=" + Math.log(1 - SELECT_FIRST_CHANCE));
     }
     
     /**
@@ -468,34 +556,46 @@ public class CrossoverPopulation
     
     @Override
     public Dataset getBest() {
-        return best;
+        return best.getDataset();
     }
     
-    
-    
-    
-    // TMP
-    public CrossInstance create(Dataset ds) {
-        return new CrossInstance(ds);
-    }
     
     // tmp
     public static void main(String[] args) {
-        Dataset ds = new Dataset(-1, false, 4);
+        //Logger.setDefaultLogger(new StreamLogger(System.err));
+
+        Dataset ds = new Dataset(-1, true, 5);
         ds.add(1, 1);
         ds.add(2, 2);
         ds.add(3, 3);
         ds.add(4, 4);
+        ds.add(5, 5);
         
-        CrossoverPopulation cp = new CrossoverPopulation(ds, -1);
-        for (int i = 0; i < 4; i++) {
-            System.out.println("fitness " + i);
+        ds.add(6, 6);
+        ds.add(7, 7);
+        ds.add(8, 8);
+        ds.add(9, 9);
+        ds.add(10, 10);
+        
+        ds.add(11, 11);
+        ds.add(12, 12);
+        ds.add(13, 13);
+        ds.add(14, 14);
+        ds.add(15, 15);
+        /**/
+        CrossoverPopulation cp = new CrossoverPopulation(ds);
+        for (int i = 0; i < 1000; i++) {
+            //System.out.println("fitness " + i);
             cp.calculateFitness();
-            System.out.println("selection " + i);
+            //System.out.println("selection " + i);
             cp.performSelection();
-            System.out.println("mutation " + i);
+            //System.out.println("mutation " + i);
             cp.performMutation();
         }
+        System.err.println("-----------------------");
+        System.err.println(cp.best.toShortString());
+        System.err.println(cp.getBest());
+        System.err.println("-----------------------");
         new ShowDataset(cp.getBest());
     }
     
@@ -551,7 +651,7 @@ public class CrossoverPopulation
         
         MultiTool.sleepThread(10);
         for (Operator op : opList) {
-            System.err.println(op.listAllEntries());
+            Logger.write(op.listAllEntries());
         }
         MultiTool.sleepThread(10);
         //crossInv.filterDoubles(map, map, opList);

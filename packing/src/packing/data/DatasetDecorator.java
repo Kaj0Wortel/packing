@@ -23,6 +23,8 @@ public abstract class DatasetDecorator
                 dataset.allowRot, dataset.numRect);
         height = dataset.height;
         this.dataset = dataset;
+        this.width = dataset.width;
+        this.height = dataset.height;
     }
     
     @Override

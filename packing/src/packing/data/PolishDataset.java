@@ -3,14 +3,14 @@ package packing.data;
 
 
 // Packing imports
+import packing.genetic.CrossoverPopulation;
 import packing.tools.MultiTool;
+import packing.tools.Logger;
 
 
 //##########
 // Java imports
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,7 +34,12 @@ public class PolishDataset
     // The used random variable.
     final private static Random random = new Random();
     
+    // Counter for the operators. Must be static.
     private static int opCounter = 0;
+    
+    // Map containing a map from the id's to the corresponding entries.
+    final private Map<Integer, CompareEntry> entryMap = new HashMap<>();
+    
     
     /**
      * Direction class for denoting the operator direction.
@@ -51,10 +56,12 @@ public class PolishDataset
      * Operator class.
      * This class denotes the type of operator used in the polish notation.
      */
-    public class Operator
-            extends Dataset.Entry {
+    public static class Operator
+            extends CompareEntry {
         // Direction of the operator.
         final private Direction dir;
+        
+        private PolishDataset pd;
         
         // The total wasted area of the operator.
         private int wastedArea = 0;
@@ -73,9 +80,10 @@ public class PolishDataset
          * 
          * @param dir the direcion of the operator.
          */
-        public Operator(Direction dir) {
-            super(null, opCounter++);
+        public Operator(Direction dir, PolishDataset pd) {
+            super(opCounter++);
             this.dir = dir;
+            this.pd = pd;
         }
         
         /**
@@ -85,8 +93,8 @@ public class PolishDataset
          * @param option converted to {@link Direction#RIGHT} if true,
          *     {@link Direction#UP} otherwise.
          */
-        public Operator(boolean option) {
-            this(option ? Direction.RIGHT : Direction.UP);
+        public Operator(boolean option, PolishDataset pd) {
+            this(option ? Direction.RIGHT : Direction.UP, pd);
         }
         
         /**
@@ -95,9 +103,18 @@ public class PolishDataset
          * @param entry1 the first entry of the operation.
          * @param entry2 the second entry of the operation.
          */
-        public Operator() {
-            this(random.nextBoolean());
+        public Operator(PolishDataset pd) {
+            this(random.nextBoolean(), pd);
         }
+        
+        /**
+         * Clone constructor.
+         * @param clone operator to be cloned.
+         */
+        public Operator(Operator clone) {
+            this(clone.dir, clone.pd);
+        }
+        
         
         /**
          * @return the direction of the operator.
@@ -164,6 +181,13 @@ public class PolishDataset
         }
         
         /**
+         * @return the list of the outer class of this operator.
+         */
+        protected List<CompareEntry> getList() {
+            return pd.list;
+        }
+        
+        /**
          * @return array containing the two entries involved with
          *     this operation. Note that either two can be an operator.
          * 
@@ -182,14 +206,11 @@ public class PolishDataset
          */
         public CompareEntry[] calcEntries() {
             entries = new CompareEntry[2];
-            ListIterator<CompareEntry> it = list.listIterator(list.size());
+            ListIterator<CompareEntry> it
+                    = pd.list.listIterator(pd.list.size());
             
             // Search the current entry in the list and set the endpoint.
             // Safe call due to inverse polish notation.
-            MultiTool.sleepThread(10);
-            if (!list.contains(this)) {
-                System.err.println(this + " ----- " + toShortString());
-            }
             while (it.previous() != this) { }
             
             // Safe call due to inverse polish notation.
@@ -224,7 +245,8 @@ public class PolishDataset
             
             for (int i = 0; i < 2; i++) {
                 if (entries[i] instanceof Operator) {
-                    allEntries.addAll(((Operator) entries[i]).listAllEntries());
+                    Operator op = (Operator) entries[i];
+                    allEntries.addAll(op.listAllEntries());
                     
                 } else {
                     allEntries.add(entries[i]);
@@ -276,6 +298,63 @@ public class PolishDataset
             return size;
         }
         
+        /**
+         * Sets the {@code PolishDataset} from which the
+         * {@link PolishDataset#list} should be obtained from.
+         * @param pd 
+         */
+        protected void setPD(PolishDataset pd) {
+            this.pd = pd;
+        }
+        
+        @Override
+        public Operator clone() {
+            return new Operator(this);
+        }
+        
+        /**
+         * Unsupported operations.
+         */
+        @Override
+        public Rectangle getRec() {
+            throw new UnsupportedOperationException();
+        }
+        
+        @Override
+        public void setSize(int width, int height) {
+            throw new UnsupportedOperationException();
+        }
+        
+        @Override
+        public void setLocation(int x, int y) {
+            throw new UnsupportedOperationException();
+        }
+        
+        @Override
+        public void rotate() {
+            throw new UnsupportedOperationException();
+        }
+        
+        @Override
+        public void setRotation(boolean rotation) {
+            throw new UnsupportedOperationException();
+        }
+        
+        @Override
+        public boolean useRotation() {
+            throw new UnsupportedOperationException();
+        }
+        
+        @Override
+        public Rectangle getRotatedRec() {
+            throw new UnsupportedOperationException();
+        }
+        
+        @Override
+        public Rectangle getNormalRec() {
+            throw new UnsupportedOperationException();
+        }
+        
     }
     
     
@@ -319,7 +398,7 @@ public class PolishDataset
          * the next element. If no next element exists, then
          * {@code next == null}.
          */
-        private void calcNext() {
+        protected void calcNext() {
             if (next != null) return;
             
             while (it.hasNext()) {
@@ -342,6 +421,9 @@ public class PolishDataset
     public PolishDataset(Dataset dataset) {
         super(dataset);
         list = new LinkedList<CompareEntry>();
+        for (CompareEntry entry : dataset) {
+            entryMap.put(entry.getId(), entry);
+        }
     }
     
     /**
@@ -356,6 +438,9 @@ public class PolishDataset
     public PolishDataset(Dataset dataset, List<CompareEntry> list) {
         super(dataset);
         this.list = list;
+        for (CompareEntry entry : dataset) {
+            entryMap.put(entry.getId(), entry);
+        }
     }
     
     /**
@@ -371,35 +456,28 @@ public class PolishDataset
         // Create a new instance using the cloned dataset.
         PolishDataset pd = new PolishDataset(cloneData, new LinkedList<>());
         
-        // Map all entries of the cloned dataset with respect to their ID's.
-        Map<Integer, CompareEntry> map = new HashMap<>();
-        for (CompareEntry entry : cloneData) {
-            map.put(entry.id, entry);
-        }
-        
         // Copy all values based on their ID.
         // Create new entries for {@code Operator}s.
         Iterator<CompareEntry> it = list.iterator();
         while (it.hasNext()) {
-            CompareEntry entry1 = it.next();
-            if (entry1 instanceof Operator) {
-                Operator op = (Operator) entry1;
-                pd.list.add(new Operator(op.dir));
+            CompareEntry entry = it.next();
+            if (entry instanceof Operator) {
+                Operator op = (Operator) entry;
+                pd.list.add(new Operator(op.dir, pd));
                 
             } else {
-                if (!it.hasNext()) {
-                    System.err.println(toShortString());
-                }
-                CompareEntry entry2 = it.next();
-                pd.list.add(map.get(entry2.id));
+                pd.list.add(pd.entryMap.get(entry.id));
             }
         }
+        
+        pd.setSize(width, height);
         
         return pd;
     }
     
     /**
-     * Regenerates the solution, but then using the provided hints.
+     * Regenerates the solution using the current configuration
+     *  and the provided hints.
      * 
      * @param hints used to generate a solution. If no hints are given,
      *     then no changes will occur.
@@ -414,10 +492,18 @@ public class PolishDataset
     public void regenerate(List<CompareEntry>... hints) {
         if (hints == null || hints.length == 0) return;
         
-        // Merge all entries into one list.
-        Set<CompareEntry> entries = new HashSet<CompareEntry>();
+        // Merge all id's of the entries entries into one set.
+        Set<Integer> entries = new HashSet<>();
+        // Store the id of the last enties of each hint in one set.
+        Set<Integer> endEntries = new HashSet<>();
         for (List<CompareEntry> hint : hints) {
-            entries.addAll(hint);
+            for (CompareEntry entry : hint) {
+                entries.add(entry.getId());
+            }
+            
+            if (!hint.isEmpty()) {
+                endEntries.add(hint.get(hint.size() - 1).getId());
+            }
         }
         
         List<CompareEntry> newList = new LinkedList<CompareEntry>();
@@ -425,25 +511,59 @@ public class PolishDataset
         // Safely remove the entries to be replaced and
         // savely add entries at their new locations.
         ListIterator<CompareEntry> listIt = list.listIterator(0);
+        Set<CompareEntry> ignoreSet = new HashSet<>();
         int hintCounter = 0;
         int loc = 0;
         while (listIt.hasNext()) {
             CompareEntry entry = listIt.next();
-            // An operator is certainly not in the list.
+            // The entry is an operator.
             if (entry instanceof Operator) {
-                newList.add(entry);
-                continue;
-            }
-            
-            if (entries.contains(entry)) {
-                // Remove the entries from the entry list.
-                entries.remove(entry);
+                Operator op = (Operator) entry;
+                // Only add the operator if it is not in the ignore set.
+                if (!ignoreSet.contains(entry)) {
+                    newList.add(op);
+                }
+                
+            } else if (entries.contains(entry.getId())) {
+                // Skip all entries that should be removed.
+                // Note that this is allowed since each separate hint should
+                // be a valid polish notation on it's own. Moreover, the
+                // iteration also stops when the end of a hint has been reached
+                // (e.g. the end of a "big multi-entry" in polish notation,
+                // which can be represented as a single element).
+                /*
+                if (!endEntries.contains(entry.getId())) {
+                    while (listIt.hasNext()) {
+                        CompareEntry entry2 = listIt.next();
+                        if (entry2 instanceof Operator) {
+                            listIt.previous();
+                            break;
+                        }
+                        
+                        if (!entries.contains(entry2.getId()) ||
+                                endEntries.contains(entry2.getId())) break;
+                    }
+                }*/
                 
                 // Check if there are any hints left to add.
                 if (hintCounter < hints.length) {
-                    // If there are, use the next hint to replace the removed
-                    // element.
-                    newList.addAll(hints[hintCounter++]);
+                    // If there are, use the next hint to replace the
+                    // removed element.
+                    for (CompareEntry entry2 : hints[hintCounter++]) {
+                        if (entry2 instanceof Operator) {
+                            newList.add(entry2.clone());
+                            
+                        } else {
+                            newList.add(entryMap.get(entry2.getId()));
+                        }
+                    }
+                    
+                    // tmp
+                    List<CompareEntry> tmp = list;
+                    list = newList;
+                    Logger.write("regen[0]: " + hints[hintCounter - 1]);
+                    Logger.write("regen[1]: " + toShortString());
+                    list = tmp;
                     
                 } else {
                     // If not, remove the corresponding operator.
@@ -453,23 +573,35 @@ public class PolishDataset
                         CompareEntry entry2 = it.next();
                         if (entry2 instanceof Operator) {
                             if (--entryCounter <= 0) {
-                                it.remove();
+                                ignoreSet.add(entry2);
                                 break;
-                                
                             }
                         } else {
                             entryCounter++;
                         }
                     }
                     
+                    // tmp
+                    List<CompareEntry> tmp = list;
+                    list = newList;
+                    Logger.write("regen[2]: " + toShortString());
+                    list = tmp;
                 }
                 
+            } else {
+                newList.add(entryMap.get(entry.getId()));
             }
             
             loc++;
         }
         
         list = newList;
+        for (CompareEntry entry : list) {
+            if (entry instanceof Operator) {
+                Operator op = (Operator) entry;
+                op.setPD(this);
+            }
+        }
     }
     
     /**
@@ -491,8 +623,8 @@ public class PolishDataset
             boolean ce1IsOp = ce1 instanceof Operator;
             boolean ce2IsOp = ce2 instanceof Operator;
             
-            //System.err.println("ce1: " + (ce1IsOp ? ce1 : "[" + ce1.getId() + "]"));
-            //System.err.println("ce2: " + (ce2IsOp ? ce2 : "[" + ce2.getId() + "]"));
+            //Logger.write("ce1: " + (ce1IsOp ? ce1 : "[" + ce1.getId() + "]"));
+            //Logger.write("ce2: " + (ce2IsOp ? ce2 : "[" + ce2.getId() + "]"));
             
             if (!ce1IsOp && !ce2IsOp) {
                 // Neither are operators, so simply swap them.
@@ -509,10 +641,8 @@ public class PolishDataset
                 Operator op2 = (Operator) ce2;
                 entries1 = op1.listAllInvolved();
                 entries2 = op2.listAllInvolved();
-                entries1.add(op1);
-                entries2.add(op2);
-                //System.err.println("Involved [1]: " + entries1);
-                //System.err.println("Involved [2]: " + entries2);
+                //Logger.write("Involved [1]: " + entries1);
+                //Logger.write("Involved [2]: " + entries2);
                 
                 // First add all entries from 1 to a set for easy lookup.
                 Set<CompareEntry> set = new HashSet<>();
@@ -532,7 +662,7 @@ public class PolishDataset
             } else if (ce1IsOp && !ce2IsOp) {
                 Operator op1 = (Operator) ce1;
                 entries1 = op1.listAllInvolved();
-                //System.err.println("Involved [1]: " + entries1);
+                //Logger.write("Involved [1]: " + entries1);
                 // If the {@code ce2} is involved in the operator {@code ce1},
                 // redo the process.
                 if (entries1.contains(ce2)) continue;
@@ -542,7 +672,7 @@ public class PolishDataset
             } else if (!ce1IsOp && ce2IsOp) {
                 Operator op2 = (Operator) ce2;
                 entries2 = op2.listAllInvolved();
-                //System.err.println("Involved [2]: " + entries2);
+                //Logger.write("Involved [2]: " + entries2);
                 // If the {@code ce1} is involved in the operator {@code ce2},
                 // redo the process.
                 if (entries2.contains(ce1)) continue;
@@ -570,23 +700,12 @@ public class PolishDataset
                 firstPos = pos2;
             }
             
-            // Remove {@code last.size()} entries at the latter position.
-            /*
-            for (int i = 0; i < last.size(); i++) {
-                list.remove(lastPos - i);
-            }
-            */
             list.removeAll(first);
             list.removeAll(last);
+            Logger.write(list);
             list.addAll(lastPos - first.size() - last.size() + 1, first);
             list.addAll(firstPos - first.size() + 1, last);
-            
-            // Remove {@code first.size()} entries at the former position.
-            /*
-            for (int i = 0; i < first.size(); i++) {
-                list.remove(firstPos - i);
-            }
-            */
+            Logger.write("pd: " + toShortString());
             return;
         }
     }
@@ -603,27 +722,9 @@ public class PolishDataset
             CompareEntry entry = list.get(loc);
             if (entry instanceof Operator) {
                 found = true;
-                list.set(loc, new Operator(random.nextBoolean()));
+                list.set(loc, new Operator(this));
             }
         }
-    }
-    
-    /**
-     * Randomly rotates an entry from the list..
-     */
-    public void randomRotate() {
-        boolean found = false;
-        while (!found) {
-            //MultiTool.sleepThread(10);
-            int loc = random.nextInt(list.size());
-            CompareEntry entry = list.get(loc);
-            //System.err.println(entry + "----------------------");
-            if (!(entry instanceof Operator)) {
-                found = true;
-                entry.setRotation(random.nextBoolean());
-            }
-        }
-            //MultiTool.sleepThread(10);
     }
     
     /**
@@ -645,7 +746,7 @@ public class PolishDataset
                     (!it.hasNext() || random.nextBoolean())) {
                 // Add an operator.
                 numOp++;
-                list.add(new Operator());
+                list.add(new Operator(this));
                 
             } else {
                 // Add an element.
@@ -658,9 +759,12 @@ public class PolishDataset
         while(numOp < size - 1) {
             // Select an operator.
             numOp++;
-            Operator op = new Operator();
+            Operator op = new Operator(this);
             list.add(op);
         }
+        
+        Logger.write("init: " + toShortString());
+        calcEffectiveSize();
     }
     
     /**
@@ -690,10 +794,15 @@ public class PolishDataset
         
         int i = 0;
         for (CompareEntry entry : list) {
-            strs[i++] = entry.toString();
+            if (entry == null) {
+                strs[i++] = "null";
+            } else {
+                strs[i++] = entry.toString();
+            }
         }
         
-        return getClass().getSimpleName() + "[" + String.join("", strs) + "]";
+        return getClass().getSimpleName() + "[width=" + width + ", height="
+                + height + ", elems:["  + String.join("", strs) + "]";
     }
     
     /**
@@ -704,7 +813,9 @@ public class PolishDataset
         
         int i = 0;
         for (CompareEntry entry : list) {
-            if (entry instanceof Operator) {
+            if (entry == null) {
+                strs[i++] = "null";
+            } else if (entry instanceof Operator) {
                 strs[i++] = entry.toString();
             } else {
                 strs[i++] = "[" + entry.id + "]";
@@ -719,6 +830,16 @@ public class PolishDataset
     @Override
     public void initList() {
         list = new LinkedList<CompareEntry>();
+    }
+    
+    @Override
+    public int getEffectiveWidth() {
+        return dataset.getEffectiveWidth();
+    }
+    
+    @Override
+    public int getEffectiveHeight() {
+        return dataset.getEffectiveHeight();
     }
     
     /*
@@ -764,6 +885,7 @@ public class PolishDataset
         /*
     }
     */
-    
-    
+    public static void main(String[] args) {
+        CrossoverPopulation.main(null);
+    }/**/
 }
