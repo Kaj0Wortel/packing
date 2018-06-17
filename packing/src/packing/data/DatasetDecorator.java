@@ -19,7 +19,9 @@ public abstract class DatasetDecorator
     protected Dataset dataset;
     
     public DatasetDecorator(Dataset dataset) {
-        super(dataset.height, dataset.allowRot, dataset.numRect);
+        super((dataset.fixedHeight ? dataset.height : -1),
+                dataset.allowRot, dataset.numRect);
+        height = dataset.height;
         this.dataset = dataset;
     }
     
