@@ -426,7 +426,7 @@ public class Dataset
     public int getEffectiveHeight() {
         int max = 0;
         for (CompareEntry entry : this) {
-            max = Math.max(max, entry.getRec().x + entry.getRec().height);
+            max = Math.max(max, entry.getRec().y + entry.getRec().height);
         }
         return max;
     }
