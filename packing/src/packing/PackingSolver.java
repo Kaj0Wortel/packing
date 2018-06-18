@@ -40,7 +40,7 @@ public class PackingSolver {
     // The test file
     final public static String testFile
         = System.getProperty("user.dir") + FS + "testcases" + FS
-            //+ "03_01_h20_rn.txt";
+            + "03_01_h20_rn.txt";
             //+ "03_02_hf_rn.txt";
             //+ "03_03_h12_ry.txt";
             //+ "03_04_hf_ry.txt";
@@ -55,11 +55,12 @@ public class PackingSolver {
             //+ "10000_01_h300_rn.txt";
             //+ "10000_02_hf_ry.txt";
             //+ "10000_03_hf_rn.txt";
-            + "10000_04_h1315_ry.txt";
+            //+ "10000_04_h1315_ry.txt";
             //+ "25_01_h19_ry.txt";
             //+ "25_02_hf_ry.txt";
             //+ "25_03_hf_rn.txt";
             //+ "25_04_h74_rn.txt";
+            //+ "10_hf_rn_non_optimal.txt";
     
     final public static File[] testFiles
         = new File(System.getProperty("user.dir") + FS + "testcases")
@@ -80,11 +81,12 @@ public class PackingSolver {
             gen = new GreedyGenerator(new GreedyPackerFactory());
         } else if (input.size() >= 0 && input.size() <= 10) {
             // gen = new OptimalPointGenerator(new GreedyPackerFactory());
-            //gen = new OptimalBoundingBoxGenerator(new OptimalPackerFactory());
+            // gen = new OptimalBoundingBoxGenerator(new OptimalPackerFactory());
             gen = new MultiOptimalGenerator(
                     new OptimalPointGenerator(new GreedyPackerFactory()),
                     new OptimalBoundingBoxGenerator(new OptimalPackerFactory())
             );
+            
         } else if (input.size() > 10 && input.size() <= 25) {
             /*
             if (input.isFixedHeight()) {
@@ -93,6 +95,7 @@ public class PackingSolver {
                 gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
             }*/
             gen = new GeneticCrossoverGenerator(new GreedyPackerFactory());
+            
         } else if (input.size() > 25) {
             if (input.isFixedHeight()) {
                 gen = new FixedHeightRandomSearchGenerator(new GreedyPackerFactory());
@@ -103,7 +106,7 @@ public class PackingSolver {
     }
     
     
-    /* 
+    /**
      * Runs the application.
      * 
      * @param fileName the used file name of the data file.
@@ -128,7 +131,8 @@ public class PackingSolver {
                 }
             }
         }, 300000L - 2000L); // 5*60*1000 = 300 000, use 2000 ms space
-        //}, 5000L); // tmp
+        //}, 60000L); // tmp
+        
         
         // Create the output writer.
         OutputWriter ow = null;
@@ -160,7 +164,7 @@ public class PackingSolver {
             return;
         }
 
-        Logger.setDefaultLogger(new StreamLogger(System.err));
+        //Logger.setDefaultLogger(new StreamLogger(System.err));
         
         // Generate solution.
         //previous version(v1)
@@ -208,20 +212,20 @@ public class PackingSolver {
     public static void main(String[] args) {
         String in = null;
         String out = null;
+        boolean useGreedyPacker = false;
         /*
         if (args != null) {
             if (args.length >= 1) in = args[0];
             if (args.length >= 2) out = args[1];
             //in = testFile;
-        }*/
-
-        boolean useGreedyPacker = false;
-
+        }
+        */
+        /*
         if (args != null) {
             if (Arrays.stream(args).anyMatch("--greedy"::equals)) {
                 useGreedyPacker = true;
             }
-        }
+        }*/
         
         new PackingSolver().run(in, out, useGreedyPacker);
         /*

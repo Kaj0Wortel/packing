@@ -231,7 +231,7 @@ public class CrossoverPopulation
             for (Map.Entry<Integer, EntryValue> entry : entrySet) {
                 EntryValue val = entry.getValue();
                 val.removeAllExceptOne();
-                Logger.write(val.id + ": entry value: " + val.opList);
+                //Logger.write(val.id + ": entry value: " + val.opList);
             }
             
             // Create keyset from the crossover score maps.
@@ -253,17 +253,17 @@ public class CrossoverPopulation
                 List<CompareEntry> hint = op.listAllInvolved();
                 hints[i++] = hint;
             }
-            Logger.write("hints: " + Arrays.toString(hints));
+            //Logger.write("hints: " + Arrays.toString(hints));
             
             // Create a new instance using the format hints.
             printTMP(0);
             PolishDataset clone = pd.clone();
-            Logger.write("crossover-clone: " + clone.toShortString());
-            if (hints.length > 0) Logger.write(hints[0].toString());
+            //Logger.write("crossover-clone: " + clone.toShortString());
+            //if (hints.length > 0) Logger.write(hints[0].toString());
             CrossInstance ci = new CrossInstance(clone);
-            Logger.write("number of hints: " + hints.length);
+            //Logger.write("number of hints: " + hints.length);
             ci.pd.regenerate(hints);
-            Logger.write("crossover-regenerated:" + ci.pd.toShortString());
+            //Logger.write("crossover-regenerated:" + ci.pd.toShortString());
             printTMP(1);
             containsDoubles(ci.pd);
             
@@ -276,7 +276,7 @@ public class CrossoverPopulation
          */
         private void printTMP(int i) {
             //MultiTool.sleepThread(10);
-            Logger.write("pd [" + i + "]: " + pd.toShortString());
+            //Logger.write("pd [" + i + "]: " + pd.toShortString());
             //MultiTool.sleepThread(10);
         }
         
@@ -298,12 +298,12 @@ public class CrossoverPopulation
                 } else {
                     checkSet = elemSet;
                 }
-                
+                /*
                 if (checkSet.contains(id)) {
-                    Logger.write("ERROR DATASET [short]: " + pd.toShortString());
-                    Logger.write("ERROR DATASET [long ]: " + pd);
+                    //Logger.write("ERROR DATASET [short]: " + pd.toShortString());
+                    //Logger.write("ERROR DATASET [long ]: " + pd);
                     throw new RuntimeException("num: " + id);
-                }
+                }*/
                 
                 checkSet.add(id);
             }
@@ -426,7 +426,7 @@ public class CrossoverPopulation
             if (best == null || inst.pd.getArea() < best.getArea()) {
                 newBest = true;
                 best = inst.pd;
-                Logger.write("new best: " + best.toShortString());
+                //Logger.write("new best: " + best.toShortString());
             }
         }
         
@@ -438,7 +438,7 @@ public class CrossoverPopulation
         if (newBest) {
             best = best.clone();
             
-            Logger.write("[1] best: " + best.toShortString());
+            //Logger.write("[1] best: " + best.toShortString());
         }
     }
     
@@ -457,7 +457,7 @@ public class CrossoverPopulation
         
         // Add the best instance by default.
         if (best != null) list.add(new CrossInstance(best));
-        Logger.write("selection best: " + best.toShortString());
+        //Logger.write("selection best: " + best.toShortString());
         
         // Sort all entries from big to small area.
         Collections.sort(list, Comparator.comparingInt(cd -> {
@@ -473,7 +473,7 @@ public class CrossoverPopulation
         //MultiTool.sleepThread(10);
         // tmp
         for (CrossInstance inst : list) {
-            Logger.write("old: " + inst.pd.toShortString());
+            //Logger.write("old: " + inst.pd.toShortString());
         }
         //MultiTool.sleepThread(10);
         // Create the new population.
@@ -491,7 +491,7 @@ public class CrossoverPopulation
         list = newPopulation;
         // tmp
         for (CrossInstance inst : list) {
-            Logger.write("new: " + inst.pd.toShortString());
+            //Logger.write("new: " + inst.pd.toShortString());
         }
     }
     
@@ -564,7 +564,7 @@ public class CrossoverPopulation
     public static void main(String[] args) {
         //Logger.setDefaultLogger(new StreamLogger(System.err));
 
-        Dataset ds = new Dataset(-1, true, 5);
+        Dataset ds = new Dataset(50, true, 5);
         ds.add(1, 1);
         ds.add(2, 2);
         ds.add(3, 3);
@@ -584,13 +584,14 @@ public class CrossoverPopulation
         ds.add(15, 15);
         /**/
         CrossoverPopulation cp = new CrossoverPopulation(ds);
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 100; i++) {
             //System.out.println("fitness " + i);
             cp.calculateFitness();
             //System.out.println("selection " + i);
             cp.performSelection();
             //System.out.println("mutation " + i);
             cp.performMutation();
+            System.err.println("new population size: " + (cp.POPULATION_SIZE + cp.repairDiscard));
         }
         System.err.println("-----------------------");
         System.err.println(cp.best.toShortString());
