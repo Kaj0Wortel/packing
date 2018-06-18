@@ -26,13 +26,43 @@ public class GeneticCrossoverGenerator
     @Override
     public void generateSolution(Dataset dataset) {
         generateUpperBound(dataset);
-        Population pop = new CrossoverPopulation(dataset);
         
-        while (true) {
-            pop.calculateFitness();
-            pop.performSelection();
-            pop.performMutation();
-            best = pop.getBest();
+        for (int i = 4; i < Runtime.getRuntime().availableProcessors(); i++) {
+            createRunnable(dataset.clone()).run();
+        }
+        
+        createRunnable(dataset).run();
+    }
+    
+    /**
+     * 
+     * @param dataset
+     * @return 
+     */
+    private Runnable createRunnable(Dataset dataset) {
+        return () -> {
+            Population pop = new CrossoverPopulation(dataset);
+            
+            while (true) {
+                pop.calculateFitness();
+                pop.performSelection();
+                pop.performMutation();
+                updateBest(pop.getBest());
+            }
+        };
+    }
+    
+    /**
+     * Updates the best dataset if a new best was found.
+     * 
+     * @param dataset 
+     */
+    private void updateBest(Dataset dataset) {
+        synchronized(best) {
+            if (dataset.getArea() < best.getArea()) {
+                best = dataset;
+            }
         }
     }
+    
 }
