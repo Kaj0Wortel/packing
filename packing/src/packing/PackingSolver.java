@@ -86,11 +86,13 @@ public class PackingSolver {
                     new OptimalBoundingBoxGenerator(new OptimalPackerFactory())
             );
         } else if (input.size() > 10 && input.size() <= 25) {
+            /*
             if (input.isFixedHeight()) {
                 gen = new GeneticGenerator(new GreedyPackerFactory());
             } else {
                 gen = new WideToHighBoundingBoxGenerator(new GreedyPackerFactory());
-            }
+            }*/
+            gen = new GeneticCrossoverGenerator(new GreedyPackerFactory());
         } else if (input.size() > 25) {
             if (input.isFixedHeight()) {
                 gen = new FixedHeightRandomSearchGenerator(new GreedyPackerFactory());
