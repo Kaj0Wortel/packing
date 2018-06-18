@@ -5,6 +5,7 @@ package packing;
 // Package imports
 import packing.data.Dataset;
 import packing.generator.*;
+import packing.gui.ShowDataset;
 import packing.io.AbstractReader;
 import packing.io.FileDataReader;
 import packing.io.OutputWriter;

@@ -10,7 +10,7 @@ import packing.packer.PackerFactory;
 //##########
 
 /**
- * Class description here.
+ * Generates a greedy solution.
  */
 public class GreedyGenerator extends Generator {
 
