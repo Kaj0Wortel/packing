@@ -194,12 +194,12 @@ public class PackingSolver {
         }
         
         // tmp
-        /*
+        
         System.err.println(result);
         System.err.println("Total runtime: "
                 + (System.currentTimeMillis() - startTime) + " ms");
         if (result != null) new ShowDataset(result);
-        */
+        
     }
     
     /* 
@@ -212,20 +212,20 @@ public class PackingSolver {
     public static void main(String[] args) {
         String in = null;
         String out = null;
-        boolean useGreedyPacker = false;
         /*
         if (args != null) {
             if (args.length >= 1) in = args[0];
             if (args.length >= 2) out = args[1];
             //in = testFile;
-        }
-        */
-        /*
+        }*/
+        
+        boolean useGreedyPacker = false;
+        
         if (args != null) {
             if (Arrays.stream(args).anyMatch("--greedy"::equals)) {
                 useGreedyPacker = true;
             }
-        }*/
+        }
         
         new PackingSolver().run(in, out, useGreedyPacker);
         /*

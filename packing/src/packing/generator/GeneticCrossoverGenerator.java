@@ -5,8 +5,8 @@ package packing.generator;
 import packing.data.Dataset;
 import packing.genetic.CrossoverPopulation;
 import packing.genetic.Population;
-import packing.packer.Packer;
 import packing.packer.PackerFactory;
+import packing.tools.ThreadMonitor;
 
 
 //##########
@@ -28,7 +28,7 @@ public class GeneticCrossoverGenerator
         generateUpperBound(dataset);
         
         for (int i = 4; i < Runtime.getRuntime().availableProcessors(); i++) {
-            createRunnable(dataset.clone()).run();
+            ThreadMonitor.startThread(createRunnable(dataset.clone()));
         }
         
         createRunnable(dataset).run();
