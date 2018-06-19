@@ -75,22 +75,18 @@ public class PackingSolver {
 
     private void createGenerator(Dataset input, boolean useGreedyPacker) {
         if (gen != null) return;
-
+        
         //according to the chart(v2)
         if (useGreedyPacker) {
             gen = new GreedyGenerator(new GreedyPackerFactory());
         } else if (input.size() >= 0 && input.size() <= 10) {
             // gen = new OptimalPointGenerator(new GreedyPackerFactory());
-<<<<<<< HEAD
             // gen = new OptimalBoundingBoxGenerator(new OptimalPackerFactory());
             gen = new MultiOptimalGenerator(
                     new OptimalPointGenerator(new GreedyPackerFactory()),
                     new OptimalBoundingBoxGenerator(new OptimalPackerFactory())
             );
             
-=======
-            gen = new OptimalBoundingBoxGenerator(new OptimalPackerFactory());
->>>>>>> parent of f760ed9... optimal boundingbox quick-fix
         } else if (input.size() > 10 && input.size() <= 25) {
             /*
             if (input.isFixedHeight()) {
