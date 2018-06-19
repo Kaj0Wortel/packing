@@ -27,7 +27,7 @@ import java.util.*;
 public class OptimalBoundingBoxGenerator extends Generator {
 
     static {
-        name = "optimal";
+        name = "Optimal";
     }
 
     public OptimalBoundingBoxGenerator(PackerFactory factory) {
