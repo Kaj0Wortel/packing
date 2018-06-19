@@ -29,10 +29,10 @@ import java.util.Stack;
 public class XCoordinatePacker extends Packer {
     private Packer yPacker;
 
-    public long recursions = 0;
-    public long places = 0;
-    public long pruned = 0;
-    public long yNumCalls = 0;
+    public int recursions = 0;
+    public int places = 0;
+    public int pruned = 0;
+    public int yNumCalls = 0;
     public long yTime = 0;
 
     // Positions at which rectangles can be placed satisfying the bottom-left stability property.
