@@ -472,9 +472,9 @@ public class CrossoverPopulation
         
         //MultiTool.sleepThread(10);
         // tmp
-        for (CrossInstance inst : list) {
+        //for (CrossInstance inst : list) {
             //Logger.write("old: " + inst.pd.toShortString());
-        }
+        //}
         //MultiTool.sleepThread(10);
         // Create the new population.
         while (newPopulation.size() < POPULATION_SIZE + repairDiscard) {
@@ -490,9 +490,9 @@ public class CrossoverPopulation
         // Update the population.
         list = newPopulation;
         // tmp
-        for (CrossInstance inst : list) {
+        //for (CrossInstance inst : list) {
             //Logger.write("new: " + inst.pd.toShortString());
-        }
+        //}
     }
     
     /**
